@@ -3,6 +3,7 @@
 	ProjectType="Visual C++"
 	Version="7.00"
 	Name="libcdlyte"
+	ProjectGUID="{76FC34EE-EEB8-41FA-B7EE-F9BC5397BAD3}"
 	SccProjectName=""
 	SccLocalPath="">
 	<Platforms>
@@ -122,9 +123,6 @@
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl">
-			<File
-				RelativePath="..\..\acconfig.h">
-			</File>
 			<File
 				RelativePath="..\..\src\cdlyte.h">
 			</File>

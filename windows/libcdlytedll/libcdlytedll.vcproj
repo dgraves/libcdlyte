@@ -148,9 +148,6 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl">
 			<File
-				RelativePath="..\..\acconfig.h">
-			</File>
-			<File
 				RelativePath="..\..\src\cdlyte.h">
 			</File>
 			<File

@@ -20,12 +20,13 @@ Boston, MA  02111-1307, USA.
 
 #ifdef WIN32
 
+#include "config.h"
+#include "cdlyte.h"
 #include <windows.h>
 #include <mmsystem.h>
 #include <memory.h>
+#include <stdlib.h>
 #include <ctype.h>
-#include "config.h"
-#include "cdlyte.h"
 
 /* Information required for proper operation.  */
 #define MAXDRIVES 26 /* All the letters in the alphabet.  */
