@@ -18,14 +18,14 @@ Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 Boston, MA  02111-1307, USA.
 */
 
+#ifdef WIN32
+
 #include <windows.h>
 #include <mmsystem.h>
 #include <memory.h>
 #include <ctype.h>
 #include "config.h"
 #include "cdlyte.h"
-
-#ifdef WIN32
 
 /* Information required for proper operation.  */
 #define MAXDRIVES 26 /* All the letters in the alphabet.  */
