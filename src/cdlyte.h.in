@@ -433,11 +433,13 @@ int cddb_mc_copy_from_data(struct disc_mc_data *out,const struct disc_data *in);
 int cddb_data_copy_from_mc(struct disc_data *out,const struct disc_mc_data *in);
 
 /* Extract CDDB protocol, server address and port, and CGI script from URL.  */
-int cddb_process_url(struct cddb_host *host, const char *url);
+int cddb_process_url(struct cddb_host *host,const char *url);
 
-int cddb_read_serverlist(struct cddb_conf *conf, struct cddb_serverlist *list, struct cddb_server *proxy);
-int cddb_write_serverlist(const struct cddb_conf *conf,const  struct cddb_serverlist *list,const struct cddb_server *proxy);
-char *cddb_genre(int genre);
+/* Convert numerical genre identifier to text descriptor.  */
+char *cddb_genre(int genre,char* buffer,int len);
+
+/* Convert genre text descriptor to numerical identifier.  */ 
+int cddb_genre_value(const char* genre);
 
 int cddb_connect(const struct cddb_server *server);
 int cddb_connect_server(const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello *hello,...);
@@ -461,6 +463,9 @@ int cddb_http_proxy_read(int cd_desc,const struct cddb_host *host,const struct c
 int cddb_http_sites(int cd_desc,const struct cddb_host *host,const struct cddb_hello *hello, struct cddb_serverlist *list);
 int cddb_http_proxy_sites(int cd_desc,const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello *hello, struct cddb_serverlist *list);
 int cddb_http_submit(int cd_desc,const struct cddb_host *host, struct cddb_server *proxy, char *email_address);
+
+int cddb_read_serverlist(struct cddb_conf *conf, struct cddb_serverlist *list, struct cddb_server *proxy);
+int cddb_write_serverlist(const struct cddb_conf *conf,const  struct cddb_serverlist *list,const struct cddb_server *proxy);
 
 
 int cdindex_discid(int cd_desc, char *discid, int len);
