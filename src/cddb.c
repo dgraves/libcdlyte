@@ -422,12 +422,13 @@ int cddb_genre_value(char *genre)
  * Connect to a specified CDDB server.  
  * @param server a cddb_server structure specifying the CDDB 
  *        server with which to connect.  
- * @return 0 on success, -1 on failure.  
+ * @return handle to a connected socket on success, 
+ *         INVALID_CDSOCKET on failure.  
  */
-int cddb_connect(const struct cddb_server *server)
+cdsock_t cddb_connect(const struct cddb_server *server)
 {
-  socket_t sock;
-  sockaddr_in_t sin;
+  cdsock_t sock;
+  struct sockaddr_in sin;
   struct hostent *host;
 
   sin.sin_family=AF_INET;
@@ -439,33 +440,40 @@ int cddb_connect(const struct cddb_server *server)
     {
       if(use_cddb_message)
         strncpy(cddb_message,strerror(errno),256);
-      return -1;
+      return INVALID_CDSOCKET;
     }
       
     memcpy(&sin.sin_addr,host->h_addr,host->h_length);
   }
 
-  if((sock=socket(AF_INET,SOCK_STREAM,0))<0)
+  if((sock=socket(AF_INET,SOCK_STREAM,0))==INVALID_CDSOCKET)
   {
     if(use_cddb_message)
       strncpy(cddb_message,strerror(errno),256);
-    return -1;
+    return INVALID_CDSOCKET;
   }
 
-  if(connect(sock,(struct sockaddr *)&sin,sizeof(sin))<0)
+  if(connect(sock,(struct sockaddr *)&sin,sizeof(sin))==CDSOCKET_ERROR)
   {
     if(use_cddb_message)
       strncpy(cddb_message,strerror(errno),256);
-    return -1;
+    return INVALID_CDSOCKET;
   }
 
   return sock;
 }
-		  
-/* Connect to a CDDB server and say hello */
+  
+/**
+ * Connect to a specified CDDB server and initiate session.  
+ * @param server a cddb_server structure specifying the CDDB 
+ *        server with which to connect.  
+ * @return handle to a connected socket on success, 
+ *         INVALID_CDSOCKET on failure.  
+ */
 int cddb_connect_server(const struct cddb_host *host,const struct cddb_server *proxy,const  struct cddb_hello *hello,...)
 {
-  int sock,token[3],http_string_len;
+  cdsock_t sock;
+  int token[3],http_string_len;
   char outbuffer[256],*http_string;
   va_list arglist;
 
@@ -473,13 +481,13 @@ int cddb_connect_server(const struct cddb_host *host,const struct cddb_server *p
    
   if(proxy!=NULL)
   {
-    if((sock=cddb_connect(proxy))<0)
-      return -1;
+    if((sock=cddb_connect(proxy))==INVALID_CDSOCKET)
+      return INVALID_CDSOCKET;
   }
   else
   {
-    if((sock=cddb_connect(&host->host_server))<0)
-      return -1;
+    if((sock=cddb_connect(&host->host_server))==INVALID_CDSOCKET)
+      return INVALID_CDSOCKET;
   }
 
   if(host->host_protocol==CDDB_MODE_HTTP)
