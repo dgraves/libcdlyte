@@ -1,0 +1,86 @@
+Installation Instructions for libcdaudio
+----------------------------------------
+
+ If you received libcdaudio as part of a package with something else, 
+ then you should go to the top level source directory and read the instructions
+ from there.  The instructions in this file are for building libcdaudio as an
+ independant package.
+
+Platforms
+---------
+
+ libcdaudio will compile under the following platforms.  Listed underneath
+ them are any functions that will not work on that platform.
+
+ Linux 1.2
+  CD-ROM changer functions will not work at all.
+
+ Linux 2.0
+  You may select discs using the cd_changer_select_disc() function, but the
+  cd_changer_slots() function will not work at all, and consequently, the
+  cd_changer_stat() function will not work as well.
+  
+ Linux 2.1/2.2/2.3
+  All functions should work correctly.
+
+ OpenBSD 2.3 
+  The tray open/close functions may not work correctly.
+  CD-ROM changer functions will not work at all.
+
+ FreeBSD 3.2
+  A kernel bug prevents you from ejecting the tray when 
+  there is no disc present.
+  CD-ROM changer functions will not work at all.
+
+ Solaris 2.5, 2.6
+  The tray open/close functions may not work correctly 
+  CD-ROM changer functions will not work at all.
+  cd_get_volume() will always return 0 for the volumes.
+
+ Irix
+  As far as I know all function work within Irix.
+
+Installation
+------------
+
+Step 1.
+  Run the configuration script.  This script will sort out any platform
+  dependancies and select the appropriate CD-ROM header file for your
+  system.  Simply run:
+
+  ./configure
+
+  For systems using a different shell than bash or sh (e.g. csh), you
+  will need to run:
+
+  sh ./configure
+  
+  Be sure to watch what configure says to be sure that it has selected
+  everything correctly.
+
+Step 2.
+  Run 'make'.  This will build libcdaudio.  If all works correctly both the
+  shared and static libraries will be created, and should be located under
+  source/.libs
+
+Step 3.
+  Run 'make install'.  This will install libcdaudio under /usr/local/lib.
+  If /usr/local/lib is not present in your ld.so.conf (usually located under
+  /etc/ld.so.conf), you will need to add it.  If you are unable to add it or
+  are on a system which does not use ld.so.conf, you will need to add 
+  /usr/local/lib to the LD_LIBRARY_PATH when you wish to run libcdaudio
+  programs.
+
+Step 4.
+  For Linux: If /usr/local/lib is in or has been added to ld.so.conf, you may 
+  now run:
+ 
+  ldconfig
+
+  to complete the installation of the library.  If you added /usr/local/lib
+  to your LD_LIBRARY_PATH instead, then you do not need to do this.
+
+Step 5. (optional)
+  You may now run 'make clean' to delete the object and library files left in
+  the source directory.  If you don't have any reason to keep the source,
+  you can simply remove the source directory entirely. 

@@ -1,0 +1,4 @@
+The following changes are still to be made in the pre1.0.0 series:
+
+Some method of listing and updating unknown CDDB entries.
+Direct e-mail submission via sendmail instead of mailx.

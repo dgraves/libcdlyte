@@ -1,0 +1,291 @@
+Sat,  1 Jan 2000 10:34:43 -0700  Tony Arcieri  <bascule@inferno.tusculum.edu>
+
+	* Solaris fixes.
+
+	* cddb_mc_* class of functions completed.
+
+Wed, 20 Oct 1999 20:58:18 -0600  Tony Arcieri  <bascule@inferno.tusculum.edu>
+
+	* Fixed non-symlink mount checking bug
+
+Thu,  7 Oct 1999 19:58:40 -0600  Tony Arcieri  <bascule@inferno.tusculum.edu>
+	
+	* Much of cdaudio.c simplified. 
+
+	* Denastified a great deal of code.  Needless static buffers are
+	  gone, as are most of the calls to strtok().
+
+Mon, 16 Aug 1999 23:55:10 -0600  Tony Arcieri  <bascule@inferno.tusculum.edu>
+
+	* E-mail submission is pretty nasty, but works somewhat.
+
+	* Cover art lookups were failing.  Fixed.
+
+	* Cover art caching wasn't working correctly.  That is now fixed.
+
+	* Fixed problems for people who are cross-compiling.
+
+	* Fixed a little problem.  FreeBSD and Linux now generate the same
+	  CD Index ID.  As to which one had the "correct" TOC data, I don't
+	  know, but since the CD Index seems to have started on Linux, I
+	  thought I'd go ahead and make FreeBSD generate the same IDs as Linux.
+
+	* Ugh, submission support has gone all to pot.  I'll try to fix this.
+
+	* Well, 0.99.0 didn't work on Irix.  It should now, I hope.
+	
+	* Ditto for Solaris.
+
+Thu, 29 Jul 1999 10:40:40 -0600  Tony Arcieri  <bascule@inferno.tusculum.edu>
+	
+	* cd_stat() modularized to use cd_poll() to read the subchannel and
+	  cd_update() to update information in a disc_info structure using
+	  the data from a disc_status structure.  In this fashion programs
+	  which continouosly poll the CD-ROM need not read the TOC every time.
+
+	* Added the cd_poll() function and disc_status structure
+
+	* Added parse_disc_artist and parse_track_artist flags which can
+	  disable parsing of the disc title and track title into seperate
+	  artist and title fields.
+
+	* Fixed some internal bugs about detecting whether or not a CD is
+	  present in the drive
+
+	* cd_playctl() is now the de facto standard for CD play.  All other
+	  play functions are now wrappers to it.
+
+	* Since my ~/.cddbrc is conflicting with others, it is now called
+	  ~/.cdserverrc.  This also makes since because it's storing CD Index
+	  and Cover Art servers now.
+
+	* Changed all my old thinking on cover art storage.  It now uses a
+ 	  seperate structure.  The old method was based on the idea that the
+	  cover art would be stored within a CDDB/CD Index entry itself.  This
+	  didn't pan out.
+
+	* Fixed cd_advance() bug where rewind would not function properly.
+
+	* Irix support in libcdaudio added.
+
+	* Began implementing Cover Art support.
+
+	* Majour interface overhauls... but this is it, the final published
+	  libcdaudio interface is out.  If there's anything else I want to
+	  change, I better have a damn good reason for it.
+
+Fri, 18 Jun 1999 01:04:03 -0600  Tony Arcieri  <bascule@inferno.tusculum.edu>
+
+	* Fixed 64-bit clenliness problems with CDDB IDs.
+	
+	* Attempted some internal optomisations, which were not entirely
+	  successful.
+
+Sat Apr 17 16:49:31 MDT 1999  Tony Arcieri  <tarcieri@gjhsnews.mesa.k12.co.us>
+
+	* Removed the cover art structures from the track structures.
+
+	* Added CD Index support.
+
+	* Added LBA information for each track because it is required to 
+	  calculate the CD Index ID.
+
+Fri Apr  9 23:16:53 MDT 1999  Tony Arcieri  <tarcieri@gjhsnews.mesa.k12.co.us>
+
+	* Added structures for the future storage of cover art, as soon as a
+	  standard gets worked out for this.  The size is based upon a padded
+	  maximum byte value for a 150x150 JPEG.  It may also change.
+
+	* Added cddb_message external variable to store CDDB messages received
+	  or other error messages that occoured.
+
+	* Fixed CDDB revision values
+
+	* Renamed track structure under disc_data to data_track to make the
+	  naming conventions more consistant.
+
+	* Fixed glibc2.1 snprintf problems.
+
+	* Fixed Solaris compile-time problems.  Some run-time problems still 
+	  exist.
+
+Thu Feb 18 22:07:45 MST 1999  Tony Arcieri  <tarcieri@gjhsnews.mesa.k12.co.us>
+
+	* Fixed track_type to reflect if a track is truly an audio or data
+	  track.
+
+	* Fixed some bugs in data.c which cause extended data to be truncated
+
+	* CDDB submission support added, currently set to 'test' mode until
+	  libcdaudio is certified
+
+	* Fixed a problem with cd_changer_stat's formatting of disc_info
+
+Sun Jan 31 21:09:14 MST 1999  Tony Arcieri  <tarcieri@gjhsnews.mesa.k12.co.us>
+
+	* Due to an apparent bug in the new kernel interface, the old, ugly
+	  method of detecting if there is no disc in the CD-ROM is used
+
+	* Applications should no longer use the "getserver" method of locating
+	  a server.  The entire server list may be obtained via the
+	  cddb_read_serverlist function.  To refresh the serverlist, use
+	  the cddb_sites function to obtain the list, and cddb_write_serverlist
+	  to write it.
+
+	* All previous configuration functions eliminated, new class
+	  implemented.  cddb_read_serverlist and cddb_write_serverlist
+	  added to deal with new ~/.cddbrc format.  Server names are now
+	  stored as URLs.  cddb_process_url implemented to process URLs.
+
+	* cddb_query now takes the HTTP string from cddb_connect_server when
+	  the HTTP method is used.
+
+	* cddb_connect_server, cddb_query, cddb_read, and cddb_sites now take
+	  variable arguements.  When used in HTTP mode, cddb_connect_server
+	  takes char *http_string and int http_string_len.  All the latter take
+	  the http_string produced by cddb_connect_server at the end.
+  
+	* cddb_connect_server combined with cddb_hello to produce a single
+	  function.
+
+	* Merged libcdaudio 0.5.2 with Mike Oliphant's libcdaudio 0.6.0.
+	  Now supports HTTP method of CDDB access, and level 3 of the CDDB
+	  protocol.
+
+1999-01-18  Mike Oliphant  <oliphant@ling.ed.ac.uk>
+
+        * fixed problem with snprintf() not liking src & dest to be the
+          same
+
+        * fixed problems handling albums without titles
+
+        * switched code to use http instead of the (now deprecated) cddb
+          (note: this involves non-backward compatible changes)
+
+Sat Sep 26 21:05:05 MDT 1998  Tony Arcieri  <bascule@procyon.mesa.k12.co.us>
+
+	* Fixed a formatting data formatting problem that was causing
+	  quite a bit of trouble. 
+
+	* cd_init changed to cd_init_device for better standardization across
+          all of libaudio. 
+
+Thu Aug 27 21:44:18 MDT 1998  Tony Arcieri  <bascule@procyon.mesa.k12.co.us>
+
+	* Added cddb_stat_disc_data, which client-side CDDB operations would
+	  call before invoking cddb_read_disc_data in order to keep it from
+	  performing automated CDDB lookups, similar to one calling select
+	  before reading from a descriptor that blocks.   
+
+	* Portability #defines improved for more flexibility.  libcdaudio works
+          under Linux, FreeBSD, OpenBSD, and Solaris.
+
+	* Vastly improved CDDB command set, especially the query command.  The
+	  CDDB command set is no longer static, allowing programmers to call
+	  the functions directly.
+
+	* Fixed buffer overflows in data.c modifications... *grin*... this was
+	  done pre-release so I guess it's okay...
+
+	* Massive internal changes across the board, designed to fix many
+	  bugs and other oddities that people were complaining about.
+
+	* Ignore that last comment.  libcdaudio compiles under FreeBSD.  Now I
+	  discover that there are multiple forms of sys/cdio.h, so everything
+	  gets a heck of a lot more complicated now.
+
+	* Added a whole bunch of stuff for sys/cdio.h, hoping to get libcdaudio
+	  to compile under FreeBSD.  If anybody manages to compile it under
+	  FreeBSD be sure to tell me.
+
+	* struct disc_data changes again, for the last time... I promise!
+
+	* data.c is much bigger, and much more important.  User level programs
+	  now get preformatted everything, including extended data.
+
+	* Found that all CDDB entries can be multi-line when listening to
+	  "Several Species of Small Furry Animals Gathered Together in a Cave
+	  and Grooving with a Pict."  Changed the way the cddb code processes
+	  entries to include a proto-data storage structure and a final data
+	  storage structure.
+
+	* Started working on FreeBSD support
+
+	* Whoops!  The mount checking didn't exactly work if the device given
+	  is a symlink (which cdcd does).  Fixed that.
+
+	* cd_play_track_pos endtrack function fixed (I'm gonna rewrite that
+	  screwey function anyway)
+
+Sun Aug  1 16:20:05 MDT 1998  Tony Arcieri  <bascule@inferno.tusculum.edu>
+
+	* CDDB server list functions implemented
+
+	* Volume functions changed to use a structure
+
+	* track_pos now replaces old track_length
+
+	* cd_get_volume implemented
+
+	* Experimenting with CD changer support 
+
+	* track_length fixed, to produce individual track lengths
+
+Mon Jul 27 23:27:03 MDT 1998  Tony Arcieri  <bascule@procyon.mesa.k12.co.us>
+
+	* Package now configured with autoconf, to avoid all those nasty
+	  problems people have been reporting with installation
+
+	* Added data.c, with functions to work with track information
+
+	* Added support for extended track information
+
+	* Fixed genre bug in cd_read_disc_data (cddb_read_data_local) 
+
+Thu Jul 23 00:15:33 MDT 1998  Tony Arcieri  <bascule@procyon.mesa.k12.co.us>
+
+	* True CDDB-style local databasing system implemented, compatible with
+	  XFreeCd.
+
+	* trackinfo.c eliminated.  Here ends the old track database system.
+
+Wed Jul 22 12:35:04 MDT 1998  Tony Arcieri  <bascule@procyon.mesa.k12.co.us>
+
+	* CDDB support functional.
+
+Mon Jul 20 01:02:23 MDT 1998  Tony Arcieri  <bascule@procyon.mesa.k12.co.us>
+
+	* cdcd and libcdaudio seperated.
+
+	* Work on cdda reading implementation suspended until cddb support is 
+	  completed.
+
+	* Started implementing CDDB support.
+
+Thu Jul  9 02:29:20 MDT 1998  Tony Arcieri  <bascule@procyon.mesa.k12.co.us>
+
+	* Started implementing cdda reader.
+
+	* Added digital volume control.
+
+	* Added track positioning system (cd_advance).
+
+	* make install works now.
+
+Tue Jul  7 10:31:56 MDT 1998  Tony Arcieri  <bascule@procyon.mesa.k12.co.us>
+
+	* cdcd now supports track name databases.
+
+	* Added some prototypes in the include file... whoops.
+
+	* Eliminated disc_info section of play function, fixing disc change
+	  problem.
+
+	* Eliminated disc_zero function in favour of reading CD header every
+	  time.
+	
+	* Experimenting with track name databases.
+
+Sun Jul  5 14:40:41 MDT 1998  Tony Arcieri  <bascule@procyon.mesa.k12.co.us>
+
+	* Started ChangeLog.

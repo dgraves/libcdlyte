@@ -1,0 +1,66 @@
+Changes in 0.99.4
+* cddb_mc_* class of functions finished.
+
+Changes in 0.99.3
+* Bugs fixed
+
+Changes in 0.99.2
+* Internal optomisations
+
+Changes in 0.99.1
+* Cover art support is functional
+
+Changes in 0.99.0-pre1.0.0:
+* The new final interface is here.  Quite a bit has changed: mainly interface
+  problems created through my ignorance
+* Cover art support added
+* cd_advance() rewinding bug fixed
+* cd_poll() added
+* cd_playctl() added
+
+Changes in 0.7.1:
+* Bugs fixed
+* Internal optomizations attempted
+
+Changes in 0.7.0:
+* CD Index support added
+
+Changes in 0.6.3:
+* Interface changed to support future addition of cover art
+
+Changes in 0.6.2:
+* Experimental CDDB submission support added
+* Bugs fixed in detecting data tracks
+* Bugs with the cd_changer_stat function's formatting fixed
+
+Changes in 0.6.1:
+* cddb_read_serverlist now used to obtain the server list
+* Library interface modified significantly to use HTTP CDDB servers
+
+Changes in 0.6.0:
+* HTTP support added
+* Proxy support added
+
+Changes in 0.5.1:
+* cddb_generate_new_entry is out, cddb_generate_unknown_entry is in 
+
+Changes in 0.5.0:
+* Massive improvements in portability.  libcdaudio should now compile under
+  Linux, FreeBSD, OpenBSD, and Solaris, with Digital UNIX and others on the way
+* Internal changes.  More refined CDDB interface.  More powerful CDDB functions
+
+Changes in 0.4.6:
+* Fixed endtrack bug in cd_play_track_pos, the root of all the CD playing 
+  functions
+* Fixed mount checking for symlinks
+
+Changes in 0.4.5:
+
+* CDDB server list functions added, as well as cddbconfgen, to create cddb.conf
+* changer.c added, containing functions for working with CD-ROM changers
+* CD volume functions changed to structures to allow for surround sound control
+
+Changes in 0.4.4:
+
+* Makefile now generated with automake/autoconf
+* Support for CDDB extended information added (and helpful processors in data.c)

@@ -1,0 +1,101 @@
+/* config.h.in.  Generated automatically from configure.in by autoheader.  */
+
+/* Define to empty if the keyword does not work.  */
+#undef const
+
+/* Define if you have the getmntent function.  */
+#undef HAVE_GETMNTENT
+
+/* Define if you have the ANSI C header files.  */
+#undef STDC_HEADERS
+
+/* Define if you can safely include both <sys/time.h> and <time.h>.  */
+#undef TIME_WITH_SYS_TIME
+
+/* Define if your processor stores words with the most significant
+   byte first (like Motorola and SPARC, unlike Intel and VAX).  */
+#undef WORDS_BIGENDIAN
+
+/* This symbol will be declared if we're compiling for an Irix system,
+and we have access to the Irix cdaudio library to do the dirty work. */
+#undef IRIX_CDLYTE
+
+/* These are quick fixes for Solaris */
+#undef SOLARIS_GETMNTENT
+#undef BROKEN_SOLARIS_LEADOUT
+
+/* Define if your system provides POSIX.4 threads */
+#undef HAVE_PTHREAD
+
+/* The number of bytes in a long.  */
+#undef SIZEOF_LONG
+
+/* Define if you have the gethostbyname function.  */
+#undef HAVE_GETHOSTBYNAME
+
+/* Define if you have the gethostbyname_r function.  */
+#undef HAVE_GETHOSTBYNAME_R
+
+/* Define if you have the getmntinfo function.  */
+#undef HAVE_GETMNTINFO
+
+/* Define if you have the mkdir function.  */
+#undef HAVE_MKDIR
+
+/* Define if you have the snprintf function.  */
+#undef HAVE_SNPRINTF
+
+/* Define if you have the socket function.  */
+#undef HAVE_SOCKET
+
+/* Define if you have the strerror function.  */
+#undef HAVE_STRERROR
+
+/* Define if you have the strstr function.  */
+#undef HAVE_STRSTR
+
+/* Define if you have the strtol function.  */
+#undef HAVE_STRTOL
+
+/* Define if you have the <fcntl.h> header file.  */
+#undef HAVE_FCNTL_H
+
+/* Define if you have the <io/cam/cdrom.h> header file.  */
+#undef HAVE_IO_CAM_CDROM_H
+
+/* Define if you have the <linux/cdrom.h> header file.  */
+#undef HAVE_LINUX_CDROM_H
+
+/* Define if you have the <linux/ucdrom.h> header file.  */
+#undef HAVE_LINUX_UCDROM_H
+
+/* Define if you have the <mntent.h> header file.  */
+#undef HAVE_MNTENT_H
+
+/* Define if you have the <stdarg.h> header file.  */
+#undef HAVE_STDARG_H
+
+/* Define if you have the <sys/cdio.h> header file.  */
+#undef HAVE_SYS_CDIO_H
+
+/* Define if you have the <sys/ioctl.h> header file.  */
+#undef HAVE_SYS_IOCTL_H
+
+/* Define if you have the <sys/mntent.h> header file.  */
+#undef HAVE_SYS_MNTENT_H
+
+/* Define if you have the <sys/mount.h> header file.  */
+#undef HAVE_SYS_MOUNT_H
+
+/* Define if you have the <sys/ucred.h> header file.  */
+#undef HAVE_SYS_UCRED_H
+
+/* Define if you have the <unistd.h> header file.  */
+#undef HAVE_UNISTD_H
+
+/* Name of package */
+#undef PACKAGE
+
+/* Version number of package */
+#undef VERSION
+

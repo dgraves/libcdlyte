@@ -1,0 +1,29 @@
+libcdaudio authors:
+-------------------
+Tony Arcieri  <tarcieri@gjhsnews.com>
+	Primary author and developer.
+
+Mike Oliphant  <oliphant@mp3.com>
+	Original author of HTTP CDDB lookup code.
+
+Ralph Wallace  <ralph@afmeridoc.net>
+	FreeBSD porter.
+
+Ryan Banks  <rbanks@interim.net>
+	OSF/1 porter.
+
+Justus Pendleton
+	Solaris porter.
+
+Matt Kraai  <kraai@ghs.com>
+	Additional Solaris assistance.
+
+David Rose  <David.R.Rose@disney.com>
+	Irix porter.
+
+Quinton Dolan  <q@OntheNet.com.au>
+	Internal optomisations.
+
+Acknowledgements:
+-----------------
+Ryan Werber		Debugging assistance.

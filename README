@@ -1,0 +1,73 @@
+General Information
+-------------------
+ libcdaudio is a library designed to provide functions to control
+ operation of a CD-ROM when playing audio CDs.  It also contains
+ functions for CDDB and CD Index lookup.
+
+Installation
+------------
+ If you have received libcdaudio as part of another package, read the
+ documentation in the top level source directory first to see if you need to
+ compile libcdaudio seperately.
+
+ For help with installation, please see the file INSTALL
+
+Thanks
+------
+ Thanks to:
+ 
+ Mike Oliphant for parts of the HTTP code.
+ Ralph Wallace for ports to FreeBSD.
+ Ryan Banks for incomplete ports to Digital UNIX.
+ Justus Pendelton for ports to Solaris.
+ Matt Kraai for additional Solaris help.
+ David Rose for ports to Irix.
+ Ryan Werber for a box to test the CD-ROM changer code on.
+ Quinton Dolan for internal optomisations.
+
+Bugs
+----
+ All bugs reports should be sent to bascule@inferno.tusculum.edu.
+
+ This library has been tested under the following:
+ * Linux 1.2, 2.0, 2.1, 2.2
+ * FreeBSD 3.2, 3.3, 4.0
+ * Solaris 2.3, 2.4, 2.5, 2.6
+ * OpenBSD 2.3
+ * Irix
+
+ If you do experience any problems compiling, please send me:
+
+ * The version of libcdaudio
+ * Your platform type and release
+ * A complete list of errors that occoured during the compile
+   (e.g. make >& errors)
+ * The CD-ROM header file for your platform so I can modify libcdaudio
+   accordingly
+ * Any other information you believe is relevant
+ 
+ If you experience problems during the operation of programs compiled with
+ this library, be sure to check with the authors of the relevant programs
+ first, then contact me.  Be sure to send:
+ 
+ * The version of libcdaudio
+ * The name of the program with which the error occoured
+ * Your platform type and release
+ * Any other information you believe is relevant
+
+Patches
+-------
+ If you think you can do something better than the existing code, by all
+ means, send me the patch!  
+
+ Send all patches to: bascule@inferno.tusculum.edu.
+
+ Be sure to include your name so I can give credit where it is due.  If the
+ patch fixes a bug, it would be nice if you could send the patch along with
+ the bug report.
+
+A few final words
+-----------------
+ libcdaudio is distributed under the GNU Library General Public License,
+ included in this package under the top level source directory in the file
+ LICENSE.
