@@ -6,14 +6,15 @@ noinst_HEADERS = \
 lib_LTLIBRARIES = libcdlyte.la
 
 libcdlyte_la_SOURCES = \
-	cd.c       \
-	irix_cd.c  \
-	win32_cd.c  \
-	cddb.c          \
-	changer.c	\
+	cd.c           \
+	irix_cd.c      \
+	win32_cd.c     \
+	cddb.c         \
+	changer.c      \
         extra_objs.c
 
-libcdlyte_la_LDFLAGS = -version-info 1:0:0
+libcdlyte_la_LDFLAGS = \
+	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
 
 include_HEADERS = \
 	cdlyte.h

@@ -58,6 +58,9 @@ and we have access to the Irix cdaudio library to do the dirty work. */
 /* Define if you have the strtol function.  */
 #define HAVE_STRTOL 1
 
+/* Define if you have the <dlfcn.h> header file.  */
+#define HAVE_DLFCN_H 1
+
 /* Define if you have the <fcntl.h> header file.  */
 #define HAVE_FCNTL_H 1
 
@@ -98,5 +101,5 @@ and we have access to the Irix cdaudio library to do the dirty work. */
 #define PACKAGE "libcdlyte"
 
 /* Version number of package */
-#define VERSION "0.9.5"
+#define VERSION "0.9.6"
 

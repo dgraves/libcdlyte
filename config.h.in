@@ -57,6 +57,9 @@ and we have access to the Irix cdaudio library to do the dirty work. */
 /* Define if you have the strtol function.  */
 #undef HAVE_STRTOL
 
+/* Define if you have the <dlfcn.h> header file.  */
+#undef HAVE_DLFCN_H
+
 /* Define if you have the <fcntl.h> header file.  */
 #undef HAVE_FCNTL_H
 
