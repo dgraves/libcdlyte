@@ -92,10 +92,6 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=..\..\src\base64.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\src\cd.c
 # End Source File
 # Begin Source File
@@ -104,15 +100,7 @@ SOURCE=..\..\src\cddb.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\src\cdindex.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\src\changer.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\src\data.c
 # End Source File
 # Begin Source File
 
@@ -141,10 +129,6 @@ SOURCE=..\..\src\compat.h
 # Begin Source File
 
 SOURCE=..\..\config.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\src\data.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"
