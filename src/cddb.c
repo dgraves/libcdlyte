@@ -29,6 +29,7 @@ Boston, MA  02111-1307, USA.
 #include <string.h>
 #include <errno.h>
 #include <time.h>
+#include <math.h>
 
 #ifndef WIN32
 #include <unistd.h>
@@ -66,7 +67,7 @@ Boston, MA  02111-1307, USA.
 #define snprintf _snprintf
 #endif
 
-#define CDDB_INT_STRLEN(x) ((x<0)?log10(x)+1:log10(x))
+#define CDDB_INT_STRLEN(x) ((x<0)?log10(x)+2:log10(x)+1)
 
 /* Global cddb_message definition */
 char cddb_message[CDDB_LINE_SIZE];
@@ -331,6 +332,47 @@ void cddb_free_cddb_host(struct cddb_host *host)
   {
     free(host->host_description);
     host->host_description=NULL;
+  }
+}
+
+/** Initialize cddb_hello structure.
+ * @param hello a cddb_hello structure to be initialized.
+ */
+void cddb_init_cddb_hello(struct cddb_hello *hello)
+{
+   hello->hello_user;
+   hello->hello_hostname;
+   hello->hello_program;
+   hello->hello_version;
+}
+
+/** Free resources allocated for cddb_hello structure.
+ * @param hello a cddb_hello structure with memory resources to be freed.
+ */
+void cddb_free_cddb_hello(struct cddb_hello *hello)
+{
+  if(hello->hello_user)
+  {
+    free(hello->hello_user);
+    hello->hello_user=NULL;
+  }
+
+  if(hello->hello_hostname)
+  {
+    free(hello->hello_hostname);
+    hello->hello_hostname=NULL;
+  }
+
+  if(hello->hello_program)
+  {
+    free(hello->hello_program);
+    hello->hello_program=NULL;
+  }
+
+  if(hello->hello_version)
+  {
+    free(hello->hello_version);
+    hello->hello_version=NULL;
   }
 }
 
@@ -806,7 +848,7 @@ int cddb_proto(cdsock_t sock)
   len+=strlen("proto \n")+1;  /* Plus 1 for null terminator */
 
   outbuffer=(char *)malloc(len);
-  snprintf(outbuffer,sizeof(outbuffer),"proto %d\n",CDDB_PROTOCOL_LEVEL);
+  snprintf(outbuffer,len,"proto %d\n",CDDB_PROTOCOL_LEVEL);
 
   if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
   {
@@ -962,7 +1004,7 @@ int cddb_query(const char* querystr,cdsock_t sock,int mode,struct cddb_query *qu
     snprintf(outtemp,outlen,"cddb+query+%s",querystr);
 
     /* Replace any spaces with '+'.  */
-    for(index=0;index<sizeof(outtemp)&&outtemp[index]!='\0';index++)
+    for(index=0;index<outlen&&outtemp[index]!='\0';index++)
       if(outtemp[index]==' ') outtemp[index]='+';
 
     outbuffer=cddb_generate_http_request(outtemp,http_string);
@@ -1253,7 +1295,7 @@ static void cddb_proc_read_data(struct disc_data *data)
     free(artist);
   }
 
-  for(index=0;index<=data->data_total_tracks;index++)
+  for(index=0;index<data->data_total_tracks;index++)
   {
     artist=data->data_track[index].track_title;
     title=strstr(artist," / ");
@@ -1312,18 +1354,18 @@ int cddb_read(int category,unsigned long discid,cdsock_t sock,int mode,struct di
 
   if(mode==CDDB_MODE_HTTP)
   {
-    int len;
+    int outlen;
     char* outtemp;
     va_list arglist;
     va_start(arglist,data);
 
     http_string=va_arg(arglist,char *);
 
-    len=strlen(cddb_categories[category])+8;  /* Plus 8 for hex number */
-    len+=strlen("cddb+read++")+1;  /* Plus 1 for null terminator */
+    outlen=strlen(cddb_categories[category])+8;  /* Plus 8 for hex number */
+    outlen+=strlen("cddb+read++")+1;  /* Plus 1 for null terminator */
 
-    outtemp=(char *)malloc(len);
-    snprintf(outtemp,len,"cddb+read+%s+%08lx",cddb_categories[category],discid);
+    outtemp=(char *)malloc(outlen);
+    snprintf(outtemp,outlen,"cddb+read+%s+%08lx",cddb_categories[category],discid);
 
     outbuffer=cddb_generate_http_request(outtemp,http_string);
 
@@ -1333,10 +1375,10 @@ int cddb_read(int category,unsigned long discid,cdsock_t sock,int mode,struct di
   }
   else
   {
-    int len=strlen(cddb_categories[category])+8;  /* Plus 8 for hex number */
-    len+=strlen("cddb read  \n")+1;  /* Plus 1 for null terminator */
-    outbuffer=(char *)malloc(len);
-    snprintf(outbuffer,len,"cddb read %s %08lx\n",cddb_categories[category],discid);
+    int outlen=strlen(cddb_categories[category])+8;  /* Plus 8 for hex number */
+    outlen+=strlen("cddb read  \n")+1;  /* Plus 1 for null terminator */
+    outbuffer=(char *)malloc(outlen);
+    snprintf(outbuffer,outlen,"cddb read %s %08lx\n",cddb_categories[category],discid);
   }
 
   if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
@@ -1548,7 +1590,7 @@ int cddb_sites(cdsock_t sock,int mode,struct cddb_serverlist *list,...)
     list->list_host[list->list_len].host_longitude=NULL;
     list->list_host[list->list_len].host_description=NULL;
 
-    if(cddb_proc_sites_line(inbuffer,&list->list_host[list->list_len])!=-1)
+    if(cddb_proc_sites_line(inbuffer,&list->list_host[list->list_len])==-1)
     {
       snprintf(cddb_message,sizeof(cddb_message),"Error processing server reply");
       cddb_close(sock);
@@ -2363,7 +2405,7 @@ int cddb_http_query(const char *querystr,const struct cddb_host *host,const stru
 
   /* Connect.  */
   http_string=(char *)malloc(len);
-  if((sock=cddb_connect(host,proxy,hello,http_string,sizeof(http_string)))==INVALID_CDSOCKET)
+  if((sock=cddb_connect(host,proxy,hello,http_string,&len))==INVALID_CDSOCKET)
   {
     free(http_string);
     if(len!=0)
@@ -2658,10 +2700,12 @@ int cddb_read_data(cddesc_t cd_desc,const struct cddb_host *host,const struct cd
   }
 
   /* Query.  */
+  cddb_init_cddb_query(&query);
   if(cddb_query(query_string,sock,host->host_protocol,&query,http_string)<1)
   {
     cddb_close(sock);
     free(query_string);
+    cddb_free_cddb_query(&query);
     if(host->host_protocol==CDDB_MODE_HTTP) free(http_string);
     return -1;
   }
@@ -2673,6 +2717,7 @@ int cddb_read_data(cddesc_t cd_desc,const struct cddb_host *host,const struct cd
   if(query.query_match==QUERY_NOMATCH||query.query_matches==0)
   {
     cddb_close(sock);
+    cddb_free_cddb_query(&query);
     return 0;
   }
 
@@ -2694,11 +2739,15 @@ int cddb_read_data(cddesc_t cd_desc,const struct cddb_host *host,const struct cd
         if((sock=cddb_initiate(host,proxy,hello,http_string,&len))==INVALID_CDSOCKET)
         {
           free(http_string);
+          cddb_free_cddb_query(&query);
           return -1;
         }
       }
       else
+      {
+        cddb_free_cddb_query(&query);
         return -1;
+      }
     }
   }
 
@@ -2706,12 +2755,14 @@ int cddb_read_data(cddesc_t cd_desc,const struct cddb_host *host,const struct cd
   if(cddb_read(query.query_list[0].list_category,query.query_list[0].list_id,sock,host->host_protocol,data,http_string)<1)
   {
     cddb_close(sock);
+    cddb_free_cddb_query(&query);
     if(host->host_protocol==CDDB_MODE_HTTP) free(http_string);
     return -1;
   }
 
   cddb_quit(sock,host->host_protocol);
 
+  cddb_free_cddb_query(&query);
   if(host->host_protocol==CDDB_MODE_HTTP) free(http_string);
 
   return 1;

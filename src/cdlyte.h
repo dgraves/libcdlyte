@@ -384,6 +384,12 @@ void cddb_init_cddb_host(struct cddb_host *host);
 /* Free resources allocated for cddb_host.  */
 void cddb_free_cddb_host(struct cddb_host *host);
 
+/* Initialize cddb_hello structure.  */
+void cddb_init_cddb_hello(struct cddb_hello *hello);
+
+/* Free resources allocated for cddb_hello.  */
+void cddb_free_cddb_hello(struct cddb_hello *hello);
+
 /* Initialize cddb_serverlist structure.  */
 void cddb_init_cddb_serverlist(struct cddb_serverlist *list);
 
