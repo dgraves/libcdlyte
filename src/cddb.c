@@ -19,22 +19,28 @@ Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 Boston, MA  02111-1307, USA.
 */
 
-#include <config.h>
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
 #include <sys/types.h>
+#include <string.h>
+#include <errno.h>
+#include <time.h>
+
+#ifndef WIN32
+#include <unistd.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <string.h>
 #include <pwd.h>
-#include <errno.h>
-#include <unistd.h>
-#include <time.h>
+#else
+#include <windows.h>
+#include <winsock2.h>
+#endif
 
 #define __LIBCDAUDIO_INTERNAL
 
