@@ -177,6 +177,8 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
     return -1;
   disc->disc_first_track=1;
   disc->disc_total_tracks=msp.dwReturn;
+  if(disc->disc_track!=NULL)
+    free(disc->disc_track);
   disc->disc_track=(struct track_info*)malloc(disc->disc_total_tracks*(struct track_info));
 
   for(readtracks=0;readtracks<disc->disc_total_tracks;readtracks++)

@@ -307,7 +307,7 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
     disc->disc_track[readtracks].track_type=(cdte.CDTE_CONTROL&CDROM_DATA_TRACK)?CDLYTE_TRACK_DATA:CDLYTE_TRACK_AUDIO;
     disc->disc_track[readtracks].track_lba=cd_msf_to_lba(&disc->disc_track[readtracks].track_pos);
   }
-  
+
 #endif /* CDLYTE_READTOCENTRY */
 
   for(readtracks=1;readtracks<=disc->disc_total_tracks;readtracks++)
@@ -659,7 +659,7 @@ void cd_lba_to_msf(struct disc_timeval *time,int lba)
 }
 
 /** Initialize disc_info structure for use with cd_stat.
- * @param disc a disc_info structured to be initialized for use with cd_stat.
+ * @param disc a disc_info structure to be initialized for use with cd_stat.
  */
 void cd_init_disc_info(struct disc_info *disc)
 {
@@ -668,7 +668,7 @@ void cd_init_disc_info(struct disc_info *disc)
 }
 
 /** Free resources allocated for disc_info structure by cd_stat.
- * @param disc a disc_info structured with memory resources allocated by 
+ * @param disc a disc_info structure with memory resources allocated by
  *        cd_stat to be freed.
  */
 void cd_free_disc_info(struct disc_info *disc)
@@ -677,6 +677,7 @@ void cd_free_disc_info(struct disc_info *disc)
   {
     free(disc->disc_track);
     disc->disc_track=NULL;
+    disc->disc_total_tracks=0;
   }
 }
 

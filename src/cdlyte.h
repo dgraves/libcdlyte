@@ -296,14 +296,14 @@ cddesc_t cd_init_device(char *device_name);
 /* Close a device handle and free its resources.  */
 int cd_finish(cddesc_t cd_desc);
 
-/* Initialize disc_info structure for use with cd_stat.  */
+/* Initialize disc_info structure.  */
 void cd_init_disc_info(struct disc_info *disc);
+
+/* Free resources allocated for disc_info structure.  */
+void cd_free_disc_info(struct disc_info *disc);
 
 /* Read CD table of contents and get current status.  */
 int cd_stat(cddesc_t cd_desc,struct disc_info *disc);
-
-/* Free resources allocated ro disc_info structure by cd_stat.  */
-void cd_free_disc_info(struct disc_info *disc);
 
 /* Get current CD status.  */
 int cd_poll(cddesc_t cd_desc,struct disc_status *status);
@@ -365,6 +365,30 @@ unsigned long cddb_discid(cddesc_t cd_desc);
 
 /* Create a CDDB query string for the CD in device with handle cd_desc.  */
 char* cddb_query_string(cddesc_t cd_desc, char *query, int *len);
+
+/* Initialize disc_data structure.  */
+void cddb_init_disc_data(struct disc_data *data);
+
+/* Free resources allocated for disc_data.  */
+void cddb_free_disc_data(struct disc_data *data);
+
+/* Initialize cddb_query structure.  */
+void cddb_init_cddb_query(struct cddb_query *query);
+
+/* Free resources allocated for cddb_query.  */
+void cddb_free_cddb_query(struct cddb_query *query);
+
+/* Initialize cddb_host structure.  */
+void cddb_init_cddb_host(struct cddb_host *host);
+
+/* Free resources allocated for cddb_host.  */
+void cddb_free_cddb_host(struct cddb_host *host);
+
+/* Initialize cddb_serverlist structure.  */
+void cddb_init_cddb_serverlist(struct cddb_serverlist *list);
+
+/* Free resources allocated for cddb_serverlist.  */
+void cddb_free_cddb_serverlist(struct cddb_serverlist *list);
 
 /* Create a generic entry for an unknown disc.  */
 int cddb_gen_unknown_entry(int cd_desc,struct disc_data *data);
