@@ -465,7 +465,7 @@ int cddb_gen_unknown_entry(cddesc_t cd_desc,struct disc_data *data)
   data->data_track=(struct track_data *)malloc(data->data_total_tracks*sizeof(struct track_data));
   for(i=0;i<data->data_total_tracks;i++)
   {
-    snprintf(tempstr,sizeof(tempstr),"Track %d",i);
+    snprintf(tempstr,sizeof(tempstr),"Track %d",i+disc.disc_first_track);
     data->data_track[i].track_artist=strdup("Unknown Artist");
     data->data_track[i].track_title=strdup(tempstr);
     data->data_track[i].track_extended=strdup("");

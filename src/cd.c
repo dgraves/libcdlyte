@@ -493,7 +493,7 @@ int cd_close(int cd_desc)
 }
 
 /* Convert volume level from a byte to a percentage.  */
-static float __internal_cd_get_volume_percentage(char level)
+static float __internal_cd_get_volume_percentage(unsigned char level)
 {
   return (float)level/255.0f;
 }
@@ -749,6 +749,7 @@ int cd_track_advance(cddesc_t cd_desc,int endtrack,const struct disc_timeval *ti
 {
   struct disc_info disc;
 
+  cd_init_disc_info(&disc);
   if(cd_stat(cd_desc,&disc)<0)
     return -1;
 
@@ -758,6 +759,7 @@ int cd_track_advance(cddesc_t cd_desc,int endtrack,const struct disc_timeval *ti
   if(__internal_cd_track_advance(cd_desc,&disc,endtrack,time)<0)
     return -1;
 
+  cd_free_disc_info(&disc);
   return 0;
 }
 
@@ -772,12 +774,14 @@ int cd_advance(cddesc_t cd_desc,const struct disc_timeval *time)
 {
   struct disc_info disc;
 
+  cd_init_disc_info(&disc);
   if(cd_stat(cd_desc,&disc)<0)
     return -1;
 
   if(__internal_cd_track_advance(cd_desc,&disc,disc.disc_total_tracks,time)<0)
     return -1;
 
+  cd_free_disc_info(&disc);
   return 0;
 }
 
@@ -897,9 +901,15 @@ int cd_playctl(cddesc_t cd_desc,int options,int starttrack,...)
   struct disc_timeval *startpos, *endpos, start_position, end_position;
   va_list arglist;
 
-  va_start(arglist,starttrack);
+  cd_init_disc_info(&disc);
+  
   if(cd_stat(cd_desc,&disc)<0)
+  {
+    cd_free_disc_info(&disc);
     return -1;
+  }
+
+  va_start(arglist,starttrack);
 
   if(options&PLAY_END_TRACK)
     end_track=va_arg(arglist,int);
@@ -952,6 +962,8 @@ int cd_playctl(cddesc_t cd_desc,int options,int starttrack,...)
     end_position.seconds=disc.disc_track[disc.disc_total_tracks].track_pos.seconds;
     end_position.frames=disc.disc_track[disc.disc_total_tracks].track_pos.frames;
   }
+
+  cd_free_disc_info(&disc);
 
   return cd_play_frames(cd_desc,cd_msf_to_frames(&start_position),cd_msf_to_frames(&end_position));
 }
