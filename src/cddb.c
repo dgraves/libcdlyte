@@ -27,6 +27,7 @@ Boston, MA  02111-1307, USA.
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <string.h>
+#include <ctype.h>
 #include <errno.h>
 #include <time.h>
 #include <math.h>
@@ -105,7 +106,7 @@ static int cddb_sum(int val)
 /**
  * Return CDDB ID for CD in device with handle cd_desc.
  * @param cd_desc the handle to the cd device containing CD from which to obtain CDDB ID.
- * @return calculated CDDB ID on success, -1 on failure.
+ * @return calculated CDDB ID on success, 0 on failure.
  */
 unsigned long cddb_discid(cddesc_t cd_desc)
 {
@@ -116,12 +117,12 @@ unsigned long cddb_discid(cddesc_t cd_desc)
   cd_init_disc_info(&disc);
 
   if(cd_stat(cd_desc,&disc)<0)
-    return -1;
+    return 0;
 
   if(!disc.disc_present)
   {
     cd_free_disc_info(&disc);
-    return -1;
+    return 0;
   }
 
   for(index=0;index<disc.disc_total_tracks;index++)
@@ -156,7 +157,7 @@ char* cddb_query_string(cddesc_t cd_desc, char *query, int *len)
   char tempstr[BUFSIZ];
   struct disc_info disc;
 
-  if((discid=cddb_discid(cd_desc))==-1)
+  if((discid=cddb_discid(cd_desc))==0)
   {
     *len=0;
     return NULL;
@@ -202,8 +203,8 @@ char* cddb_query_string(cddesc_t cd_desc, char *query, int *len)
 char* cddb_strdup(const char* str)
 {
   char *dup;
-  
-  if(str==NULL) return NULL;  
+
+  if(str==NULL) return NULL;
   dup=(char*)malloc(strlen(str)+1);
   if(dup==NULL) return NULL;
   strcpy(dup,str);
@@ -353,10 +354,10 @@ void cddb_free_cddb_host(struct cddb_host *host)
  */
 void cddb_init_cddb_hello(struct cddb_hello *hello)
 {
-   hello->hello_user;
-   hello->hello_hostname;
-   hello->hello_program;
-   hello->hello_version;
+   hello->hello_user=NULL;
+   hello->hello_hostname=NULL;
+   hello->hello_program=NULL;
+   hello->hello_version=NULL;
 }
 
 /** Free resources allocated for cddb_hello structure.
@@ -439,7 +440,7 @@ int cddb_gen_unknown_entry(cddesc_t cd_desc,struct disc_data *data)
   struct disc_info disc;
   unsigned long discid=cddb_discid(cd_desc);
 
-  if(discid==-1)
+  if(discid==0)
     return -1;
 
   cd_init_disc_info(&disc);
@@ -1172,7 +1173,7 @@ static int cddb_read_copy(char* dest,const char* src,int n)
 /* Process a line read from CDDB database.  */
 static int cddb_proc_read_string(char *line,struct disc_data *data)
 {
-  unsigned int index=0;
+  int index=0;
   char *key,*value,buffer[CDDB_LINE_SIZE];
 
   /*Skip white space.  */
@@ -1226,7 +1227,7 @@ static int cddb_proc_read_string(char *line,struct disc_data *data)
     else if(strncmp(key,"TTITLE",6)==0)
     {
       /* Get track number.  */
-      index=strtoul(key+6,NULL,10);
+      index=strtol(key+6,NULL,10);
 
       if(index>=data->data_total_tracks)
       {
@@ -1447,7 +1448,6 @@ int cddb_read(int category,unsigned long discid,cdsock_t sock,int mode,struct di
 /* Process a single line in the sites list.  */
 static int cddb_proc_sites_line(char *line,struct cddb_host *host)
 {
-  int index=0;
   char *start,*end;
 
   /* Extract site address.  */
@@ -2292,7 +2292,7 @@ int cddb_submit(const struct cddb_host *host,const struct cddb_server *proxy,con
       return -1;
     }
 
-    snprintf(outbuffer,sizeof(outbuffer),"Content-Length: %d\r\n\r\n",length);
+    snprintf(outbuffer,sizeof(outbuffer),"Content-Length: %ld\r\n\r\n",length);
     if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
     {
       snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");

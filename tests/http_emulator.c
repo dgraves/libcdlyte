@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <signal.h>
 #include <setjmp.h>
@@ -27,8 +28,11 @@ jmp_buf env;
 
 void sighandler(int s)
 {
-  live=0;
-  longjmp(env,1);
+  if(s==SIGINT)
+  {
+    live=0;
+    longjmp(env,1);
+  }
 }
 
 int readline(socket_t client,char *line,int size)
@@ -50,11 +54,11 @@ int main(int argc,char **argv)
 {
   char line[BUFSIZ];
   short port;
-  int size,bytes,length,result;
+  int size,bytes,result;
   socket_t server,client;
   struct sockaddr_in sin;
   const char response[]="HTTP/1.1 200 OK\r\nServer: libcdlyte freedb http server emulator\r\nConnection: close\r\nContent-Type: text/plain; charset=iso-8859-1\r\n\r\n200 OK, submission has been sent.\r\n";
-  
+
   /* Listen for connections on user supplied port or port 8080 */
   if(argc>2)
   {
@@ -82,7 +86,7 @@ int main(int argc,char **argv)
 
   if(listen(server,5)==SOCKET_ERROR)
   {
-    printf("Unable to listen for incoming connections.\n",port);
+    printf("Unable to listen for incoming connections.\n");
     return 0;
   }
 

@@ -63,7 +63,7 @@ int main(int argc,char **argv)
   /* Done with disc_info structure */
   cd_free_disc_info(&disc);
 
-  if((discid=cddb_discid(cd_desc))==-1)
+  if((discid=cddb_discid(cd_desc))==0)
   {
     printf("Error computing CD ID\n");
     cd_finish(cd_desc);

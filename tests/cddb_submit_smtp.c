@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <sys/time.h>
@@ -121,7 +122,7 @@ int main(int argc,char **argv)
 
   printf("Retrieving data to be used in test submission:\n\n");
 
-  if((discid=cddb_discid(cd_desc))==-1)
+  if((discid=cddb_discid(cd_desc))==0)
   {
     printf("Error computing CD ID\n");
     cd_finish(cd_desc);

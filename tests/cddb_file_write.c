@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <sys/time.h>
@@ -97,7 +98,7 @@ int main(int argc,char **argv)
     cddb_free_disc_data(&data);
     return 0;
   }
-  printf("Retrieved data\n",cddb_message);
+  printf("Retrieved data\n");
 
   /* Write to current directory; disc_info was retrieved above */
   printf("\nWriting file .%c%08lx\n",PATHSEP,cddb_discid(cd_desc));

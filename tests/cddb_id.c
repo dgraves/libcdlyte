@@ -53,7 +53,7 @@ int main(int argc,char **argv)
 
   cd_free_disc_info(&disc);
 
-  if((discid=cddb_discid(cd_desc))==-1)
+  if((discid=cddb_discid(cd_desc))==0)
   {
     printf("Error computing CD ID\n");
     return 0;

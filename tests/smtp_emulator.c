@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <signal.h>
 #include <setjmp.h>
@@ -27,8 +28,11 @@ jmp_buf env;
 
 void sighandler(int s)
 {
-  live=0;
-  longjmp(env,1);
+  if(s==SIGINT)
+  {
+    live=0;
+    longjmp(env,1);
+  }
 }
 
 int readline(socket_t client,char *line,int size)
@@ -50,10 +54,10 @@ int main(int argc,char **argv)
 {
   char line[BUFSIZ],data[BUFSIZ],*p,*e;
   short port;
-  int size,bytes,length,result;
+  int size,bytes,result;
   socket_t server,client;
   struct sockaddr_in sin;
-  
+
   /* Listen for connections on user supplied port or port 8080 */
   if(argc>2)
   {
@@ -81,7 +85,7 @@ int main(int argc,char **argv)
 
   if(listen(server,5)==SOCKET_ERROR)
   {
-    printf("Unable to listen for incoming connections.\n",port);
+    printf("Unable to listen for incoming connections.\n");
     return 0;
   }
 
@@ -143,7 +147,7 @@ int main(int argc,char **argv)
       goto readerror;
     }
     printf("--> %s",line);
-    
+
     p=strchr(line,'<');
     if((e=strrchr(line,'\r'))==NULL) e=strrchr(line,'\n');
     *e='\0';
@@ -166,7 +170,7 @@ int main(int argc,char **argv)
       goto readerror;
     }
     printf("--> %s",line);
-    
+
     p=strchr(line,'<');
     if((e=strrchr(line,'\r'))==NULL) e=strrchr(line,'\n');
     *e='\0';
@@ -189,7 +193,7 @@ int main(int argc,char **argv)
       goto readerror;
     }
     printf("--> %s",line);
- 
+
     strncpy(line,"354 Enter mail, end with \".\" on a line by itself\r\n",BUFSIZ);
     printf("<-- %s",line);
     if(send(client,line,strlen(line),0)==SOCKET_ERROR)
