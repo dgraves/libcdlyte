@@ -22,8 +22,6 @@ Boston, MA  02111-1307, USA.
 #ifndef _CDLYTE_H
 #define _CDLYTE_H
 
-#include "cdver.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

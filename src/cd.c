@@ -37,6 +37,7 @@ Boston, MA  02111-1307, USA.
 #include <netinet/in.h>
 #endif
 
+#include "cdver.h"
 #include "cdlyte.h"
 
 #ifndef WIN32
