@@ -96,7 +96,8 @@ noinst_PROGRAMS = \
         cddb_cddbp_read \
         cddb_cddbp_sites \
 	cddb_http_read \
-        cddb_http_sites
+        cddb_http_sites \
+        cddb_file_write
 
 
 cddb_id_SOURCES = cddb_id.c
@@ -104,12 +105,13 @@ cddb_cddbp_read_SOURCES = cddb_cddbp_read.c
 cddb_cddbp_sites_SOURCES = cddb_cddbp_sites.c
 cddb_http_read_SOURCES = cddb_http_read.c
 cddb_http_sites_SOURCES = cddb_http_sites.c
+cddb_file_write_SOURCES = cddb_file_write.c
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES = 
 noinst_PROGRAMS =  cddb_id$(EXEEXT) cddb_cddbp_read$(EXEEXT) \
 cddb_cddbp_sites$(EXEEXT) cddb_http_read$(EXEEXT) \
-cddb_http_sites$(EXEEXT)
+cddb_http_sites$(EXEEXT) cddb_file_write$(EXEEXT)
 PROGRAMS =  $(noinst_PROGRAMS)
 
 
@@ -136,6 +138,10 @@ cddb_http_sites_OBJECTS =  cddb_http_sites.$(OBJEXT)
 cddb_http_sites_LDADD = $(LDADD)
 cddb_http_sites_DEPENDENCIES =  $(top_builddir)/src/libcdlyte.la
 cddb_http_sites_LDFLAGS = 
+cddb_file_write_OBJECTS =  cddb_file_write.$(OBJEXT)
+cddb_file_write_LDADD = $(LDADD)
+cddb_file_write_DEPENDENCIES =  $(top_builddir)/src/libcdlyte.la
+cddb_file_write_LDFLAGS = 
 CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -148,8 +154,8 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = gtar
 GZIP_ENV = --best
-SOURCES = $(cddb_id_SOURCES) $(cddb_cddbp_read_SOURCES) $(cddb_cddbp_sites_SOURCES) $(cddb_http_read_SOURCES) $(cddb_http_sites_SOURCES)
-OBJECTS = $(cddb_id_OBJECTS) $(cddb_cddbp_read_OBJECTS) $(cddb_cddbp_sites_OBJECTS) $(cddb_http_read_OBJECTS) $(cddb_http_sites_OBJECTS)
+SOURCES = $(cddb_id_SOURCES) $(cddb_cddbp_read_SOURCES) $(cddb_cddbp_sites_SOURCES) $(cddb_http_read_SOURCES) $(cddb_http_sites_SOURCES) $(cddb_file_write_SOURCES)
+OBJECTS = $(cddb_id_OBJECTS) $(cddb_cddbp_read_OBJECTS) $(cddb_cddbp_sites_OBJECTS) $(cddb_http_read_OBJECTS) $(cddb_http_sites_OBJECTS) $(cddb_file_write_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
@@ -234,6 +240,10 @@ cddb_http_read$(EXEEXT): $(cddb_http_read_OBJECTS) $(cddb_http_read_DEPENDENCIES
 cddb_http_sites$(EXEEXT): $(cddb_http_sites_OBJECTS) $(cddb_http_sites_DEPENDENCIES)
 	@rm -f cddb_http_sites$(EXEEXT)
 	$(LINK) $(cddb_http_sites_LDFLAGS) $(cddb_http_sites_OBJECTS) $(cddb_http_sites_LDADD) $(LIBS)
+
+cddb_file_write$(EXEEXT): $(cddb_file_write_OBJECTS) $(cddb_file_write_DEPENDENCIES)
+	@rm -f cddb_file_write$(EXEEXT)
+	$(LINK) $(cddb_file_write_LDFLAGS) $(cddb_file_write_OBJECTS) $(cddb_file_write_LDADD) $(LIBS)
 
 tags: TAGS
 
