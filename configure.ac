@@ -40,6 +40,8 @@ AC_CHECK_HEADERS(fcntl.h sys/ioctl.h unistd.h linux/cdrom.h linux/ucdrom.h sys/c
 dnl Checks for libraries
 AC_CHECK_LIB(m,main)
 
+CFLAGS=""
+
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_C_BIGENDIAN
@@ -61,11 +63,6 @@ case "$host_os" in
     ;;
 esac
 
-dnl Add copious amounts of debugging with gcc, egcs, etc
-if test "${GCC}" = "yes" ; then
-  CXXFLAGS="${CFLAGS} -Wall -W -Wmissing-prototypes -Woverloaded-virtual -Wformat"
-fi
-
 dnl Debugging turned on
 dnl If using gcc, turn on special debugging mode suitable for gdb
 AC_MSG_CHECKING(for debugging)
@@ -73,9 +70,9 @@ AC_ARG_ENABLE(debug,[  --enable-debug          compile for debugging])
 if test "x$enable_debug" = "xyes" ; then
   AC_MSG_RESULT(yes)
   if test "$GCC" != "" ; then
-    CFLAGS="${CFLAGS} -ggdb3 -DDEBUG"
+    CFLAGS="-ggdb3 -DDEBUG"
   else
-    CFLAGS="${CFLAGS} -g -DDEBUG"
+    CFLAGS="-g -DDEBUG"
   fi
 else
   AC_MSG_RESULT(no)
@@ -86,12 +83,17 @@ AC_MSG_CHECKING(for release build)
 AC_ARG_ENABLE(release,[  --enable-release        compile for release])
 if test "x$enable_release" = "xyes" ; then
   AC_MSG_RESULT(yes)
-  CXXFLAGS="${CFLAGS} -O2 -DNDEBUG"
+  CFLAGS="-O2 -DNDEBUG"
   if test "${GCC}" = "yes" ; then
-    CXXFLAGS="${CFLAGS} -Wuninitialized -ffast-math -finline-functions -fomit-frame-pointer -fexpensive-optimizations"
+    CFLAGS="${CFLAGS} -Wuninitialized -ffast-math -finline-functions -fomit-frame-pointer -fexpensive-optimizations"
   fi
 else
   AC_MSG_RESULT(no)
+fi
+
+dnl Add copious amounts of debugging with gcc, egcs, etc
+if test "${GCC}" = "yes" ; then
+  CFLAGS="${CFLAGS} -Wall -W -Wmissing-prototypes -Wformat"
 fi
 
 dnl Check for threading support
