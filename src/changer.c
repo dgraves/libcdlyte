@@ -101,7 +101,6 @@ int cd_changer_stat(int cd_desc, struct disc_changer *changer)
     changer->changer_disc[discindex].disc_length.frames=disc.disc_length.frames;
     changer->changer_disc[discindex].disc_total_tracks=disc.disc_total_tracks;
     changer->changer_disc[discindex].disc_id=data.data_id;
-    strncpy(changer->changer_disc[discindex].data_cdindex_id,data.data_cdindex_id,CDINDEX_ID_SIZE);
 
     if(strlen(data.data_artist)>0)
     {

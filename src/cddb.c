@@ -1,7 +1,7 @@
 /*
 This is part of the audio CD player library
 Copyright (C)1998-99 Tony Arcieri <bascule@inferno.tusculum.edu>
-Copyright (C)2001 Dustin Graves <dgraves@computer.org>
+Copyright (C)2001,2002 Dustin Graves <dgraves@computer.org>
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Library General Public
@@ -36,7 +36,6 @@ Boston, MA  02111-1307, USA.
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <pwd.h>
 #else
 #include <winsock2.h>
 #include <windows.h>
@@ -50,16 +49,26 @@ Boston, MA  02111-1307, USA.
 #define INADDR_NONE 0xFFFFFFFF
 #endif
 
+#ifndef PATH_MAX
+#if defined(_MAX_PATH)
+#define PATH_MAX  _MAX_PATH
+#elif defined(MAX_PATH)
+#define PATH_MAX  MAX_PATH
+#else
+#define PATH_MAX  1024
+#endif
+#endif
+
 #include "cdlyte.h"
 
 /* Some procedures differ on Windows.  */
 #ifndef WIN32
+#define PATHSEP '/'
 #define cddb_close close
 #else
+#define PATHSEP '\\'
 #define cddb_close closesocket
 #endif
-
-#undef strncpy
 
 /* Global cddb_message definition */
 char cddb_message[256];
@@ -628,9 +637,9 @@ cdsock_t cddb_connect(const struct cddb_host *host,const struct cddb_server *pro
     http_string_len=va_arg(arglist,int);
 
     if(proxy!=NULL)
-      snprintf(http_string,http_string_len,"GET http://%s:%d/%s?hello=%s+%s+%s+%s&proto=%d HTTP/1.0\n\n",host->host_server.server_name,host->host_server.server_port,host->host_addressing,hello->hello_user,hello->hello_hostname,hello->hello_program,hello->hello_version,CDDB_PROTOCOL_LEVEL);
+      snprintf(http_string,http_string_len,"GET http://%s:%d%s?hello=%s+%s+%s+%s&proto=%d HTTP/1.0\n\n",host->host_server.server_name,host->host_server.server_port,host->host_addressing,hello->hello_user,hello->hello_hostname,hello->hello_program,hello->hello_version,CDDB_PROTOCOL_LEVEL);
     else
-      snprintf(http_string,http_string_len,"GET /%s?hello=%s+%s+%s+%s&proto=%d HTTP/1.0\n\n",host->host_addressing,hello->hello_user,hello->hello_hostname,hello->hello_program,hello->hello_version,CDDB_PROTOCOL_LEVEL);
+      snprintf(http_string,http_string_len,"GET %s?hello=%s+%s+%s+%s&proto=%d HTTP/1.0\n\n",host->host_addressing,hello->hello_user,hello->hello_hostname,hello->hello_program,hello->hello_version,CDDB_PROTOCOL_LEVEL);
 
     va_end(arglist);
   }
@@ -648,9 +657,9 @@ cdsock_t cddb_connect(const struct cddb_host *host,const struct cddb_server *pro
       cddb_close(sock);
       return INVALID_CDSOCKET;
     }
-
-    return sock;
   }
+
+  return sock;
 }
 
 /**
@@ -1055,6 +1064,49 @@ static int cddb_proc_read_string(char *line,struct disc_data *data,struct __disc
   return 0;
 }
 
+/* Process parse artist names and song titles.  */
+static void cddb_proc_read_data(struct disc_data *data,struct __disc_data *__data)
+{
+  int index;
+  char *artist,*title;
+
+  /* Get album artist name and title.  */
+  artist=__data->dtitle;
+  title=strstr(artist," / ");
+  if(title==NULL)
+  {
+    /* Minus one to ensure that if the entire buffer is filled, the last item is '\0'.  */
+    strncpy(data->data_artist,artist,sizeof(data->data_artist)-1);
+    strncpy(data->data_title,artist,sizeof(data->data_title)-1);
+  }
+  else
+  {
+    *title='\0';
+    strncpy(data->data_artist,artist,sizeof(data->data_artist)-1);
+    strncpy(data->data_title,title+3,sizeof(data->data_title)-1);
+  }
+  
+  for(index=0;index<=__data->track_total;index++)
+  {
+    artist=__data->track[index].ttitle;
+    title=strstr(artist," / ");
+    if(title==NULL)
+    {
+      strncpy(data->data_track[index].track_title,artist,sizeof(data->data_track[index].track_title)-1);
+      data->data_track[index].track_artist[0]='\0';
+    }
+    else
+    {
+      *title='\0';
+      strncpy(data->data_track[index].track_artist,artist,sizeof(data->data_track[index].track_artist)-1);
+      strncpy(data->data_track[index].track_title,title+3,sizeof(data->data_track[index].track_title)-1);
+    }
+  }
+
+  /* Set the total number of track entries in list.  */
+  data->data_total_tracks=__data->track_total+1;
+}
+
 /**
  * Read CDDB data for a specified CDDB entry.  
  * @param category an integer specifying the category for the disc whose 
@@ -1063,7 +1115,7 @@ static int cddb_proc_read_string(char *line,struct disc_data *data,struct __disc
  *        is to be retrieved.  
  * @param sock handle to the socket connected to the CDDB server.  
  * @param mode an integer indicating CDDB server mode, either CDDBP or HTTP.  
- * @param data a disc_data structure to be filled with retrieved CDDB data.  
+ * @param data a disc_data structure to be filled with the retrieved CDDB data.  
  * @param http_string a variable argument only required when using HTTP.  
  *        This is a character array filled with the CDDB handshake string
  *        obtained from 'cddb_connect'.  
@@ -1072,8 +1124,7 @@ static int cddb_proc_read_string(char *line,struct disc_data *data,struct __disc
  */
 int cddb_read(int category,unsigned long discid,cdsock_t sock,int mode,struct disc_data *data,...)
 {
-  int index;
-  char outbuffer[1024],outtemp[1024],inbuffer[256],*http_string,*artist,*title;
+  char outbuffer[1024],outtemp[1024],inbuffer[256],*http_string;
   struct __disc_data __data;
 
   memset(&__data,0,sizeof(__data));
@@ -1137,46 +1188,12 @@ int cddb_read(int category,unsigned long discid,cdsock_t sock,int mode,struct di
     }
   }
 
-  /* Get album artist name and title.  */
-  artist=__data.dtitle;
-  title=strstr(artist," / ");
-  if(title==NULL)
-  {
-    /* Minus one to ensure that if the entire buffer is filled, the last item is '\0'.  */
-    strncpy(data->data_artist,artist,sizeof(data->data_artist)-1);
-    strncpy(data->data_title,artist,sizeof(data->data_title)-1);
-  }
-  else
-  {
-    *title='\0';
-    strncpy(data->data_artist,artist,sizeof(data->data_artist)-1);
-    strncpy(data->data_title,title+3,sizeof(data->data_title)-1);
-  }
-  
-  for(index=0;index<=__data.track_total;index++)
-  {
-    artist=__data.track[index].ttitle;
-    title=strstr(artist," / ");
-    if(title==NULL)
-    {
-      strncpy(data->data_track[index].track_title,artist,sizeof(data->data_track[index].track_title)-1);
-      data->data_track[index].track_artist[0]='\0';
-    }
-    else
-    {
-      *title='\0';
-      strncpy(data->data_track[index].track_artist,artist,sizeof(data->data_track[index].track_artist)-1);
-      strncpy(data->data_track[index].track_title,title+3,sizeof(data->data_track[index].track_title)-1);
-    }
-  }
-
-  /* Set the total number of track entries in list.  */
-  data->data_total_tracks=__data.track_total+1;
+  cddb_proc_read_data(data,&__data);
 
   return 1;
 }
 
-/* Process a single line in the sites list */
+/* Process a single line in the sites list.  */
 static int cddb_proc_sites_line(char *line,struct cddb_host *host)
 {
   int index=0;
@@ -1250,7 +1267,17 @@ static int cddb_proc_sites_line(char *line,struct cddb_host *host)
   return 0;
 }
 
-/* Read the CDDB sites list */
+/** 
+ * Read the list of CDDB server sites.   
+ * @param sock handle to the socket connected to the CDDB server.  
+ * @param mode an integer indicating CDDB server mode, either CDDBP or HTTP.  
+ * @param list a cddb_serverlist structure to be filled with the retrieved server data.  
+ * @param http_string a variable argument only required when using HTTP.  
+ *        This is a character array filled with the CDDB handshake string
+ *        obtained from 'cddb_connect'.  
+ * @return 1 on read success, 0 on read failure, and CDSOCKET_ERROR 
+ *         on socket failure.  
+ */
 int cddb_sites(cdsock_t sock,int mode,struct cddb_serverlist *list,...)
 {
   char outbuffer[1024],inbuffer[256],*http_string;
@@ -1312,7 +1339,15 @@ int cddb_sites(cdsock_t sock,int mode,struct cddb_serverlist *list,...)
   return 1;
 }
 
-/* Terminate the connection */
+/**
+ * Terminate the connection to the CDDB server.  If the server mode
+ * is CDDBP, the quit command will be issued and the socket will be closed.  
+ * If hte server mode is HTTP the socket will simply be closed.  
+ * @param sock handle to the socket connected to the CDDB server.  
+ * @param mode an integer indicating CDDB server mode, either CDDBP or HTTP.  
+ * @return 1 on read success, 0 on read failure, and CDSOCKET_ERROR 
+ *         on socket failure.  
+ */
 int cddb_quit(cdsock_t sock,int mode)
 {
   char outbuffer[]="quit\n";
@@ -1338,174 +1373,900 @@ int cddb_quit(cdsock_t sock,int mode)
   return 0;
 }
 
-
-
-
-
-
-
-
-
-/*
-
-int cddb_http_submit(int cd_desc,const struct cddb_host *host,struct cddb_server *proxy,char *email_address)
+/* Read a single line from a file.  */
+static int cddb_read_file_line(FILE* fd,char *inbuffer,int len)
 {
-  FILE *cddb_entry;
-  int sock,index,changed_artist=0,changed_track[MAX_TRACKS],token[3],error=0;
-  char inbuffer[512],outbuffer[512],cddb_file[PATH_MAX],*home;
-  struct stat st;
-  struct cddb_entry entry;
-  struct disc_info disc;
-  struct disc_data data;
-   
-  if((home=getenv("HOME"))==NULL)
+  int index;
+  char inchar;
+
+  len--;  /* Make sure their is always a null terminator.  */
+  index=0;
+
+  inchar=fgetc(fd);
+  while(inchar!=EOF&&inchar!='\n'&&index<len)
   {
-    if(use_cddb_message)
-      strncpy(cddb_message,"$HOME is not set!",256);
+    if(inchar!='\r')
+      inbuffer[index++]=inchar;
+    inchar=fgetc(fd);
+  }
+
+  inbuffer[index]='\0';
+  return index;
+}
+
+/**
+ * Read CDDB data from a local directory.  
+ * @param path a string containing the path to the directory containig
+ *        the local CDDB data files.  
+ * @param discid an unsigned long specifying the id of the CD whose CDDB
+ *        data is to be read.  
+ * @param data a disc_data structure to be filled with the read CDDB data.  
+ * @return 0 on success, -1 on failure.  
+ */
+int cddb_read_local(const char *path,unsigned long discid,struct disc_data *data)
+{
+  int len;
+  char file[PATH_MAX],inbuffer[256];
+  struct __disc_data __data;
+  FILE* fd;
+
+  memset(&__data,0,sizeof(__data));
+  memset(data,0,sizeof(*data));
+
+  len=strlen(path);
+  if(path[len-1]==PATHSEP)
+    snprintf(file,sizeof(file),"%s%08lx",path,discid);
+  else
+    snprintf(file,sizeof(file),"%s%c%08lx",path,PATHSEP,discid);
+
+  if((fd=fopen(file,"r"))==NULL)
+  {
+    snprintf(cddb_message,sizeof(cddb_message),"Could not open file %s",file);
     return -1;
   }
 
-  if(cd_stat(cd_desc,&disc)<0)
-    return -1;
+  /* Read lines and process.  */
+  data->data_id=discid;
+  data->data_category=CDDB_UNKNOWN;
 
-  if(!disc.disc_present)
-    return -1;
-
-  if(cddb_stat_disc_data(cd_desc,&entry)<0)
-    return -1;
-
-  if(entry.entry_present)
+  cddb_read_file_line(fd,inbuffer,sizeof(inbuffer));
+  while(!feof(fd)&&!ferror(fd)&&inbuffer[0]!='.')
   {
-    if(cddb_read_disc_data(cd_desc,&data)<0)
-      return -1;
+    cddb_proc_read_string(inbuffer,data,&__data);
+    cddb_read_file_line(fd,inbuffer,sizeof(inbuffer));
   }
+
+  cddb_proc_read_data(data,&__data);
+
+  /* Return -1 if error was encountered.  */
+  if(ferror(fd))
+  {
+    snprintf(cddb_message,sizeof(cddb_message),"Error reading file %s",file);
+    fclose(fd);
+    return -1;
+  }
+
+  fclose(fd);
+
+  /* Return 0 if EOF or '.' was found.  */
+  return 0;
+}
+
+/* Write a line to file.  */
+static int cddb_write_file_line(FILE* fd,const char *key,const char* value)
+{
+  int count=0,total=0;
+  char outchar,special='\0';
+
+  fprintf(fd,"%s",key);
+  count=strlen(key);
+
+  outchar='=';
+  while(outchar!='\0')
+  {
+    /* Character 256 should be the new line.  */
+    if(count>=255)
+    {
+      fputc('\n',fd);
+      total+=count+1;
+      fprintf(fd,"%s=",key);
+      count=strlen(key)+1;
+    }
+
+    switch(outchar)
+    {
+    case '\n':
+      outchar='\\';
+      special='n';
+      break;
+    case '\t':
+      outchar='\\';
+      special='t';
+      break;
+    case '\\':
+      /* If special is already '\\', we are midway through '\\' write.  */
+      if(special!='\\')
+      {
+        outchar='\\';
+        special='\\';
+      }
+      break;
+    }
+
+    fputc(outchar,fd);
+    count++;
+
+    if(special!='\0')
+    {
+      outchar=special;
+      special='\0';
+    }
+    else
+      outchar=*value++;
+  }
+
+  /* Replace '\0' with '\n'.  'count' is <= 255,  */
+  fputc('\n',fd);
+  count++;
+
+  return total+count;
+}
+
+/*  Write data to file.  */
+static int cddb_write_local_file(FILE* fd,const struct cddb_hello *hello,const struct disc_info *info,const struct disc_data *data,const char *comment)
+{
+  int len,index;
+  char key[256],outbuffer[EXTENDED_DATA_SIZE];
+
+  fprintf(fd,"# xmcd\n#\n# Track frame offset:\n");
+  for(index=0;index<info->disc_total_tracks;index++)
+    fprintf(fd,"#        %d\n",info->disc_track[index].track_pos.frames);
+  fprintf(fd,"#\n# Disc length: %d seconds\n",(info->disc_length.minutes*60)+info->disc_length.seconds);
+
+  if(comment!=NULL)
+    fprintf(fd,"#\n# Revision: %d\nSubmitted via: %s %s %s\n#\n",data->data_revision,hello->hello_program,hello->hello_version,comment);
+  else
+    fprintf(fd,"#\n# Revision: %d\nSubmitted via: %s %s\n#\n",data->data_revision,hello->hello_program,hello->hello_version);
+
+  fprintf(fd,"DISCID=%08lx\n",data->data_id);
+  if(data->data_title[0]=='\0')
+    cddb_write_file_line(fd,"DTITLE",data->data_artist);
   else
   {
-    if(use_cddb_message)
-      strncpy(cddb_message,"No CDDB entry present in cache",256);
-    return -1;
+    snprintf(outbuffer,sizeof(outbuffer),"%s / %s",data->data_artist,data->data_title);
+    cddb_write_file_line(fd,"DTITLE",outbuffer);
   }
 
-  if(proxy!=NULL)
+  cddb_write_file_line(fd,"DYEAR",data->data_year);
+  cddb_write_file_line(fd,"DGENRE",data->data_genre);
+
+  for(index=0;index<data->data_total_tracks;index++)
   {
-    if((sock=cddb_connect(proxy))<0)
+    snprintf(key,sizeof(key),"TTITLE%d",index);
+    if(data->data_track[index].track_artist=='\0')
+      cddb_write_file_line(fd,key,data->data_track[index].track_title);
+    else
     {
-      if(use_cddb_message)
-	strncpy(cddb_message,strerror(errno),256);
-      return -1;
+      snprintf(outbuffer,sizeof(outbuffer),"%s / %s",data->data_track[index].track_artist,data->data_track[index].track_title);
+      cddb_write_file_line(fd,key,outbuffer);
     }
   }
+
+  cddb_write_file_line(fd,"EXTD",data->data_extended);
+
+  for(index=0;index<data->data_total_tracks;index++)
+  {
+    snprintf(key,sizeof(key),"EXTT%d",index);
+    cddb_write_file_line(fd,key,data->data_track[index].track_extended);
+  }
+
+  fprintf(fd,"PLAYORDER=\n.\n");
+
+  return (ferror(fd))?-1:0;
+}
+
+/**
+ * Write CDDB data to a local directory.  
+ * @param path a string containing the path to the directory containig
+ *        the local CDDB data files.  
+ * @param hello a cddb_hello structure containing the name and version 
+ *        numberof the program that is writing the CDDB data.  Only the
+ *        'hello_program' and 'hello_version' fields need to be filled.  
+ *        The 'hello_user' and 'hello_hostname' fields will be ignored.  
+ * @param info a disc_info structure containing the frame offsets and total 
+ *        length for the CD whose CDDB data is to be written.  Obtained from
+ *        the 'cd_stat' function.  
+ * @param data a disc_data structure containing the CDDB data to be written.  
+ * @param comment a character string specifying a comment to be added to the 
+ *        CDDB data file.  This parameter is optional, and may be NULL.  
+ * @return 0 on success, -1 on failure.  
+ */
+int cddb_write_local(const char *path,const struct cddb_hello *hello,const struct disc_info *info,const struct disc_data *data,const char *comment)
+{
+  int len,index;
+  char file[PATH_MAX],key[256],outbuffer[EXTENDED_DATA_SIZE];
+  FILE* fd;
+
+  len=strlen(path);
+  if(path[len-1]==PATHSEP)
+    snprintf(file,sizeof(file),"%s%08lx",path,data->data_id);
   else
-  {
-    if((sock=cddb_connect(&host->host_server))<0)
-    {
-      if(use_cddb_message)
-	strncpy(cddb_message,strerror(errno),256);
-      return -1;
-    }
-  }
+    snprintf(file,sizeof(file),"%s%c%08lx",path,PATHSEP,data->data_id);
 
-  if(strlen(data.data_title)<1||strcmp(data.data_title,"Unknown")==0)
+  /* Binary to prevent inclusion of carriage return with WIN32.  */
+  if((fd=fopen(file,"wb"))==NULL)
   {
-    if(use_cddb_message)
-      strncpy(cddb_message,"Edit the disc title before submission.",256);
+    snprintf(cddb_message,sizeof(cddb_message),"Could not open file %s for writing",file);
     return -1;
   }
 
-  if(strcmp(data.data_artist,"Unknown")==0)
+  if(cddb_write_local_file(fd,hello,info,data,comment)<0)
   {
-    strncpy(data.data_artist,"",256);
-    changed_artist = 1;
-  }
-
-  for(index=0;index<disc.disc_total_tracks;index++)
-  {
-    changed_track[index]=0;
-    if(strcmp(data.data_track[index].track_name,"Unknown")==0)
-    {
-      snprintf(data.data_track[index].track_name,256,"Track %d",index);
-      changed_track[index]=1;
-    }
-  }
-
-  cddb_write_data(cd_desc,&data);
-
-  if(cddb_submit_method==CDDB_SUBMIT_EMAIL)
-  {
-    snprintf(outbuffer,512,"cat %s/.cddb/%s/%08lx | mail -s \"cddb %s %08lx\" %s",home,cddb_genre(data.data_genre),data.data_id,cddb_genre(data.data_genre),data.data_id,cddb_submit_email_address);
-    if(system(outbuffer) != 0)
-      return -1;
-    return 0;
-  }
-
-  if(proxy!=NULL)
-    snprintf(outbuffer,512,"POST http://%s:%d%s HTTP/1.0\n",host->host_server.server_name,host->host_server.server_port,CDDB_HTTP_SUBMIT_CGI);
-  else
-    snprintf(outbuffer,512,"POST %s HTTP/1.0\n",CDDB_HTTP_SUBMIT_CGI);
-  write(sock,outbuffer,strlen(outbuffer));
-
-  snprintf(outbuffer,512,"Category: %s\n",cddb_genre(data.data_genre));
-  write(sock,outbuffer,strlen(outbuffer));
-
-  snprintf(outbuffer,512,"Discid: %08lx\n",data.data_id);
-  write(sock,outbuffer,strlen(outbuffer));
-
-  snprintf(outbuffer,512,"User-Email: %s\n",email_address);
-  write(sock,outbuffer,strlen(outbuffer));
-
-  snprintf(outbuffer,512,"Submit-Mode: %s\n",CDDB_SUBMIT_MODE?"submit":"test");
-  write(sock,outbuffer,strlen(outbuffer));
-
-  strncpy(outbuffer,"X-Cddbd-Note: Submission problems?  E-mail libcdaudio@gjhsnews.mesa.k12.co.us\n",512);
-  write(sock, outbuffer, strlen(outbuffer));
-
-  snprintf(cddb_file,PATH_MAX,"%s/.cddb/%s/%08lx",home,cddb_genre(data.data_genre),data.data_id);
-  stat(cddb_file,&st);
-
-  snprintf(outbuffer,512,"Content-Length: %d\n\n",(int)st.st_size);
-  write(sock,outbuffer,strlen(outbuffer));
-
-  cddb_entry=fopen(cddb_file,"r");
-  while(!feof(cddb_entry))
-  {
-    fgets(outbuffer,512,cddb_entry);
-    write(sock,outbuffer,strlen(outbuffer));
-  }
-
-  cddb_read_line(sock,inbuffer,512);
-  if(strncmp(inbuffer+9,"200",3)!=0)
-  {
-    if(use_cddb_message)
-      strncpy(cddb_message,inbuffer,256);
+    snprintf(cddb_message,sizeof(cddb_message),"Error writing file %s",file);
+    fclose(fd);
     return -1;
   }
 
-  cddb_skip_http_header(sock);
-
-  if(cddb_read_token(sock,token)<0)
-    error = 1;
-
-  if(token[0]!=2)
-    error = 1;
-
-  close(sock);
-
-  if(changed_artist)
-    strncpy(data.data_artist,"Unknown",256);
-
-  for(index=0;index<disc.disc_total_tracks;index++)
-  {
-    if(changed_track[index])
-      strncpy(data.data_track[index].track_name,"Unknown",256);
-  }
-
-  data.data_revision++;
-  cddb_write_data(cd_desc, &data);
-
-  if(error)
-    return -1;
+  fclose(fd);
 
   return 0;
 }
 
-*/
+/**
+ * Erase CDDB data from local directory.  
+ * @param path a string containing the path to the directory containig
+ *        the local CDDB data files.  
+ * @param discid an unsigned long specifying the id of the CD whose CDDB
+ *        data is to be erased.  
+ * @return 0 on success, -1 on failure.  
+ */
+int cddb_erase_local(const char *path,unsigned long discid)
+{
+  int len;
+  char file[PATH_MAX];
+
+  len=strlen(path);
+  if(path[len-1]==PATHSEP)
+    snprintf(file,sizeof(file),"%s%08lx",path,discid);
+  else
+    snprintf(file,sizeof(file),"%s%c%08lx",path,PATHSEP,discid);
+
+  if(unlink(file)<0)
+  {
+    snprintf(cddb_message,sizeof(cddb_message),"Could not remove file %s",file);
+    return -1;
+  }
+
+  return 0;
+}
+
+/**
+ * Submit CDDB data to a CDDB server.  Data can be submitted via HTTP or
+ * SMTP.  Submissions can only be made with the US_ASCII and
+ * ISO-8859-1 characeter sets.  If 'CDDBTESTSUBMIT' is defined, the 
+ * data will be sent to the specified CDDB server in test mode when doing 
+ * an HTTP submit.  
+ * @param host a cddb_host structure specifying the CDDB 
+ *        server with which to connect.  
+ * @param proxy a cddb_server structure specifying the proxy server
+ *        to connect through.  If there is no proxy server this value 
+ *        should be NULL.  
+ * @param hello a cddb_hello structure containing the name and version 
+ *        numberof the program that is writing the CDDB data.  For HTTP
+ *        submissions only the 'hello_program' and 'hello_version' fields 
+ *        need to be filled.  The 'hello_user' and 'hello_hostname' fields will 
+ *        be ignored.  For SMTP submissions the 'hello_program', hello_version',
+ *        and 'hello_hostname' fields will have to be filled.  
+ * @param info a disc_info structure containing the frame offsets and total 
+ *        length for the CD whose CDDB data is to be written.  Obtained from
+ *        the 'cd_stat' function.  
+ * @param data a disc_data structure containing the CDDB data to be written.  
+ * @param comment a character string specifying a comment to be added to the 
+ * @param email_address a character string specifying the user's email address.  
+ * @param submit_address a character string specifying the submission email address.  
+ *        Typically 'freedb-submit@freedb.org' for actual submissions and 
+ *        'test-submit@freedb.org' for test submissions.  
+ * @param mime_type an integer specifying that the MIME "quoted-printable" scheme 
+ *        is to be used.  Use this scheme to submit entries containing 8-bit 
+ *        characters (for accents such as umlaut, or other extended characters).  
+ *        Set to 1 to enable, 0 to disable.  
+ * @return 0 on success, -1 on failure.  
+ */
+int cddb_submit(const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello *hello,const struct disc_info *info,const struct disc_data *data,const char *comment,const char *email_address,...)
+{
+  int index,mime_type;
+  long length;
+  char outbuffer[512],inbuffer[256],*submit_address;
+  cdsock_t sock;
+  FILE *fd;
+
+  /* Generate data in temp file.  */
+  if((fd=tmpfile())==NULL)
+  {
+    snprintf(cddb_message,sizeof(cddb_message),"Could not create temporary file");
+    return -1;
+  }
+
+  /* Write data.  */
+  if(cddb_write_local_file(fd,hello,info,data,comment)<0)
+  {
+    snprintf(cddb_message,sizeof(cddb_message),"Error generating temporary data file");
+    fclose(fd);
+    return -1;
+  }
+
+  /* Calculate length and reset file position.  */
+  length=ftell(fd);
+  fseek(fd,0,SEEK_SET);
+  length-=ftell(fd);
+  if(ferror(fd))
+  {
+    snprintf(cddb_message,sizeof(cddb_message),"Error calculating data legth");
+    fclose(fd);
+    return -1;
+  }
+
+  /* Connect to server.  */
+  if(proxy!=NULL)
+  {
+    if((sock=cddb_connect_server(proxy))==INVALID_CDSOCKET)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Failed to connect with proxy server");
+      fclose(fd);
+      return -1;
+    }
+  }
+  else
+  {
+    if((sock=cddb_connect_server(&host->host_server))==INVALID_CDSOCKET)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Failed to connect with %s",host->host_server.server_name);
+      fclose(fd);
+      return -1;
+    }
+  }
+
+  if(host->host_protocol==CDDB_SUBMIT_SMTP)
+  {
+    /* Send SMTP header.  */
+    va_list arglist;
+    va_start(arglist,email_address);
+    submit_address=va_arg(arglist,char *);
+    mime_type=va_arg(arglist,int);
+
+    /* Read the opening message.  */
+    if(cddb_read_line(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    if(strncmp(inbuffer,"220",3)!=0)
+    {
+      strncpy(cddb_message,inbuffer,sizeof(cddb_message));
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    /* Send HELO.  */
+    snprintf(outbuffer,sizeof(outbuffer),"HELO %s\r\n",hello->hello_hostname);
+    if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    if(cddb_read_response(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    if(strncmp(cddb_message,"250",3)!=0)
+    {
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    /* Send FROM.  */
+    snprintf(outbuffer,sizeof(outbuffer),"MAIL FROM: <%s>\r\n",email_address);
+    if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    if(cddb_read_response(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    if(strncmp(cddb_message,"250",3)!=0)
+    {
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    /* Send RCPT.  */
+    snprintf(outbuffer,sizeof(outbuffer),"RCPT TO: <%s>\r\n",submit_address);
+    if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    if(cddb_read_response(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    if(strncmp(cddb_message,"250",3)!=0)
+    {
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    /* Send DATA.  */
+    snprintf(outbuffer,sizeof(outbuffer),"DATA\r\n");
+    if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    if(cddb_read_response(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    if(strncmp(cddb_message,"354",3)!=0)
+    {
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    /* Send our info.  */
+    snprintf(outbuffer,sizeof(outbuffer),"From: %s\r\n",email_address);
+    if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    snprintf(outbuffer,sizeof(outbuffer),"To: %s\r\n",submit_address);
+    if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    snprintf(outbuffer,sizeof(outbuffer),"X-Cddbd-Note: Sent by %s - Questions: contact %s maintainer\n",hello->hello_program,hello->hello_program);
+    if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    snprintf(outbuffer,sizeof(outbuffer),"Subject: cddb %s %08lx\r\n",cddb_category(data->data_category,inbuffer,sizeof(inbuffer)),data->data_id);
+    if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+ 
+    if (mime_type)
+    {
+      snprintf(outbuffer,sizeof(outbuffer),"MIME-Version: 1.0\r\n"
+                                           "Content-Type: text/plain; charset=ISO-8859-1\r\n"
+                                           "Content-Transfer-Encoding: quoted-printable\r\n");
+      if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
+      {
+        snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+        cddb_close(sock);
+        fclose(fd);
+        return -1;
+      }
+    }
+
+    /* Start body.  */
+    if(send(sock,"\r\n",2,0)==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    va_end(arglist);
+  }
+  else
+  {
+    /* Send HTTP header.  */
+    if (proxy != NULL)
+      snprintf(outbuffer,sizeof(outbuffer),"POST http://%s:%d%s HTTP/1.0\n",host->host_server.server_name,host->host_server.server_port,host->host_addressing);
+    else
+      snprintf(outbuffer,sizeof(outbuffer),"POST %s HTTP/1.0\n",host->host_addressing);
+    if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    snprintf(outbuffer,sizeof(outbuffer),"Category: %s\n",cddb_category(data->data_category,inbuffer,sizeof(inbuffer)));
+    if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    snprintf(outbuffer,sizeof(outbuffer),"Discid: %08lx\n",data->data_id);
+    if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    snprintf(outbuffer,sizeof(outbuffer),"User-Email: %s\n",email_address);
+    if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+#ifdef CDDBTESTSUBMIT
+    snprintf(outbuffer,sizeof(outbuffer),"Submit-Mode: %s\n","test");
+#else
+    snprintf(outbuffer,sizeof(outbuffer),"Submit-Mode: %s\n","submit");
+#endif
+    if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    snprintf(outbuffer,sizeof(outbuffer),"X-Cddbd-Note: Sent by %s - Questions: contact %s maintainer\n",hello->hello_program,hello->hello_program);
+    if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    snprintf(outbuffer,sizeof(outbuffer),"Content-Length: %d\n\n",length);
+    if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+  }
+
+  /* Send cd data.  */
+  while(!feof(fd))
+  {
+    fgets(outbuffer,sizeof(outbuffer),fd);
+    if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+  }
+
+  if(host->host_protocol==CDDB_SUBMIT_SMTP)
+  {
+    if(cddb_read_response(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    if(strncmp(cddb_message,"250",3)!=0)
+    {
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    /* Send QUIT.  */
+    snprintf(outbuffer,sizeof(outbuffer),"QUIT\r\n");
+    if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    if(cddb_read_response(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    if(strncmp(cddb_message,"221",3)!=0)
+    {
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+
+    strncpy(cddb_message,"OK, submission has been sent",sizeof(cddb_message));
+  }
+  else
+  {
+    cddb_skip_http_header(sock);
+
+    if(cddb_read_reply(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      fclose(fd);
+      return -1;
+    }
+  }
+
+  cddb_close(sock);
+  fclose(fd);
+
+  return 0;
+}
+
+/**
+ * Query CDDB for an entry corresponding to a specified CDDB id 
+ * via HTTP.  Simply calls the 'cddb_connect', 'cddb_query', and 
+ * 'cddb_quit' functions, in that order.  Provided to simplify use 
+ * of HTTP with CDDB.  
+ * @param querystr a character string, specifying the CDDB id and disk 
+ *        track info required for a CDDB query, obtained from 'cddb_query_string'.  
+ * @param host a cddb_host structure specifying the CDDB 
+ *        server with which to connect.  
+ * @param proxy a cddb_server structure specifying the proxy server
+ *        to connect through.  If there is no proxy server this value 
+ *        should be NULL.  
+ * @param hello a cddb_hello structure specifying the name and version 
+ *        of the application connecting to the CDDB server.  
+ * @param query a cddb_query structure to be filled with CDDB query info.  
+ * @return 0 on success, -1 on failure.  
+ */
+int cddb_http_query(const char *querystr,const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello* hello,struct cddb_query *query)
+{
+  char http_string[1024];
+  cdsock_t sock;
+
+  /* Make sure mode is correct.  */
+  if(host->host_protocol!=CDDB_MODE_HTTP)
+    return -1;
+
+  /* Connect.  */
+  if((sock=cddb_connect(host,proxy,hello,http_string,sizeof(http_string)))==INVALID_CDSOCKET)
+    return -1;
+
+  /* Query.  */
+  if(cddb_query(querystr,sock,host->host_protocol,query,http_string)<1)
+  {
+    cddb_close(sock);
+    return -1;
+  }
+
+  cddb_quit(sock,host->host_protocol);
+
+  return 0;
+}
+
+/**
+ * Read CDDB data for a specified CDDB entry via HTTP.   Simply calls 
+ * the 'cddb_connect', 'cddb_read', and 'cddb_quit' functions, in that 
+ * order.  Provided to simplify use of HTTP with CDDB.  
+ * @param category an integer specifying the category for the disc whose 
+ *        data is to be retrieved.  
+ * @param discid an unsigned long specifying the id for the disc whose data
+ *        is to be retrieved.  
+ * @param host a cddb_host structure specifying the CDDB 
+ *        server with which to connect.  
+ * @param proxy a cddb_server structure specifying the proxy server
+ *        to connect through.  If there is no proxy server this value 
+ *        should be NULL.  
+ * @param hello a cddb_hello structure specifying the name and version 
+ *        of the application connecting to the CDDB server.  
+ * @param data a disc_data structure to be filled with the retrieved CDDB data.  
+ * @return 0 on success, -1 on failure.  
+ */
+int cddb_http_read(int category,unsigned long discid,const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello* hello,struct disc_data *data)
+{
+  char http_string[1024];
+  cdsock_t sock;
+
+  /* Make sure mode is correct.  */
+  if(host->host_protocol!=CDDB_MODE_HTTP)
+    return -1;
+
+  /* Connect.  */
+  if((sock=cddb_connect(host,proxy,hello,http_string,sizeof(http_string)))==INVALID_CDSOCKET)
+    return -1;
+
+  /* Read.  */
+  if(cddb_read(category,discid,sock,host->host_protocol,data,http_string)<1)
+  {
+    cddb_close(sock);
+    return -1;
+  }
+
+  cddb_quit(sock,host->host_protocol);
+
+  return 0;
+}
+
+/**
+ * Retrieve CDDB server list via http.  Simply calls
+ * the 'cddb_connect', 'cddb_sites', and 'cddb_quit' functions, in that 
+ * order.  Provided to simplify use of HTTP with CDDB.  
+ * @param host a cddb_host structure specifying the CDDB 
+ *        server with which to connect.  
+ * @param proxy a cddb_server structure specifying the proxy server
+ *        to connect through.  If there is no proxy server this value 
+ *        should be NULL.  
+ * @param hello a cddb_hello structure specifying the name and version 
+ *        of the application connecting to the CDDB server.  
+ * @param list a cddb_serverlist structure to be filled with the retrieved server data.  
+ * @return 0 on success, -1 on failure.  
+ */
+int cddb_http_sites(const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello* hello,struct cddb_serverlist *list)
+{
+  char http_string[1024];
+  cdsock_t sock;
+
+  /* Make sure mode is correct.  */
+  if(host->host_protocol!=CDDB_MODE_HTTP)
+    return -1;
+
+  /* Connect.  */
+  if((sock=cddb_connect(host,proxy,hello,http_string,sizeof(http_string)))==INVALID_CDSOCKET)
+    return -1;
+
+  /* Read.  */
+  if(cddb_sites(sock,host->host_protocol,list,http_string)<1)
+  {
+    cddb_close(sock);
+    return -1;
+  }
+
+  cddb_quit(sock,host->host_protocol);
+
+  return 0;
+}
+
+/**
+ * Fully initiate a connection with a CDDB server.  Simply calls 
+ * the 'cddb_connect', 'cddb_handshake', and 'cddb_proto' functions,
+ * in that order.  Provided to simplify use of CDDBP with CDDB (but
+ * can also be used with HTTP; equivalent to 'cddb_connect' when used
+ * with HTTP).  With CDDBP, calling the "cddb_connect', "cddb_handshake', 
+ * and 'cddb_proto' functions separately allows the calling program to 
+ * analyze the 'cddb_message' string containing the CDDB server response 
+ * for each function individually.  
+ * @param host a cddb_host structure specifying the CDDB 
+ *        server with which to connect.  
+ * @param proxy a cddb_server structure specifying the proxy server
+ *        to connect through.  If there is no proxy server this value 
+ *        should be NULL.  
+ * @param hello a cddb_hello structure specifying the name and version 
+ *        of the application connecting to the CDDB server.  
+ * @param http_string a variable argument only required when using HTTP.  
+ *        This is a character array to be filled by the function with a 
+ *        CDDB handshake string.  This string will be required for further
+ *        HTTP queries.  Note that the string for CDDB queries differs from
+ *        the string for CDDB submissions.  When using CDDB with HTTP, separate
+ *        connections for CDDB queries and submissions are required.  
+ * @param https_string_len a variable argument only required when using HTTP.  
+ *        This is an integer specifying the size of the http_string character array.  
+ * @return handle to a connected socket on success, 
+ *         INVALID_CDSOCKET on failure.  
+ */
+cdsock_t cddb_initiate(const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello *hello,...)
+{
+  cdsock_t sock;
+  int http_string_len;
+  char *http_string;
+
+  if(host->host_protocol==CDDB_MODE_HTTP)
+  {
+    va_list arglist;
+    va_start(arglist,hello);
+    http_string=va_arg(arglist,char *);
+    http_string_len=va_arg(arglist,int);
+
+    if((sock=cddb_connect(host,proxy,hello,http_string,http_string_len))==INVALID_CDSOCKET)
+      return INVALID_CDSOCKET;
+
+    va_end(arglist);
+  }
+  else
+  {
+    if((sock=cddb_connect(host,proxy))==INVALID_CDSOCKET)
+      return INVALID_CDSOCKET;
+
+    if(cddb_handshake(sock,hello)<1)
+    {
+      cddb_close(sock);
+      return INVALID_CDSOCKET;
+    }
+
+    if(cddb_proto(sock)<1)
+    {
+      cddb_close(sock);
+      return INVALID_CDSOCKET;
+    }
+  }
+
+  return sock;
+}
+
+/* Do full process to read entry.  */
+int cddb_read_data(cddesc_t cd_desc,const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello *hello,struct disc_data *data)
+{
+  return 0;
+}
+
+/* Do full sites read.  */
+int cddb_read_sites(cddesc_t cd_desc,const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello *hello,struct cddb_serverlist *list)
+{
+  return 0;
+}
+
+/* Do full submit.  */
+int cddb_http_submit(int cd_desc,const struct cddb_host *host, struct cddb_server *proxy, char *email_address,...)
+{
+  return 0;
+}

@@ -55,18 +55,15 @@ extern "C" {
 #define HTTP_DEFAULT_PORT			80
 #define CDDB_HTTP_QUERY_CGI			"/~cddb/cddb.cgi"
 #define CDDB_HTTP_SUBMIT_CGI 			"/~cddb/submit.cgi"
-#define CDINDEX_QUERY_CGI			"/cgi-bin/cdi/get.pl"
-#define CDINDEX_SUBMIT_CGI			"/cgi-bin/cdi/xsubmit.pl"
-#define CDDB_SUBMIT_HTTP			0
 #define CDDB_MAX_SERVERS			128
 #define MAX_INEXACT_MATCHES			32
 #define EXTENDED_DATA_SIZE 			4096
-#define CDINDEX_ID_SIZE				30
 
-/* Connection modes */
+/* Connection and submission modes */
 #define CDDB_MODE_CDDBP 			0
 #define CDDB_MODE_HTTP 				1
-#define CDINDEX_MODE_HTTP			2
+#define CDDB_SUBMIT_SMTP			0
+#define CDDB_SUBMIT_HTTP			1
 
 /* CDDB genres */
 #define CDDB_UNKNOWN				0
@@ -82,10 +79,6 @@ extern "C" {
 #define CDDB_ROCK				10
 #define CDDB_SOUNDTRACK				11
 
-/* CD Index artist types */
-#define CDINDEX_SINGLE_ARTIST			0
-#define CDINDEX_MULTIPLE_ARTIST			1
-
 /* Play function options */
 #define PLAY_START_TRACK			0
 #define PLAY_END_TRACK				1
@@ -93,12 +86,9 @@ extern "C" {
 #define PLAY_END_POSITION			4
 
 
-/*
-#define cdindex_write_disc_data(cd_desc, data)	cdindex_write_data(cd_desc, &data)
-*/
-
 /* External declarations */
 extern char cddb_message[256];
+
 
 /* Library typedefs */
 
@@ -152,6 +142,12 @@ struct cddb_host {
    char host_latitude[8];
    char host_longitude[8];
    char host_description[256];
+};
+
+/** CDDB server list structure */
+struct cddb_serverlist {
+   int list_len;
+   struct cddb_host list_host[CDDB_MAX_SERVERS];
 };
 
 /** CDDB hello structure */
@@ -240,7 +236,6 @@ struct track_data {
 struct disc_data {
    unsigned long data_id;			/* CDDB ID */
    int data_category;				/* Disc category */
-   char data_cdindex_id[CDINDEX_ID_SIZE];	/* CD Index ID */
    int data_revision; 				/* CDDB revision (incremented with each submit) */
    char data_artist[256];			/* Album artist */
    char data_title[256];			/* Disc title */
@@ -262,7 +257,6 @@ struct track_mc_data {
 struct disc_mc_data {
    unsigned long data_id;
    int data_category;
-   char data_cdindex_id[CDINDEX_ID_SIZE];
    int data_revision;
    char *data_artist;
    char *data_title;
@@ -279,7 +273,6 @@ struct disc_summary {
    struct disc_timeval disc_length;		/* Length of disc */
    int disc_total_tracks;			/* Total tracks */
    unsigned long disc_id;			/* CDDB ID */
-   char data_cdindex_id[CDINDEX_ID_SIZE];	/* CDI ID */
    char disc_info[516];				/* Artist name / Disc name */
 };
 
@@ -295,7 +288,6 @@ struct disc_mc_summary {
    struct disc_timeval disc_length;
    int disc_total_tracks;
    unsigned int disc_id;
-   char data_cdindex_id[CDINDEX_ID_SIZE];
    int disc_info_len;
    char *disc_info;
 };
@@ -304,12 +296,6 @@ struct disc_mc_summary {
 struct disc_mc_changer {
    int changer_slots;
    struct disc_mc_summary **changer_disc;
-};
-
-/** CDDB server list structure */
-struct cddb_serverlist {
-   int list_len;
-   struct cddb_host list_host[CDDB_MAX_SERVERS];
 };
 
 
@@ -454,29 +440,41 @@ int cddb_sites(cdsock_t sock,int mode,struct cddb_serverlist *list,...);
 /* Terminate CDDB connection.  */
 int cddb_quit(cdsock_t sock,int mode);
 
-int cddb_read_local(cddesc_t cd_desc,struct disc_data* data);
-int cddb_write_local(cddesc_t cd_desc,const struct disc_data* data);
-int cddb_erase_local(int category,unsigned long discid);
+/* Read CDDB data from a local directory.  */
+int cddb_read_local(const char *path,unsigned long discid,struct disc_data *data);
 
-/*** ideas for mega-functions ***/
+/* Write CDDB data to a local directory.  */
+int cddb_write_local(const char *path,const struct cddb_hello *hello,const struct disc_info *info,const struct disc_data *data,const char *comment);
+
+/* Erase CDDB data from local directory.  */
+int cddb_erase_local(const char* path,unsigned long discid);
+
+/* Submit CDDB data to a CDDB server.  */
+int cddb_submit(const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello *hello,const struct disc_info *info,const struct disc_data *data,const char *comment,const char *email_address,...);
+
+/* Query CDDB for an entry corresponding to a specified CDDB id via HTTP.  */
+int cddb_http_query(const char *querystr,const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello* hello,struct cddb_query *query);
+
+/* Read CDDB data for a specified CDDB entry via HTTP.  */
+int cddb_http_read(int category,unsigned long discid,const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello* hello,struct disc_data *data);
+
+/* Retrieve CDDB server list via http.  */
+int cddb_http_sites(const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello* hello,struct cddb_serverlist *list);
+
 /* Do connect, handshake, and proto.  */
 cdsock_t cddb_initiate(const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello *hello,...);
-/* Do full process to read entry via CDDBP.  */
+
+/* Do full process to read entry.  */
 int cddb_read_data(cddesc_t cd_desc,const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello *hello,struct disc_data *data);
+
+/* Do full sites read.  */
 int cddb_read_sites(cddesc_t cd_desc,const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello *hello,struct cddb_serverlist *list);
-/*** end ***/
+
+/* Do full submit.  */
+int cddb_http_submit(int cd_desc,const struct cddb_host *host, struct cddb_server *proxy, char *email_address,...);
 
 
-/*
-int cddb_http_submit(int cd_desc,const struct cddb_host *host, struct cddb_server *proxy, char *email_address);
-*/
-
-/*
-int cdindex_discid(int cd_desc, char *discid, int len);
-int cdindex_connect_server(const struct cddb_host *host, struct cddb_server *proxy, char *http_string, int len);
-int cdindex_read(int cd_desc, int sock, struct disc_data *data, char *http_string);
-int cdindex_write_data(int cd_desc, struct disc_data *data);
-*/
+/* CD Changer function declarations */
 
 int cd_changer_select_disc(int cd_desc,int disc);
 int cd_changer_slots(int cd_desc);
