@@ -20,7 +20,7 @@ int main(int argc,char **argv)
 
   /* Connect */
   cddb_init_cddb_host(&host);
-  host.host_server.server_name=strdup("freedb.freedb.org");
+  host.host_server.server_name=cddb_strdup("freedb.freedb.org");
   host.host_server.server_port=8880;
   host.host_protocol=CDDB_MODE_CDDBP;
 
@@ -43,10 +43,10 @@ int main(int argc,char **argv)
   cddb_init_cddb_hello(&hello);
   cddb_init_cddb_serverlist(&list);
 
-  hello.hello_user=strdup("anonymous");
-  hello.hello_hostname=strdup("localhost");
-  hello.hello_program=strdup(prog);
-  hello.hello_version=strdup(ver);
+  hello.hello_user=cddb_strdup("anonymous");
+  hello.hello_hostname=cddb_strdup("localhost");
+  hello.hello_program=cddb_strdup(prog);
+  hello.hello_version=cddb_strdup(ver);
 
   printf ("\nInitiating connection: %s %s %s %s\n",hello.hello_user,hello.hello_hostname,hello.hello_program,hello.hello_version);
   if(cddb_handshake(sock,&hello)!=1)

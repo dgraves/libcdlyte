@@ -366,6 +366,9 @@ unsigned long cddb_discid(cddesc_t cd_desc);
 /* Create a CDDB query string for the CD in device with handle cd_desc.  */
 char* cddb_query_string(cddesc_t cd_desc, char *query, int *len);
 
+/* Duplicate a string for a cddb strcuture, to be freed by one of the cddb_free functions.  */
+char* cddb_strdup(const char* str);
+
 /* Initialize disc_data structure.  */
 void cddb_init_disc_data(struct disc_data *data);
 

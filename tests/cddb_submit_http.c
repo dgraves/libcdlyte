@@ -154,10 +154,10 @@ int main(int argc,char **argv)
 
     /* Connect */
     cddb_init_cddb_host(&host);
-    host.host_server.server_name=strdup("freedb.freedb.org");
+    host.host_server.server_name=cddb_strdup("freedb.freedb.org");
     host.host_server.server_port=80;
     host.host_protocol=CDDB_MODE_HTTP;
-    host.host_addressing=strdup(CDDB_HTTP_QUERY_CGI);
+    host.host_addressing=cddb_strdup(CDDB_HTTP_QUERY_CGI);
 
     cd_version(version,BUFSIZ);
     prog=version;
@@ -165,10 +165,10 @@ int main(int argc,char **argv)
     *ver++='\0';
 
     cddb_init_cddb_hello(&hello);
-    hello.hello_user=strdup("anonymous");
-    hello.hello_hostname=strdup("localhost");
-    hello.hello_program=strdup(prog);
-    hello.hello_version=strdup(ver);
+    hello.hello_user=cddb_strdup("anonymous");
+    hello.hello_hostname=cddb_strdup("localhost");
+    hello.hello_program=cddb_strdup(prog);
+    hello.hello_version=cddb_strdup(ver);
 
     /* One transaction per socket.  Use cddb_http_query to avoid dealing with sockets */
     printf ("\nConnecting to server: %s %d\n",host.host_server.server_name,host.host_server.server_port);
@@ -253,10 +253,10 @@ int main(int argc,char **argv)
 
   cddb_free_cddb_host(&host);
   cddb_init_cddb_host(&host);
-  host.host_server.server_name=strdup(hostname);
+  host.host_server.server_name=cddb_strdup(hostname);
   host.host_server.server_port=port;
   host.host_protocol=CDDB_SUBMIT_HTTP;
-  host.host_addressing=strdup(CDDB_HTTP_SUBMIT_CGI);
+  host.host_addressing=cddb_strdup(CDDB_HTTP_SUBMIT_CGI);
 
   cd_version(version,BUFSIZ);
   prog=version;
@@ -265,10 +265,10 @@ int main(int argc,char **argv)
 
   cddb_free_cddb_hello(&hello);
   cddb_init_cddb_hello(&hello);
-  hello.hello_user=strdup("anonymous");
-  hello.hello_hostname=strdup("localhost");
-  hello.hello_program=strdup(prog);
-  hello.hello_version=strdup(ver);
+  hello.hello_user=cddb_strdup("anonymous");
+  hello.hello_hostname=cddb_strdup("localhost");
+  hello.hello_program=cddb_strdup(prog);
+  hello.hello_version=cddb_strdup(ver);
 
   printf("Connecting to \"%s\" on port %d\n",host.host_server.server_name,host.host_server.server_port);
 

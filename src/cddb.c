@@ -198,6 +198,19 @@ char* cddb_query_string(cddesc_t cd_desc, char *query, int *len)
   return query;
 }
 
+/* Duplicate a string for a cddb strcuture, to be freed by one of the cddb_free functions.  */
+char* cddb_strdup(const char* str)
+{
+  char *dup;
+  
+  if(str==NULL) return NULL;  
+  dup=(char*)malloc(strlen(str)+1);
+  if(dup==NULL) return NULL;
+  strcpy(dup,str);
+
+  return dup;
+}
+
 /** Initialize disc_data structure.
  * @param data a disc_data structure to be initialized.
  */
