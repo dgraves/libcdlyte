@@ -322,9 +322,9 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
     cd_frames_to_msf(&disc->disc_track[readtracks-1].track_length,pos);
   }
 
-  disc->disc_length.minutes=disc->disc_track[disc->disc_total_tracks].track_pos.minutes;
-  disc->disc_length.seconds=disc->disc_track[disc->disc_total_tracks].track_pos.seconds;
-  disc->disc_length.frames=disc->disc_track[disc->disc_total_tracks].track_pos.frames;
+  pos=cd_msf_to_frames(&disc->disc_track[disc->disc_total_tracks].track_pos)-
+      cd_msf_to_frames(&disc->disc_track[0].track_pos);
+  cd_frames_to_msf(&disc->disc_length,pos);
 
   cd_update(disc,&status);
 
@@ -905,7 +905,7 @@ int cd_playctl(cddesc_t cd_desc,int options,int starttrack,...)
   va_list arglist;
 
   cd_init_disc_info(&disc);
-  
+
   if(cd_stat(cd_desc,&disc)<0)
   {
     cd_free_disc_info(&disc);

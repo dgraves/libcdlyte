@@ -131,7 +131,8 @@ unsigned long cddb_discid(cddesc_t cd_desc)
   for(index=0;index<disc.disc_total_tracks;index++)
     tracksum+=cddb_sum(disc.disc_track[index].track_pos.minutes*60+disc.disc_track[index].track_pos.seconds);
 
-  discid=(disc.disc_length.minutes*60+disc.disc_length.seconds)-(disc.disc_track[0].track_pos.minutes*60+disc.disc_track[0].track_pos.seconds);
+  discid=(disc.disc_track[disc.disc_total_tracks].track_pos.minutes*60+disc.disc_track[disc.disc_total_tracks].track_pos.seconds)-
+         (disc.disc_track[0].track_pos.minutes*60+disc.disc_track[0].track_pos.seconds);
 
   cddbid=((tracksum%0xFF)<<24|discid<<8|disc.disc_total_tracks)&0xFFFFFFFF;
 
