@@ -1,0 +1,27 @@
+Microsoft Visual Studio Solution File, Format Version 7.00
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcdlyte", "libcdlyte\libcdlyte.vcproj", "{CE4EFB43-30FD-4124-BBA2-DBEF4225BF4C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcdlytedll", "libcdlytedll\libcdlytedll.vcproj", "{95870C37-A4D9-4DE6-B6DE-238F2DF8B585}"
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		ConfigName.0 = Debug
+		ConfigName.1 = Release
+	EndGlobalSection
+	GlobalSection(ProjectDependencies) = postSolution
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{CE4EFB43-30FD-4124-BBA2-DBEF4225BF4C}.Debug.ActiveCfg = Debug|Win32
+		{CE4EFB43-30FD-4124-BBA2-DBEF4225BF4C}.Debug.Build.0 = Debug|Win32
+		{CE4EFB43-30FD-4124-BBA2-DBEF4225BF4C}.Release.ActiveCfg = Release|Win32
+		{CE4EFB43-30FD-4124-BBA2-DBEF4225BF4C}.Release.Build.0 = Release|Win32
+		{95870C37-A4D9-4DE6-B6DE-238F2DF8B585}.Debug.ActiveCfg = Debug|Win32
+		{95870C37-A4D9-4DE6-B6DE-238F2DF8B585}.Debug.Build.0 = Debug|Win32
+		{95870C37-A4D9-4DE6-B6DE-238F2DF8B585}.Release.ActiveCfg = Release|Win32
+		{95870C37-A4D9-4DE6-B6DE-238F2DF8B585}.Release.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal
