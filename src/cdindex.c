@@ -30,19 +30,22 @@ Applied Cryptography by Bruce Schneier
 
 #include <stdio.h>
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <errno.h>
 
+#ifndef WIN32
+#include <sys/socket.h>
+#include <unistd.h>
+#endif
+
 #define __LIBCDAUDIO_INTERNAL
 
-#include <cdlyte.h>
-#include <data.h>
-#include <config.h>
+#include "cdlyte.h"
+#include "data.h"
+#include "config.h"
 
 extern char cddb_message[256];
 

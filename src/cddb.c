@@ -24,6 +24,7 @@ Boston, MA  02111-1307, USA.
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <string.h>
 #include <errno.h>
@@ -32,14 +33,17 @@ Boston, MA  02111-1307, USA.
 #ifndef WIN32
 #include <unistd.h>
 #include <sys/socket.h>
-#include <sys/stat.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <pwd.h>
 #else
-#include <windows.h>
 #include <winsock2.h>
+#include <windows.h>
+
+#define strcasecmp  _stricmp
+#define strncasecmp _strnicmp
+
 #endif
 
 #define __LIBCDAUDIO_INTERNAL
@@ -48,8 +52,8 @@ Boston, MA  02111-1307, USA.
 #define INADDR_NONE 0xFFFFFFFF
 #endif
 
-#include <cdlyte.h>
-#include <data.h>
+#include "cdlyte.h"
+#include "data.h"
 
 /* Static function prototypes */
 static int cddb_sum(long val);
@@ -73,7 +77,11 @@ static int cddb_sum(long val)
   char *bufptr,buf[16];
   int ret=0;
 
+#ifndef WIN32
   snprintf(buf,16,"%lu",val);
+#else
+  _snprintf(buf,16,"%lu",val);
+#endif
   for(bufptr=buf;*bufptr!='\0';bufptr++)
     ret+=(*bufptr-'0');
 

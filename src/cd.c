@@ -25,16 +25,21 @@ Boston, MA  02111-1307, USA.
 #include <stdarg.h>
 #include <string.h>
 #include <sys/types.h>
-#include <sys/param.h>
 #include <sys/stat.h>
-#include <sys/ioctl.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <limits.h>
+
+#ifndef WIN32
 #include <unistd.h>
+#include <sys/ioctl.h>
+#include <sys/param.h>
 #include <netinet/in.h>
+#endif
+
 #include "cdlyte.h"
 
+#ifndef WIN32
 /* We can check to see if the CD-ROM is mounted if this is available */
 #ifdef HAVE_MNTENT_H
 #include <mntent.h>
@@ -76,6 +81,8 @@ Boston, MA  02111-1307, USA.
 #include <io/cam/cdrom.h>
 #endif
 
+#endif
+
 #include "compat.h"
 
 /** 
@@ -86,7 +93,11 @@ Boston, MA  02111-1307, USA.
  */
 void cd_version(char *buffer,int len)
 {
+#ifndef WIN32
   snprintf(buffer,len,"%s %s",PACKAGE,VERSION);
+#else
+  _snprintf(buffer,len,"%s %s",PACKAGE,VERSION);
+#endif
 }
 
 /**
@@ -98,7 +109,7 @@ long cd_getversion()
   return LIBCDLYTE_VERSION;
 }
 
-#if !defined IRIX_CDLYTE || !defined WIN32
+#if !defined IRIX_CDLYTE && !defined WIN32
 /*
 Because of Irix's different interface, most of this program is
 completely ignored when compiling under Irix.
@@ -712,6 +723,7 @@ int __internal_cd_track_advance(cddesc_t cd_desc,const struct disc_info *disc,in
   internal_disc.disc_track_time.minutes=disc->disc_track_time.minutes+time->minutes;
   internal_disc.disc_track_time.seconds=disc->disc_track_time.seconds+time->seconds;
   internal_disc.disc_track_time.frames=disc->disc_track_time.frames+time->frames;
+  internal_disc.disc_current_track=disc->disc_current_track;
 
   if(internal_disc.disc_track_time.frames>74)
   {

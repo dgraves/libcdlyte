@@ -127,7 +127,9 @@ extern char *cddb_submit_email_address;
 typedef int cddesc_t;
 #else
 /** The type descriptor for a CD device handle.  */
-typedef MEDIAHANDLE cddesc_t;
+#include <windows.h>
+#include <mmsystem.h>
+typedef MCIDEVICEID cddesc_t;
 #endif
 
 
