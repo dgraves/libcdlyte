@@ -14,7 +14,7 @@ libcdlyte_la_SOURCES = \
         extra_objs.c
 
 libcdlyte_la_LDFLAGS = \
-	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
+	-version-info $(LT_VERSION)
 
 include_HEADERS = \
         cdver.h   \
