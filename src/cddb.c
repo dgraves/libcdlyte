@@ -73,6 +73,9 @@ Boston, MA  02111-1307, USA.
 /* Global cddb_message definition */
 char cddb_message[256];
 
+/* Global cddb_test_submit definition */
+int cddb_test_submit=0;
+
 /* Local structs for cddb_read input processing.  Hold char count for char arrays to prevent array bounds write */
 struct __track_data {
   int ttitle_len;                  /* Amount of data in ttitle field */
@@ -649,9 +652,9 @@ cdsock_t cddb_connect(const struct cddb_host *host,const struct cddb_server *pro
     http_string_len=va_arg(arglist,int);
 
     if(proxy!=NULL)
-      snprintf(http_string,http_string_len,"GET http://%s:%d%s?hello=%s+%s+%s+%s&proto=%d HTTP/1.0\n\n",host->host_server.server_name,host->host_server.server_port,host->host_addressing,hello->hello_user,hello->hello_hostname,hello->hello_program,hello->hello_version,CDDB_PROTOCOL_LEVEL);
+      snprintf(http_string,http_string_len,"GET http://%s:%d%s?hello=%s+%s+%s+%s&proto=%d HTTP/1.0\r\n\r\n",host->host_server.server_name,host->host_server.server_port,host->host_addressing,hello->hello_user,hello->hello_hostname,hello->hello_program,hello->hello_version,CDDB_PROTOCOL_LEVEL);
     else
-      snprintf(http_string,http_string_len,"GET %s?hello=%s+%s+%s+%s&proto=%d HTTP/1.0\n\n",host->host_addressing,hello->hello_user,hello->hello_hostname,hello->hello_program,hello->hello_version,CDDB_PROTOCOL_LEVEL);
+      snprintf(http_string,http_string_len,"GET %s?hello=%s+%s+%s+%s&proto=%d HTTP/1.0\r\n\r\n",host->host_addressing,hello->hello_user,hello->hello_hostname,hello->hello_program,hello->hello_version,CDDB_PROTOCOL_LEVEL);
 
     va_end(arglist);
   }
@@ -1653,18 +1656,18 @@ int cddb_erase_local(const char *path,unsigned long discid)
 }
 
 /**
- * Submit CDDB data to a CDDB server.  Data can be submitted via HTTP or
- * SMTP.  Submissions can only be made with the US_ASCII and
- * ISO-8859-1 characeter sets.  If 'CDDBTESTSUBMIT' is defined, the 
- * data will be sent to the specified CDDB server in test mode when doing 
- * an HTTP submit.  
+ * Submit CDDB data to a CDDB server.  Data can be submitted via HTTP or 
+ * SMTP.  Submissions can only be made with the US_ASCII and 
+ * ISO-8859-1 characeter sets.  If the variable 'cddb_test_submit' is set 
+ * to a non-zero value, the data will be sent to the specified CDDB server 
+ * in test mode when doing an HTTP submit.  
  * @param host a cddb_host structure specifying the CDDB 
  *        server with which to connect.  
- * @param proxy a cddb_server structure specifying the proxy server
+ * @param proxy a cddb_server structure specifying the proxy server 
  *        to connect through.  If there is no proxy server this value 
  *        should be NULL.  
  * @param hello a cddb_hello structure containing the name and version 
- *        numberof the program that is writing the CDDB data.  For HTTP
+ *        number of the program that is writing the CDDB data.  For HTTP
  *        submissions only the 'hello_program' and 'hello_version' fields 
  *        need to be filled.  The 'hello_user' and 'hello_hostname' fields will 
  *        be ignored.  For SMTP submissions the 'hello_program', hello_version',
@@ -1674,12 +1677,13 @@ int cddb_erase_local(const char *path,unsigned long discid)
  *        the 'cd_stat' function.  
  * @param data a disc_data structure containing the CDDB data to be written.  
  * @param comment a character string specifying a comment to be added to the 
+ *        CDDB data.  This parameter is optional, and may be NULL.  
  * @param email_address a character string specifying the user's email address.  
  * @param submit_address a character string specifying the submission email address.  
  *        Typically 'freedb-submit@freedb.org' for actual submissions and 
  *        'test-submit@freedb.org' for test submissions.  
  * @param mime_type an integer specifying that the MIME "quoted-printable" scheme 
- *        is to be used.  Use this scheme to submit entries containing 8-bit 
+ *        is to be used with SMTP.  Use this scheme to submit entries containing 8-bit 
  *        characters (for accents such as umlaut, or other extended characters).  
  *        Set to 1 to enable, 0 to disable.  
  * @return 0 on success, -1 on failure.  
@@ -1755,9 +1759,8 @@ int cddb_submit(const struct cddb_host *host,const struct cddb_server *proxy,con
       return -1;
     }
 
-    if(strncmp(inbuffer,"220",3)!=0)
+    if(strncmp(cddb_message,"220",3)!=0)
     {
-      strncpy(cddb_message,inbuffer,sizeof(cddb_message));
       cddb_close(sock);
       fclose(fd);
       return -1;
@@ -1882,7 +1885,7 @@ int cddb_submit(const struct cddb_host *host,const struct cddb_server *proxy,con
       return -1;
     }
 
-    snprintf(outbuffer,sizeof(outbuffer),"X-Cddbd-Note: Sent by %s - Questions: contact %s maintainer\n",hello->hello_program,hello->hello_program);
+    snprintf(outbuffer,sizeof(outbuffer),"X-Cddbd-Note: Sent by %s - Questions? contact %s maintainer\n",hello->hello_program,hello->hello_program);
     if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
     {
       snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
@@ -1928,10 +1931,10 @@ int cddb_submit(const struct cddb_host *host,const struct cddb_server *proxy,con
   else
   {
     /* Send HTTP header.  */
-    if (proxy != NULL)
-      snprintf(outbuffer,sizeof(outbuffer),"POST http://%s:%d%s HTTP/1.0\n",host->host_server.server_name,host->host_server.server_port,host->host_addressing);
+    if (proxy!=NULL)
+      snprintf(outbuffer,sizeof(outbuffer),"POST http://%s:%d%s HTTP/1.0\r\n",host->host_server.server_name,host->host_server.server_port,host->host_addressing);
     else
-      snprintf(outbuffer,sizeof(outbuffer),"POST %s HTTP/1.0\n",host->host_addressing);
+      snprintf(outbuffer,sizeof(outbuffer),"POST %s HTTP/1.0\r\n",host->host_addressing);
     if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
     {
       snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
@@ -1940,7 +1943,7 @@ int cddb_submit(const struct cddb_host *host,const struct cddb_server *proxy,con
       return -1;
     }
 
-    snprintf(outbuffer,sizeof(outbuffer),"Category: %s\n",cddb_category(data->data_category,inbuffer,sizeof(inbuffer)));
+    snprintf(outbuffer,sizeof(outbuffer),"Category: %s\r\n",cddb_category(data->data_category,inbuffer,sizeof(inbuffer)));
     if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
     {
       snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
@@ -1949,7 +1952,7 @@ int cddb_submit(const struct cddb_host *host,const struct cddb_server *proxy,con
       return -1;
     }
 
-    snprintf(outbuffer,sizeof(outbuffer),"Discid: %08lx\n",data->data_id);
+    snprintf(outbuffer,sizeof(outbuffer),"Discid: %08lx\r\n",data->data_id);
     if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
     {
       snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
@@ -1958,7 +1961,7 @@ int cddb_submit(const struct cddb_host *host,const struct cddb_server *proxy,con
       return -1;
     }
 
-    snprintf(outbuffer,sizeof(outbuffer),"User-Email: %s\n",email_address);
+    snprintf(outbuffer,sizeof(outbuffer),"User-Email: %s\r\n",email_address);
     if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
     {
       snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
@@ -1967,11 +1970,7 @@ int cddb_submit(const struct cddb_host *host,const struct cddb_server *proxy,con
       return -1;
     }
 
-#ifdef CDDBTESTSUBMIT
-    snprintf(outbuffer,sizeof(outbuffer),"Submit-Mode: %s\n","test");
-#else
-    snprintf(outbuffer,sizeof(outbuffer),"Submit-Mode: %s\n","submit");
-#endif
+    snprintf(outbuffer,sizeof(outbuffer),"Submit-Mode: %s\r\n",(cddb_test_submit!=0)?"test":"submit");
     if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
     {
       snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
@@ -1980,7 +1979,7 @@ int cddb_submit(const struct cddb_host *host,const struct cddb_server *proxy,con
       return -1;
     }
 
-    snprintf(outbuffer,sizeof(outbuffer),"X-Cddbd-Note: Sent by %s - Questions: contact %s maintainer\n",hello->hello_program,hello->hello_program);
+    snprintf(outbuffer,sizeof(outbuffer),"X-Cddbd-Note: Sent by %s - Questions? contact %s maintainer\r\n",hello->hello_program,hello->hello_program);
     if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
     {
       snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
@@ -1989,7 +1988,7 @@ int cddb_submit(const struct cddb_host *host,const struct cddb_server *proxy,con
       return -1;
     }
 
-    snprintf(outbuffer,sizeof(outbuffer),"Content-Length: %d\n\n",length);
+    snprintf(outbuffer,sizeof(outbuffer),"Content-Length: %d\r\n\r\n",length);
     if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
     {
       snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
@@ -2003,12 +2002,23 @@ int cddb_submit(const struct cddb_host *host,const struct cddb_server *proxy,con
   while(!feof(fd))
   {
     fgets(outbuffer,sizeof(outbuffer),fd);
-    if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
+    if(!feof(fd))
     {
-      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
-      cddb_close(sock);
-      fclose(fd);
-      return -1;
+      if(ferror(fd))
+      {
+        snprintf(cddb_message,sizeof(cddb_message),"Error reading from temporary data file");
+        cddb_close(sock);
+        fclose(fd);
+        return -1;
+      }
+
+      if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
+      {
+        snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+        cddb_close(sock);
+        fclose(fd);
+        return -1;
+      }
     }
   }
 
