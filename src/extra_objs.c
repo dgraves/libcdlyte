@@ -18,7 +18,12 @@ Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 Boston, MA  02111-1307, USA.
 */
 
+#ifndef WIN32
+
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
+
 #include <stdio.h>
 
 #ifdef HAVE_STDARG_H
@@ -40,3 +45,4 @@ int snprintf(char *dest,int size,const char *format,...)
 }
 #endif  /* HAVE_SNPRINTF */
 
+#endif  /* WIN32 */
