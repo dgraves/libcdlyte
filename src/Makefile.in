@@ -118,12 +118,13 @@ libcdlyte_la_LDFLAGS = \
 
 
 include_HEADERS = \
+        cdver.h   \
 	cdlyte.h
 
 subdir = src
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
-CONFIG_CLEAN_FILES = cdlyte.h
+CONFIG_CLEAN_FILES = cdver.h
 LTLIBRARIES = $(lib_LTLIBRARIES)
 
 libcdlyte_la_LIBADD =
@@ -152,7 +153,7 @@ DIST_SOURCES = $(libcdlyte_la_SOURCES)
 HEADERS = $(include_HEADERS) $(noinst_HEADERS)
 
 DIST_COMMON = $(include_HEADERS) $(noinst_HEADERS) Makefile.am \
-	Makefile.in cdlyte.h.in
+	Makefile.in cdver.h.in
 SOURCES = $(libcdlyte_la_SOURCES)
 
 all: all-am
@@ -164,7 +165,7 @@ $(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
 	  $(AUTOMAKE) --gnu  src/Makefile
 Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)
-cdlyte.h: $(top_builddir)/config.status cdlyte.h.in
+cdver.h: $(top_builddir)/config.status cdver.h.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 libLTLIBRARIES_INSTALL = $(INSTALL)
 install-libLTLIBRARIES: $(lib_LTLIBRARIES)

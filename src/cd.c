@@ -2,7 +2,7 @@
 This is part of the audio CD player library
 Copyright (C)1998-99 Tony Arcieri <bascule@inferno.tusculum.edu>
 Parts Copyright (C)1999 Quinton Dolan <q@OntheNet.com.au>
-Copyright (C)2001 Dustin Graves <dgraves@computer.org>
+Copyright (C)2001-03 Dustin Graves <dgraves@computer.org>
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Library General Public
@@ -85,12 +85,12 @@ Boston, MA  02111-1307, USA.
 
 #include "compat.h"
 
-/** 
- * Return the name and version number of libcdlyte as a string.  
+/**
+ * Return the name and version number of libcdlyte as a string.
  * @param buffer a character array to be filled with a ' ' separated string
- *        specifying the name and version of libcdlyte.  
+ *        specifying the name and version of libcdlyte.
  * @param len an integer specifying the length of 'buffer'
- * @return a pointer to 'buffer'.  
+ * @return a pointer to 'buffer'.
  */
 char* cd_version(char *buffer,int len)
 {
@@ -103,8 +103,8 @@ char* cd_version(char *buffer,int len)
 }
 
 /**
- * Return the version number of libcdlyte as an integer.  
- * @return a long integer specifying the version of libcdlyte.  
+ * Return the version number of libcdlyte as an integer.
+ * @return a long integer specifying the version of libcdlyte.
  */
 long cd_getversion()
 {
@@ -118,15 +118,15 @@ completely ignored when compiling under Irix.
 */
 
 /**
- * Initialize the CD-ROM for playing audio CDs.  
+ * Initialize the CD-ROM for playing audio CDs.
  * @param device_name a string indicating the name of the device
  *        to be opened.  On UNIX systmes this is a device name (eg
  *        "/dev/cdrom") and on Windows systems this is the drive
- *        letter for the device (eg "D:").  
- * @return a handle to the opened device if successful, 
+ *        letter for the device (eg "D:").
+ * @return a handle to the opened device if successful,
  *         INVALID_CDDESC if failed.  On failure, an error code of EBUSY
  *         indicates that the requested device can not be opened because it
- *         is currently mounted.  
+ *         is currently mounted.
  */
 cddesc_t cd_init_device(char *device_name)
 {
@@ -179,7 +179,7 @@ cddesc_t cd_init_device(char *device_name)
 #elif defined(HAVE_GETMNTENT)
   if((mounts=setmntent(MOUNTED,"r"))==NULL)
     return INVALID_CDDESC;
-  
+
   while((mnt=getmntent(mounts))!=NULL)
   {
     if(strncmp(mnt->mnt_fsname,devname,len)==0)
@@ -201,7 +201,7 @@ cddesc_t cd_init_device(char *device_name)
       return INVALID_CDDESC;
     }
   }
-#endif   
+#endif
 
 #ifdef NON_BLOCKING
   if((cd_desc=open(device_name,O_RDONLY|O_NONBLOCK))<0)
@@ -214,9 +214,9 @@ cddesc_t cd_init_device(char *device_name)
 }
 
 /**
- * Close a device handle and free its resources.  
- * @param cd_desc the handle to the cd device to close.  
- * @return 0 on success, -1 on failure.  
+ * Close a device handle and free its resources.
+ * @param cd_desc the handle to the cd device to close.
+ * @return 0 on success, -1 on failure.
  */
 int cd_finish(cddesc_t cd_desc)
 {
@@ -224,11 +224,12 @@ int cd_finish(cddesc_t cd_desc)
   return 0;
 }
 
-/** Read CD table of contents and get current status.  
- * @param cd_desc the handle to the device to stat.  
- * @param disc a disc_info structured to be filled with the current 
- *        CD info and status values.  
- * @return 0 on success, -1 on failure.  
+/** Read CD table of contents and get current status.
+ * @param cd_desc the handle to the device to stat.
+ * @param disc a disc_info structured to be filled with the current
+ *        CD info and status values.  Memory resources allocated for
+ *        disc must be freed with cd_free_disc_info.
+ * @return 0 on success, -1 on failure.
  */
 int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
 {
@@ -246,19 +247,22 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
 
   if(cd_poll(cd_desc,&status)<0)
     return -1;
- 
+
   if(!status.status_present)
   {
     disc->disc_present=0;
     return 0;
   }
-   
+
   /* Read the Table Of Contents header */
   if(ioctl(cd_desc,CDLYTE_READTOCHEADER,&cdth)<0)
     return -1;
 
   disc->disc_first_track=cdth.CDTH_STARTING_TRACK;
   disc->disc_total_tracks=cdth.CDTH_ENDING_TRACK;
+  if(disc->disc_track!=NULL)
+    free(disc->disc_track);
+  disc->disc_track=(struct track_info*)malloc(disc->disc_total_tracks*sizeof(struct track_info));
 
 #ifdef CDLYTE_READTOCENTRYS
 
@@ -269,7 +273,11 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
   cdte.CDTE_DATA_LEN=sizeof(cdte_buffer);
 
   if(ioctl(cd_desc,CDLYTE_READTOCENTRYS,&cdte)<0)
+  {
+    free(disc->disc_track);
+    disc->disc_track=NULL;
     return -1;
+  }
 
   for(readtracks=0;readtracks<=disc->disc_total_tracks;readtracks++)
   {
@@ -287,7 +295,11 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
     cdte.CDTE_STARTING_TRACK=(readtracks==disc->disc_total_tracks)?CDROM_LEADOUT:readtracks+1;
     cdte.CDTE_ADDRESS_FORMAT=CDLYTE_MSF_FORMAT;
     if(ioctl(cd_desc,CDLYTE_READTOCENTRY,&cdte)<0)
+    {
+      free(disc->disc_track);
+      disc->disc_track=NULL;
       return -1;
+    }
 
     disc->disc_track[readtracks].track_pos.minutes=cdte.CDTE_MSF_M;
     disc->disc_track[readtracks].track_pos.seconds=cdte.CDTE_MSF_S;
@@ -295,7 +307,9 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
     disc->disc_track[readtracks].track_type=(cdte.CDTE_CONTROL&CDROM_DATA_TRACK)?CDLYTE_TRACK_DATA:CDLYTE_TRACK_AUDIO;
     disc->disc_track[readtracks].track_lba=cd_msf_to_lba(&disc->disc_track[readtracks].track_pos);
   }
+  
 #endif /* CDLYTE_READTOCENTRY */
+
   for(readtracks=1;readtracks<=disc->disc_total_tracks;readtracks++)
   {
     pos=cd_msf_to_frames(&disc->disc_track[readtracks].track_pos)-
@@ -306,17 +320,17 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
   disc->disc_length.minutes=disc->disc_track[disc->disc_total_tracks].track_pos.minutes;
   disc->disc_length.seconds=disc->disc_track[disc->disc_total_tracks].track_pos.seconds;
   disc->disc_length.frames=disc->disc_track[disc->disc_total_tracks].track_pos.frames;
-   
+
   cd_update(disc,&status);
 
   return 0;
 }
 
-/** Get current CD status.  
- * @param cd_desc the handle to the device to poll.  
- * @param status a disc_status structured to be filled with the current 
- *        CD status values.  
- * @return 0 on success, -1 on failure.  
+/** Get current CD status.
+ * @param cd_desc the handle to the device to poll.
+ * @param status a disc_status structured to be filled with the current
+ *        CD status values.
+ * @return 0 on success, -1 on failure.
  */
 int cd_poll(cddesc_t cd_desc,struct disc_status *status)
 {
@@ -341,7 +355,7 @@ int cd_poll(cddesc_t cd_desc,struct disc_status *status)
   }
 
   status->status_present=1;
-   
+
 #ifdef CDLYTE_SUBCHANNEL_DATA
   status->status_disc_time.minutes=cdsc_data.CDSC_DATA_ABS_MSF_M;
   status->status_disc_time.seconds=cdsc_data.CDSC_DATA_ABS_MSF_S;
@@ -378,12 +392,12 @@ int cd_poll(cddesc_t cd_desc,struct disc_status *status)
   return 0;
 }
 
-/** 
- * Play a range of frames from a CD.  
- * @param cd_desc the handle to the device to play.  
- * @param startfram an integer specifying the frame address at which to begin play.  
- * @param endframe an integer specifying the frame address at which to end play.  
- * @return 0 on success, -1 on failure.  
+/**
+ * Play a range of frames from a CD.
+ * @param cd_desc the handle to the device to play.
+ * @param startfram an integer specifying the frame address at which to begin play.
+ * @param endframe an integer specifying the frame address at which to end play.
+ * @return 0 on success, -1 on failure.
  */
 int cd_play_frames(int cd_desc,int startframe,int endframe)
 {
@@ -407,9 +421,9 @@ int cd_play_frames(int cd_desc,int startframe,int endframe)
 }
 
 /**
- * Stop the CD.  
- * @param cd_desc the handle to the device to stop.  
- * @return 0 on success, -1 on failure.  
+ * Stop the CD.
+ * @param cd_desc the handle to the device to stop.
+ * @return 0 on success, -1 on failure.
  */
 int cd_stop(cddesc_t cd_desc)
 {
@@ -420,9 +434,9 @@ int cd_stop(cddesc_t cd_desc)
 }
 
 /**
- * Pause the CD.  
- * @param cd_desc the handle to the device to pause.  
- * @return 0 on success, -1 on failure.  
+ * Pause the CD.
+ * @param cd_desc the handle to the device to pause.
+ * @return 0 on success, -1 on failure.
  */
 int cd_pause(cddesc_t cd_desc)
 {
@@ -433,9 +447,9 @@ int cd_pause(cddesc_t cd_desc)
 }
 
 /**
- * Resume a paused CD.  
- * @param cd_desc the handle to the device to resume.  
- * @return 0 on success, -1 on failure.  
+ * Resume a paused CD.
+ * @param cd_desc the handle to the device to resume.
+ * @return 0 on success, -1 on failure.
  */
 int cd_resume(int cd_desc)
 {
@@ -446,12 +460,12 @@ int cd_resume(int cd_desc)
 }
 
 /**
- * Eject the tray.  
- * @param cd_desc the handle to the device to eject.  
- * @return 0 on success, -1 on failure.  
+ * Eject the tray.
+ * @param cd_desc the handle to the device to eject.
+ * @return 0 on success, -1 on failure.
  */
 int cd_eject(cddesc_t cd_desc)
-{  
+{
   if(ioctl(cd_desc,CDLYTE_EJECT)<0)
     return -1;
 
@@ -459,9 +473,9 @@ int cd_eject(cddesc_t cd_desc)
 }
 
 /**
- * Close the tray.  
- * @param cd_desc the handle to the device to close.  
- * @return 0 on success, -1 on failure.  
+ * Close the tray.
+ * @param cd_desc the handle to the device to close.
+ * @return 0 on success, -1 on failure.
  */
 int cd_close(int cd_desc)
 {
@@ -483,11 +497,11 @@ static float __internal_cd_get_volume_percentage(char level)
 }
 
 /**
- * Return the current volume level.  
- * @param cd_desc the handle to the device to query.  
- * @param vol a disc_volume structure to fill with current volume level.  
- *            The volume level is represented as a percentage (scale 0.0-1.0).  
- * @return 0 on success, -1 on failure.  
+ * Return the current volume level.
+ * @param cd_desc the handle to the device to query.
+ * @param vol a disc_volume structure to fill with current volume level.
+ *            The volume level is represented as a percentage (scale 0.0-1.0).
+ * @return 0 on success, -1 on failure.
  */
 int cd_get_volume(cddesc_t cd_desc,struct disc_volume *vol)
 {
@@ -513,7 +527,7 @@ int cd_get_volume(cddesc_t cd_desc,struct disc_volume *vol)
   vol->vol_back.left=__internal_cd_get_volume_percentage(cdvol_data.CDVOLSTAT_BACK_LEFT);
   vol->vol_back.right=__internal_cd_get_volume_percentage(cdvol_data.CDVOLSTAT_BACK_RIGHT);
 #endif
-   
+
   return 0;
 #else
   errno = ENOTTY;
@@ -528,11 +542,11 @@ static char __internal_cd_get_volume_val(float ratio)
 }
 
 /**
- * Set the volume level.  
- * @param cd_desc the handle to the device to modify.  
- * @param vol a disc_volume structure specifying the new volume level 
- *            as a percentage (scale 0.0-1.0).  
- * @return 0 on success, -1 on failure.  
+ * Set the volume level.
+ * @param cd_desc the handle to the device to modify.
+ * @param vol a disc_volume structure specifying the new volume level
+ *            as a percentage (scale 0.0-1.0).
+ * @return 0 on success, -1 on failure.
  */
 int cd_set_volume(cddesc_t cd_desc,const struct disc_volume *vol)
 {
@@ -558,7 +572,7 @@ int cd_set_volume(cddesc_t cd_desc,const struct disc_volume *vol)
   cdvol_data.CDVOLCTRL_BACK_LEFT_SELECT=CDLYTE_MAX_VOLUME;
   cdvol_data.CDVOLCTRL_BACK_RIGHT_SELECT=CDLYTE_MAX_VOLUME;
 #endif
-   
+
   if(ioctl(cd_desc,CDLYTE_SET_VOLUME,&cdvol)<0)
     return -1;
 
@@ -572,15 +586,15 @@ int cd_set_volume(cddesc_t cd_desc,const struct disc_volume *vol)
 #endif  /* IRIX_CDLYTE || WIN32*/
 
 /*
- * Because all these functions are solely mathematical and/or only make 
- * callbacks to previously existing functions they can be used for any 
+ * Because all these functions are solely mathematical and/or only make
+ * callbacks to previously existing functions they can be used for any
  * platform.
  */
 
 /**
- * Convert frames to a logical block address.  
- * @params frames an integer specifying the frame value to be converted.  
- * @return the logical block address derived from 'frames'.  
+ * Convert frames to a logical block address.
+ * @params frames an integer specifying the frame value to be converted.
+ * @return the logical block address derived from 'frames'.
  */
 int cd_frames_to_lba(int frames)
 {
@@ -589,9 +603,9 @@ int cd_frames_to_lba(int frames)
 }
 
 /**
- * Convert a logical block address to frames.  
- * @param lba an integer specifying the lba value to be converted.  
- * @return the frame value derived from 'lba'.  
+ * Convert a logical block address to frames.
+ * @param lba an integer specifying the lba value to be converted.
+ * @return the frame value derived from 'lba'.
  */
 int cd_lba_to_frames(int lba)
 {
@@ -599,9 +613,9 @@ int cd_lba_to_frames(int lba)
 }
 
 /**
- * Convert disc_timeval to frames.  
- * @param time a disc_timeval structure to be coverted.  
- * @return the frame value derived from 'time'.  
+ * Convert disc_timeval to frames.
+ * @param time a disc_timeval structure to be coverted.
+ * @return the frame value derived from 'time'.
  */
 int cd_msf_to_frames(const struct disc_timeval *time)
 {
@@ -609,9 +623,9 @@ int cd_msf_to_frames(const struct disc_timeval *time)
 }
 
 /**
- * Convert disc_timeval to a logical block address.  
- * @param time a disc_timeval structure to be converted.  
- * @return the logical block address derived from 'time'.  
+ * Convert disc_timeval to a logical block address.
+ * @param time a disc_timeval structure to be converted.
+ * @return the logical block address derived from 'time'.
  */
 int cd_msf_to_lba(const struct disc_timeval *time)
 {
@@ -621,10 +635,10 @@ int cd_msf_to_lba(const struct disc_timeval *time)
 }
 
 /**
- * Convert frames to disc_timeval. 
- * @param time a disc_timeval structure to be filled with time data 
-          derived from 'frames'.  
- * @param frames an integer specifying the frame value to be converted.  
+ * Convert frames to disc_timeval.
+ * @param time a disc_timeval structure to be filled with time data
+          derived from 'frames'.
+ * @param frames an integer specifying the frame value to be converted.
  */
 void cd_frames_to_msf(struct disc_timeval *time,int frames)
 {
@@ -634,18 +648,40 @@ void cd_frames_to_msf(struct disc_timeval *time,int frames)
 }
 
 /**
- * Convert a logical block address to disc_timeval.  
- * @param time a disc_timeval structure to be filled with time data 
-          derived from 'lba'.  
- * @param lba  an integer specifying the logical block address to be converted.  
+ * Convert a logical block address to disc_timeval.
+ * @param time a disc_timeval structure to be filled with time data
+          derived from 'lba'.
+ * @param lba  an integer specifying the logical block address to be converted.
  */
 void cd_lba_to_msf(struct disc_timeval *time,int lba)
 {
   cd_frames_to_msf(time, lba + 150);
 }
 
+/** Initialize disc_info structure for use with cd_stat.
+ * @param disc a disc_info structured to be initialized for use with cd_stat.
+ */
+void cd_init_disc_info(struct disc_info *disc)
+{
+  disc->disc_total_tracks=0;
+  disc->disc_track=NULL;
+}
+
+/** Free resources allocated for disc_info structure by cd_stat.
+ * @param disc a disc_info structured with memory resources allocated by 
+ *        cd_stat to be freed.
+ */
+void cd_free_disc_info(struct disc_info *disc)
+{
+  if(disc->disc_track!=NULL)
+  {
+    free(disc->disc_track);
+    disc->disc_track=NULL;
+  }
+}
+
 /* Internal advance function.  */
-int __internal_cd_track_advance(cddesc_t cd_desc,const struct disc_info *disc,int endtrack,const struct disc_timeval *time)
+static int __internal_cd_track_advance(cddesc_t cd_desc,const struct disc_info *disc,int endtrack,const struct disc_timeval *time)
 {
   struct disc_info internal_disc;
   internal_disc.disc_track_time.minutes=disc->disc_track_time.minutes+time->minutes;
@@ -699,12 +735,12 @@ int __internal_cd_track_advance(cddesc_t cd_desc,const struct disc_info *disc,in
 }
 
 /**
- * Advance the position within a track while preserving an end track.  
- * @param cd_desc the handle to the device to advance.  
- * @param endtrack an integer specifying the track at which to end play.  
- * @param time a disc_timeval structure specifying the time to advance 
- *        to within the current track.  
- * @return 0 on success, -1 on failure.  
+ * Advance the position within a track while preserving an end track.
+ * @param cd_desc the handle to the device to advance.
+ * @param endtrack an integer specifying the track at which to end play.
+ * @param time a disc_timeval structure specifying the time to advance
+ *        to within the current track.
+ * @return 0 on success, -1 on failure.
  */
 int cd_track_advance(cddesc_t cd_desc,int endtrack,const struct disc_timeval *time)
 {
@@ -723,11 +759,11 @@ int cd_track_advance(cddesc_t cd_desc,int endtrack,const struct disc_timeval *ti
 }
 
 /**
- * Advance the position within a track without preserving the end track.  
- * @param cd_desc the handle to the device to advance.  
- * @param time a disc_timeval structure specifying the time to advance 
- *        to within the current track.  
- * @return 0 on success, -1 on failure.  
+ * Advance the position within a track without preserving the end track.
+ * @param cd_desc the handle to the device to advance.
+ * @param time a disc_timeval structure specifying the time to advance
+ *        to within the current track.
+ * @return 0 on success, -1 on failure.
  */
 int cd_advance(cddesc_t cd_desc,const struct disc_timeval *time)
 {
@@ -742,11 +778,11 @@ int cd_advance(cddesc_t cd_desc,const struct disc_timeval *time)
   return 0;
 }
 
-/** Update information in a disc_info structure using a disc_status structure.  
- * @param disc a disc_info structure to be updated.  
- * @param status a disc_status structure containing current data to be copied 
- *        into 'disc'.  
- * @return 0 on success, -1 on failure.  
+/** Update information in a disc_info structure using a disc_status structure.
+ * @param disc a disc_info structure to be updated.
+ * @param status a disc_status structure containing current data to be copied
+ *        into 'disc'.
+ * @return 0 on success, -1 on failure.
  */
 int cd_update(struct disc_info *disc,const struct disc_status *status)
 {
@@ -766,10 +802,10 @@ int cd_update(struct disc_info *disc,const struct disc_status *status)
 }
 
 /**
- * Play from a selected track to end of CD.  
- * @param cd_desc the handle to the device to play.  
- * @param track an integer indicating the track with which to begin play.  
- * @return 0 on success, -1 on failure.  
+ * Play from a selected track to end of CD.
+ * @param cd_desc the handle to the device to play.
+ * @param track an integer indicating the track with which to begin play.
+ * @return 0 on success, -1 on failure.
  */
 int cd_play(int cd_desc,int track)
 {
@@ -777,11 +813,11 @@ int cd_play(int cd_desc,int track)
 }
 
 /**
- * Play from specified position within a selected track to end of CD.  
- * @param cd_desc the handle to the device to play.  
- * @param track an integer indicating the track with which to begin play.  
- * @param startpos an integer specifying the position within 'track', in seconds, at which to begin play.  
- * @return 0 on success, -1 on failure.  
+ * Play from specified position within a selected track to end of CD.
+ * @param cd_desc the handle to the device to play.
+ * @param track an integer indicating the track with which to begin play.
+ * @param startpos an integer specifying the position within 'track', in seconds, at which to begin play.
+ * @return 0 on success, -1 on failure.
  */
 int cd_play_pos(cddesc_t cd_desc,int track,int startpos)
 {
@@ -795,11 +831,11 @@ int cd_play_pos(cddesc_t cd_desc,int track,int startpos)
 }
 
 /**
- * Play a range of tracks from a CD.  
- * @param cd_desc the handle to the device to play.  
- * @param starttrack an integer indicating the track with which to begin play.  
- * @param endtrack an integer indicating the track with which to end play.  
- * @return 0 on success, -1 on failure.  
+ * Play a range of tracks from a CD.
+ * @param cd_desc the handle to the device to play.
+ * @param starttrack an integer indicating the track with which to begin play.
+ * @param endtrack an integer indicating the track with which to end play.
+ * @return 0 on success, -1 on failure.
  */
 int cd_play_track(cddesc_t cd_desc,int starttrack,int endtrack)
 {
@@ -807,14 +843,14 @@ int cd_play_track(cddesc_t cd_desc,int starttrack,int endtrack)
 }
 
 /**
- * Play a range of tracks, starting at a specified position within a 
-   track, from a CD.  
- * @param cd_desc the handle to the device to play.  
- * @param starttrack an integer indicating the track with which to begin play.  
- * @param endtrack an integer indicating the track with which to end play.  
- * @param startpos an integer specifying the position within 'starttrack', 
-          in seconds, at which to begin play.  
- * @return 0 on success, -1 on failure.  
+ * Play a range of tracks, starting at a specified position within a
+   track, from a CD.
+ * @param cd_desc the handle to the device to play.
+ * @param starttrack an integer indicating the track with which to begin play.
+ * @param endtrack an integer indicating the track with which to end play.
+ * @param startpos an integer specifying the position within 'starttrack',
+          in seconds, at which to begin play.
+ * @return 0 on success, -1 on failure.
  */
 int cd_play_track_pos(cddesc_t cd_desc,int starttrack,int endtrack,int startpos)
 {
@@ -823,31 +859,31 @@ int cd_play_track_pos(cddesc_t cd_desc,int starttrack,int endtrack,int startpos)
   time.minutes=startpos/60;
   time.seconds=startpos%60;
   time.frames=0;
-   
+
   return cd_playctl(cd_desc,PLAY_END_TRACK|PLAY_START_POSITION,starttrack,endtrack,&time);
 }
 
 /**
- * Universal play control function.  
- * @param cd_desc the handle to the device to play.  
- * @param options an integer specifying play options.  Options may be a 
- *        combination of the following:  
+ * Universal play control function.
+ * @param cd_desc the handle to the device to play.
+ * @param options an integer specifying play options.  Options may be a
+ *        combination of the following:
  *        <ul>
- *          <li> PLAY_START_TRACK - This is implied. If no other options 
- *               are given this may be used in place of 0.  
- *          <li> PLAY_END_TRACK - This is used to specify a track at which 
- *               play shoule end.  
- *          <li> PLAY_START_POSITION - This specifies a position (in the 
- *               form of a struct disc_timeval address) after the 
- *               start_track's beginning at which to begin play.  
- *          <li> PLAY_END_POSITION - This specifies a position struct 
- *               disc_timeval address) after the end_track's beginning 
+ *          <li> PLAY_START_TRACK - This is implied. If no other options
+ *               are given this may be used in place of 0.
+ *          <li> PLAY_END_TRACK - This is used to specify a track at which
+ *               play shoule end.
+ *          <li> PLAY_START_POSITION - This specifies a position (in the
+ *               form of a struct disc_timeval address) after the
+ *               start_track's beginning at which to begin play.
+ *          <li> PLAY_END_POSITION - This specifies a position struct
+ *               disc_timeval address) after the end_track's beginning
  *               at which to end play.
  *        </ul>
- * @param starttrack an integer specifying the track at which to begin play.  
- * @param ... a variable length list of arguments specific to the options 
- *        specified.  
- * @return 0 on success,-1 on failure.  
+ * @param starttrack an integer specifying the track at which to begin play.
+ * @param ... a variable length list of arguments specific to the options
+ *        specified.
+ * @return 0 on success,-1 on failure.
  */
 int cd_playctl(cddesc_t cd_desc,int options,int starttrack,...)
 {
@@ -864,7 +900,7 @@ int cd_playctl(cddesc_t cd_desc,int options,int starttrack,...)
     end_track=va_arg(arglist,int);
   else
     end_track=disc.disc_total_tracks;
-   
+
   if(options&PLAY_START_POSITION)
     startpos=va_arg(arglist,struct disc_timeval *);
   else
@@ -874,7 +910,7 @@ int cd_playctl(cddesc_t cd_desc,int options,int starttrack,...)
     endpos=va_arg(arglist,struct disc_timeval *);
   else
     endpos=0;
-   
+
   va_end(arglist);
 
   if(options&PLAY_START_POSITION)

@@ -75,7 +75,7 @@ int cd_changer_slots(int cd_desc)
 #else
   errno=ENOSYS;
 
-  return 1;
+  return -1;
 #endif
 }
 

@@ -17,4 +17,5 @@ libcdlyte_la_LDFLAGS = \
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
 
 include_HEADERS = \
+        cdver.h   \
 	cdlyte.h

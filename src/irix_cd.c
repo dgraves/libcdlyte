@@ -60,7 +60,8 @@ Boston, MA  02111-1307, USA.
    specs require an int cd device handle, but the Irix library gives us
    CDPLAYER *. */
 
-typedef struct {
+typedef struct
+{
   CDPLAYER *p;
   struct disc_info *disc;
 } CDInfo;
@@ -134,6 +135,7 @@ static int get_info(cddesc_t cd_desc)
   disc->disc_current_track=status.track;
   disc->disc_first_track=status.first;
   disc->disc_total_tracks=num_tracks;
+  disc->disc_track=(struct track_info*)malloc(disc->disc_total_tracks*sizeof(struct track_info));
 
   /* Now fill in all the per-track data. */
   for(i=0;i<num_tracks;i++)
@@ -152,6 +154,7 @@ static int get_info(cddesc_t cd_desc)
     else
     {
       /* Some error reading the track. */
+      free(disc->disc_track);
       free(disc);
       return 0;
     }
@@ -180,7 +183,7 @@ static int find_track(cddesc_t cd_desc,int frame)
 
   return disc->disc_total_tracks;
 }
-  
+
 /* Initialize the CD-ROM for playing audio CDs. */
 cddesc_t cd_init_device(char *device_name)
 {
@@ -220,8 +223,9 @@ int cd_finish(cddesc_t cd_desc)
 
   if(cddevs[cd_desc].disc!=NULL)
   {
+    free(cddevs[cd_desc].disc->disc_track);
     free(cddevs[cd_desc].disc);
-    cddevs[cd_desc].disc = NULL;
+    cddevs[cd_desc].disc=NULL;
   }
 
   CDclose(cddevs[cd_desc].p);
@@ -232,8 +236,11 @@ int cd_finish(cddesc_t cd_desc)
 /* Update a CD status structure. */
 int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
 {
+  int size;
+
   if(cddevs[cd_desc].disc!=NULL)
   {
+    free(cddevs[cd_desc].disc->disc_track);
     free(cddevs[cd_desc].disc);
     cddevs[cd_desc].disc=NULL;
   }
@@ -244,7 +251,10 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
     return -1;
   }
 
-  memcpy(disc,cddevs[cd_desc].disc,sizeof(struct disc_info));
+  size=disc->disc_total_tracks*sizeof(struct track_info);
+  disc->disc_track=(struct track_info*)malloc(size);
+  memcpy(disc,cddevs[cd_desc].disc,sizeof(struct disc_info) - sizeof(struct track_info *));
+  memcpy(disc.disc_track,cddevs[cd_desc].disc->disc_track,size);
 
   return 0;
 }
@@ -344,7 +354,7 @@ int cd_pause(cddesc_t cd_desc)
 {
   assert(cd_desc>=0&&cd_desc<MAXOPEN_CDDEVS);
   assert(cddevs[cd_desc].p!=NULL);
-  
+
   if(CDtogglepause(cddevs[cd_desc].p))
   {
     return 0;
@@ -367,13 +377,14 @@ int cd_resume(cddesc_t cd_desc)
 
 /* Eject the tray */
 int cd_eject(cddesc_t cd_desc)
-{  
+{
   assert(cd_desc>=0&&cd_desc<MAXOPEN_CDDEVS);
   assert(cddevs[cd_desc].p!=NULL);
 
   CDallowremoval(cddevs[cd_desc].p);
   if(cddevs[cd_desc].disc!=NULL)
   {
+    free(cddevs[cd_desc].disc->disc_track);
     free(cddevs[cd_desc].disc);
     cddevs[cd_desc].disc=NULL;
   }

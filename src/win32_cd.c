@@ -50,15 +50,15 @@ static MIXERLINE mxl;
 static MIXERLINECONTROLS mxlc;
 
 /**
- * Initialize the CD-ROM for playing audio CDs.  
+ * Initialize the CD-ROM for playing audio CDs.
  * @param device_name a string indicating the name of the device
  *        to be opened.  On UNIX systmes this is a device name (eg
  *        "/dev/cdrom") and on Windows systems this is the drive
- *        letter for the device (eg "D:").  
- * @return a handle to the opened device if successful, 
+ *        letter for the device (eg "D:").
+ * @return a handle to the opened device if successful,
  *         INVALID_CDDESC if failed.  On failure, an error code of EBUSY
  *         indicates that the requested device can not be opened because it
- *         is currently mounted.  
+ *         is currently mounted.
  */
 cddesc_t cd_init_device(char *device_name)
 {
@@ -124,9 +124,9 @@ cddesc_t cd_init_device(char *device_name)
 }
 
 /**
- * Close a device handle and free its resources.  
- * @param cd_desc the handle to the cd device to close.  
- * @return 0 on success, -1 on failure.  
+ * Close a device handle and free its resources.
+ * @param cd_desc the handle to the cd device to close.
+ * @return 0 on success, -1 on failure.
  */
 int cd_finish(cddesc_t cd_desc)
 {
@@ -150,11 +150,11 @@ int cd_finish(cddesc_t cd_desc)
   return 0;
 }
 
-/** Read CD table of contents and get current status.  
- * @param cd_desc the handle to the device to stat.  
- * @param disc a disc_info structured to be filled with the current 
- *        CD info and status values.  
- * @return 0 on success, -1 on failure.  
+/** Read CD table of contents and get current status.
+ * @param cd_desc the handle to the device to stat.
+ * @param disc a disc_info structured to be filled with the current
+ *        CD info and status values.
+ * @return 0 on success, -1 on failure.
  */
 int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
 {
@@ -164,19 +164,20 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
 
   if(cd_poll(cd_desc,&status)<0)
     return -1;
- 
+
   if(!status.status_present)
   {
     disc->disc_present=0;
     return 0;
   }
-   
+
   /* Read the number of tracks.  */
   msp.dwItem=MCI_STATUS_NUMBER_OF_TRACKS;
   if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM,(DWORD)(LPVOID)&msp)!=0)
     return -1;
   disc->disc_first_track=1;
   disc->disc_total_tracks=msp.dwReturn;
+  disc->disc_track=(struct track_info*)malloc(disc->disc_total_tracks*(struct track_info));
 
   for(readtracks=0;readtracks<disc->disc_total_tracks;readtracks++)
   {
@@ -220,17 +221,17 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
   disc->disc_length.minutes=disc->disc_track[disc->disc_total_tracks].track_pos.minutes;
   disc->disc_length.seconds=disc->disc_track[disc->disc_total_tracks].track_pos.seconds;
   disc->disc_length.frames=disc->disc_track[disc->disc_total_tracks].track_pos.frames;
-   
+
   cd_update(disc,&status);
 
   return 0;
 }
 
-/** Get current CD status.  
- * @param cd_desc the handle to the device to poll.  
- * @param status a disc_status structured to be filled with the current 
- *        CD status values.  
- * @return 0 on success, -1 on failure.  
+/** Get current CD status.
+ * @param cd_desc the handle to the device to poll.
+ * @param status a disc_status structured to be filled with the current
+ *        CD status values.
+ * @return 0 on success, -1 on failure.
  */
 int cd_poll(cddesc_t cd_desc,struct disc_status *status)
 {
@@ -322,12 +323,12 @@ int cd_poll(cddesc_t cd_desc,struct disc_status *status)
   return 0;
 }
 
-/** 
- * Play a range of frames from a CD.  
- * @param cd_desc the handle to the device to play.  
- * @param startfram an integer specifying the frame address at which to begin play.  
- * @param endframe an integer specifying the frame address at which to end play.  
- * @return 0 on success, -1 on failure.  
+/**
+ * Play a range of frames from a CD.
+ * @param cd_desc the handle to the device to play.
+ * @param startfram an integer specifying the frame address at which to begin play.
+ * @param endframe an integer specifying the frame address at which to end play.
+ * @return 0 on success, -1 on failure.
  */
 int cd_play_frames(int cd_desc,int startframe,int endframe)
 {
@@ -346,9 +347,9 @@ int cd_play_frames(int cd_desc,int startframe,int endframe)
 }
 
 /**
- * Stop the CD.  
- * @param cd_desc the handle to the device to stop.  
- * @return 0 on success, -1 on failure.  
+ * Stop the CD.
+ * @param cd_desc the handle to the device to stop.
+ * @return 0 on success, -1 on failure.
  */
 int cd_stop(cddesc_t cd_desc)
 {
@@ -362,9 +363,9 @@ int cd_stop(cddesc_t cd_desc)
 }
 
 /**
- * Pause the CD.  
- * @param cd_desc the handle to the device to pause.  
- * @return 0 on success, -1 on failure.  
+ * Pause the CD.
+ * @param cd_desc the handle to the device to pause.
+ * @return 0 on success, -1 on failure.
  */
 int cd_pause(cddesc_t cd_desc)
 {
@@ -379,9 +380,9 @@ int cd_pause(cddesc_t cd_desc)
 }
 
 /**
- * Resume a paused CD.  
- * @param cd_desc the handle to the device to resume.  
- * @return 0 on success, -1 on failure.  
+ * Resume a paused CD.
+ * @param cd_desc the handle to the device to resume.
+ * @return 0 on success, -1 on failure.
  */
 int cd_resume(int cd_desc)
 {
@@ -396,9 +397,9 @@ int cd_resume(int cd_desc)
 }
 
 /**
- * Eject the tray.  
- * @param cd_desc the handle to the device to eject.  
- * @return 0 on success, -1 on failure.  
+ * Eject the tray.
+ * @param cd_desc the handle to the device to eject.
+ * @return 0 on success, -1 on failure.
  */
 int cd_eject(cddesc_t cd_desc)
 {
@@ -412,9 +413,9 @@ int cd_eject(cddesc_t cd_desc)
 }
 
 /**
- * Close the tray.  
- * @param cd_desc the handle to the device to close.  
- * @return 0 on success, -1 on failure.  
+ * Close the tray.
+ * @param cd_desc the handle to the device to close.
+ * @return 0 on success, -1 on failure.
  */
 int cd_close(int cd_desc)
 {
@@ -428,10 +429,10 @@ int cd_close(int cd_desc)
 }
 
 /**
- * Return the current volume level.  
- * @param cd_desc the handle to the device to query.  
- * @param vol a disc_volume structure to fill with current volume level.  
- * @return 0 on success, -1 on failure.  
+ * Return the current volume level.
+ * @param cd_desc the handle to the device to query.
+ * @param vol a disc_volume structure to fill with current volume level.
+ * @return 0 on success, -1 on failure.
  */
 int cd_get_volume(cddesc_t cd_desc,struct disc_volume *vol)
 {
@@ -461,10 +462,10 @@ int cd_get_volume(cddesc_t cd_desc,struct disc_volume *vol)
 }
 
 /**
- * Set the volume level.  
- * @param cd_desc the handle to the device to modify.  
- * @param vol a disc_volume structure specifying the new volume level.  
- * @return 0 on success, -1 on failure.  
+ * Set the volume level.
+ * @param cd_desc the handle to the device to modify.
+ * @param vol a disc_volume structure specifying the new volume level.
+ * @return 0 on success, -1 on failure.
  */
 int cd_set_volume(cddesc_t cd_desc,const struct disc_volume *vol)
 {
