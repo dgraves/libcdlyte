@@ -110,7 +110,11 @@ typedef int cdsock_t;
 
 #else
 
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
 #include <windows.h>
+#include <winsock2.h>
 
 /** The type descriptor for a socket used to communicate with cddb and cdindex.  */
 typedef SOCKET cdsock_t;

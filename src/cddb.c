@@ -36,13 +36,6 @@ Boston, MA  02111-1307, USA.
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#else
-#include <winsock2.h>
-#include <windows.h>
-
-#define strcasecmp  _stricmp
-#define strncasecmp _strnicmp
-#define snprintf _snprintf
 #endif
 
 #ifndef INADDR_NONE
@@ -68,6 +61,9 @@ Boston, MA  02111-1307, USA.
 #else
 #define PATHSEP '\\'
 #define cddb_close closesocket
+#define strcasecmp  _stricmp
+#define strncasecmp _strnicmp
+#define snprintf _snprintf
 #endif
 
 /* Global cddb_message definition */
@@ -549,6 +545,7 @@ static cdsock_t cddb_connect_server(const struct cddb_server *server)
   if(connect(sock,(struct sockaddr *)&sin,sizeof(sin))==CDSOCKET_ERROR)
   {
     strncpy(cddb_message,strerror(errno),sizeof(cddb_message));
+    cddb_close(sock);
     return INVALID_CDSOCKET;
   }
 
@@ -1360,8 +1357,7 @@ int cddb_sites(cdsock_t sock,int mode,struct cddb_serverlist *list,...)
  * If hte server mode is HTTP the socket will simply be closed.  
  * @param sock handle to the socket connected to the CDDB server.  
  * @param mode an integer indicating CDDB server mode, either CDDBP or HTTP.  
- * @return 1 on read success, 0 on read failure, and CDSOCKET_ERROR 
- *         on socket failure.  
+ * @return 0 on success, and CDSOCKET_ERROR on socket failure.  
  */
 int cddb_quit(cdsock_t sock,int mode)
 {
