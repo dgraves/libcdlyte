@@ -53,24 +53,20 @@ extern "C" {
 #define CDDB_PROTOCOL_LEVEL 			5
 #define CDDBP_DEFAULT_PORT			8880
 #define HTTP_DEFAULT_PORT			80
-#define CDDB_HTTP_QUERY_CGI			"~cddb/cddb.cgi"
-#define CDINDEX_QUERY_CGI			"cgi-bin/cdi/get.pl"
-#define CDDB_HTTP_SUBMIT_CGI 			"~cddb/submit.cgi"
-#define CDINDEX_SUBMIT_CGI			"cgi-bin/cdi/xsubmit.pl"
+#define CDDB_HTTP_QUERY_CGI			"/~cddb/cddb.cgi"
+#define CDDB_HTTP_SUBMIT_CGI 			"/~cddb/submit.cgi"
+#define CDINDEX_QUERY_CGI			"/cgi-bin/cdi/get.pl"
+#define CDINDEX_SUBMIT_CGI			"/cgi-bin/cdi/xsubmit.pl"
 #define CDDB_SUBMIT_HTTP			0
-#define CDDB_SUBMIT_EMAIL			1
-#define CDDB_SUBMIT_MODE 			0
 #define CDDB_MAX_SERVERS			128
 #define MAX_INEXACT_MATCHES			16
 #define EXTENDED_DATA_SIZE 			4096
-#define DISC_ART_SIZE				32768
 #define CDINDEX_ID_SIZE				30
 
 /* Connection modes */
 #define CDDB_MODE_CDDBP 			0
 #define CDDB_MODE_HTTP 				1
 #define CDINDEX_MODE_HTTP			2
-#define COVERART_MODE_HTTP			3
 #define CDDB_ACCESS_LOCAL 			0
 #define CDDB_ACCESS_REMOTE 			1
 #define CDDB_PROXY_DISABLED 			0
@@ -100,33 +96,28 @@ extern "C" {
 #define PLAY_START_POSITION			2
 #define PLAY_END_POSITION			4
 
-/* CD error return values */
-#ifndef WIN32
-#define INVALID_CDDESC				-1
-#else
-#define INVALID_CDDESC				(~0)
-#endif
-
 
 /*
-#ifndef __LIBCDLYTE_INTERNAL
 #define cdindex_write_disc_data(cd_desc, data)	cdindex_write_data(cd_desc, &data)
 #define cddb_write_disc_data(cd_desc, data)	cddb_write_data(cd_desc, &data)
 #define cddb_erase_entry(data)			cddb_erase_data(&data)
-
+*/
+/* External declarations
 extern char cddb_message[256];
+/*
 extern int parse_disc_artist;
 extern int parse_track_artist;
-extern int cddb_submit_method;
-extern char *cddb_submit_email_address;
-#endif
 */
+
 
 /* Library typedefs */
 
 #ifndef WIN32
 /** The type descriptor for a CD device handle.  */
 typedef int cddesc_t;
+
+/* CD error return values */
+#define INVALID_CDDESC				-1
 
 /** The type descriptor for a socket used to communicate with cddb and cdindex.  */
 typedef int cdsock_t;
@@ -143,9 +134,13 @@ typedef int cdsock_t;
 /** The type descriptor for a CD device handle.  */
 typedef MCIDEVICEID cddesc_t;
 
+/* CD error return values */
+#define INVALID_CDDESC				(~0)
+
 /** The type descriptor for a socket used to communicate with cddb and cdindex.  */
 typedef SOCKET cdsock_t;
 
+/* Socket error codes */
 #define INVALID_CDSOCKET INVALID_SOCKET
 #define CDSOCKET_ERROR   SOCKET_ERROR
 #endif
@@ -157,7 +152,7 @@ typedef SOCKET cdsock_t;
 struct cddb_entry {
    int entry_present;				/* Is there an entry? */
    long entry_timestamp;                        /* Last modification time */
-   unsigned long entry_id;                      /* CDDB ID of entry */
+   unsigned long entry_id;                       /* CDDB ID of entry */
    char entry_cdindex_id[CDINDEX_ID_SIZE];      /* CD Index ID of entry */
    int entry_genre;                             /* CDDB genre of entry */
 };
@@ -183,7 +178,9 @@ struct cddb_host {
 
 /** CDDB hello structure */
 struct cddb_hello {
-   char hello_program[256]; 			/* Program name*/
+   char hello_user[64];                         /* User's name */
+   char hello_hostname[256];                    /* Workstation's name */
+   char hello_program[256]; 			/* Program name */
    char hello_version[256]; 			/* Version */
 };
 
@@ -191,8 +188,8 @@ struct cddb_hello {
 struct query_list_entry {
    int list_genre;                              /* CDDB genre of entry */
    unsigned long list_id;                       /* CDDB ID of entry */
-   char list_title[64];                         /* Title of entry */
-   char list_artist[64];                        /* Entry's artist */
+   char list_title[257];                         /* Title of entry */
+   char list_artist[257];                        /* Entry's artist */
 };
 
 /** TOC data for CDDB query */
@@ -206,7 +203,8 @@ struct cddb_direct_query_toc {
 struct cddb_query {
 #define QUERY_NOMATCH				0
 #define QUERY_EXACT				1
-#define QUERY_INEXACT				2
+#define QUERY_MULTIPLE_EXACT			2
+#define QUERY_INEXACT				3
    int query_match;				/* Uses above definitions */
    int query_matches;                           /* Number of matches */
    struct query_list_entry query_list[MAX_INEXACT_MATCHES];
@@ -263,8 +261,8 @@ struct disc_volume {
 
 /** Track database structure */
 struct track_data {
-   char track_name[256];			/* Track name */
-   char track_artist[256];			/* Track specific artist */
+   char track_name[257];			/* Track name */
+   char track_artist[257];			/* Track specific artist */
    char track_extended[EXTENDED_DATA_SIZE];	/* Extended information */
 };
 
@@ -273,8 +271,8 @@ struct disc_data {
    unsigned long data_id;			/* CDDB ID */
    char data_cdindex_id[CDINDEX_ID_SIZE];	/* CD Index ID */
    int data_revision; 				/* CDDB revision (incremented with each submit) */
-   char data_title[256];			/* Disc title */
-   char data_artist[256];			/* Album artist */
+   char data_title[257];			/* Disc title */
+   char data_artist[257];			/* Album artist */
    char data_extended[EXTENDED_DATA_SIZE];	/* Extended information */
    int data_genre;				/* Disc genre */
    int data_artist_type;			/* Single or multiple artist CD */
@@ -307,9 +305,9 @@ struct disc_summary {
    int disc_present;				/* Is disc present? */
    struct disc_timeval disc_length;		/* Length of disc */
    int disc_total_tracks;			/* Total tracks */
-   unsigned long disc_id;			/* CDDB ID */
+   unsigned int disc_id;			/* CDDB ID */
    char data_cdindex_id[CDINDEX_ID_SIZE];	/* CDI ID */
-   char disc_info[128];				/* Artist name / Disc name */
+   char disc_info[516];				/* Artist name / Disc name */
 };
 
 /** Disc changer structure */
@@ -323,7 +321,7 @@ struct disc_mc_summary {
    int disc_present;
    struct disc_timeval disc_length;
    int disc_total_tracks;
-   unsigned long disc_id;
+   unsigned int disc_id;
    char data_cdindex_id[CDINDEX_ID_SIZE];
    int disc_info_len;
    char *disc_info;
@@ -433,7 +431,10 @@ int cd_set_volume(cddesc_t cd_desc,const struct disc_volume *vol);
 /* CDDB function declarations */
 
 /* Return CDDB ID for CD in device with handle cd_desc.  */
-long cddb_discid(cddesc_t cd_desc);
+unsigned long cddb_discid(cddesc_t cd_desc);
+
+/* Create a CDDB query string for the CD in device with handle cd_desc.  */
+char* cddb_query_string(cddesc_t cd_desc,char *query,int len);
 
 /* Allocate exact ammount of memory required for CDDB data structure.  */
 int cddb_mc_alloc(struct disc_mc_data *data, int tracks);
@@ -456,19 +457,19 @@ char *cddb_genre(int genre,char* buffer,int len);
 /* Convert genre text descriptor to numerical identifier.  */ 
 int cddb_genre_value(const char* genre);
 
-/* Connect to a specified CDDB server.  */
-cdsock_t cddb_connect(const struct cddb_server *server);
-
 /* Connect to a specified CDDB server and initiate session.  */
-cdsock_t cddb_connect_server(const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello *hello,...);
+cdsock_t cddb_connect(const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello *hello,...);
 
-int cddb_skip_http_header(int sock);
+/* Read server reply to a CDDBP command.  Reply consists of an integer code and a text description separated by a ' '.  */
+int cddb_read_reply(cdsock_t sock,char *message,int len);
 
-int cddb_read_token(int sock, int token[3]);
-int cddb_query(int cd_desc, int sock, int mode, struct cddb_query *query, ...);
+/* Query CDDB for an entry corresponding to a specified CDDB id.  */
+int cddb_query(const char *query,cdsock_t sock,int mode,struct cddb_query *query,...);
+
 int cddb_read(int cd_desc, int sock, int mode,const struct cddb_entry *entry, struct disc_data *data, ...);
 int cddb_quit(int sock);
 int cddb_sites(int sock, int mode, struct cddb_serverlist *list, ...);
+
 int cddb_read_data(int desc, struct disc_data *data);
 int cddb_generate_unknown_entry(int cd_desc, struct disc_data *data);
 int cddb_read_disc_data(int cd_desc, struct disc_data *data);
