@@ -20,7 +20,6 @@ Boston, MA  02111-1307, USA.
 
 #ifdef WIN32
 
-#include "config.h"
 #include "cdlyte.h"
 #include <windows.h>
 #include <mmsystem.h>
