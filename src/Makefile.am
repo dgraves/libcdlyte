@@ -9,6 +9,7 @@ lib_LTLIBRARIES = libcdlyte.la
 libcdlyte_la_SOURCES = \
 	cd.c       \
 	irix_cd.c  \
+	win32_cd.c  \
 	cddb.c          \
 	cdindex.c	\
 	data.c          \

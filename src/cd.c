@@ -214,7 +214,7 @@ cddesc_t cd_init_device(char *device_name)
 /**
  * Close a device handle and free its resources.  
  * @param cd_desc the handle to the cd device to close.  
- * @rturn 0 on success, -1 on failure.  
+ * @return 0 on success, -1 on failure.  
  */
 int cd_finish(cddesc_t cd_desc)
 {

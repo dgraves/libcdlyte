@@ -109,6 +109,7 @@ extern "C" {
 #endif
 
 
+/*
 #ifndef __LIBCDLYTE_INTERNAL
 #define cdindex_write_disc_data(cd_desc, data)	cdindex_write_data(cd_desc, &data)
 #define cddb_write_disc_data(cd_desc, data)	cddb_write_data(cd_desc, &data)
@@ -120,7 +121,7 @@ extern int parse_track_artist;
 extern int cddb_submit_method;
 extern char *cddb_submit_email_address;
 #endif
-
+*/
 
 /* Library typedefs */
 
@@ -267,11 +268,8 @@ struct disc_data {
 
 /** Compact track database structure */
 struct track_mc_data {
-   int track_name_len;
    char *track_name;
-   int track_artist_len;
    char *track_artist;
-   int track_extended_len;
    char *track_extended;
 };
 
@@ -279,11 +277,8 @@ struct track_mc_data {
 struct disc_mc_data {
    unsigned long data_id;
    char data_cdindex_id[CDINDEX_ID_SIZE];
-   int data_title_len;
    char *data_title;
-   int data_artist_len;
    char *data_artist;
-   int data_extended_len;
    char *data_extended;
    int data_genre;
    int data_revision;
@@ -308,7 +303,7 @@ struct disc_changer {
    struct disc_summary changer_disc[MAX_SLOTS];
 };
 
-/* Compact disc summary */
+/** Compact disc summary */
 struct disc_mc_summary {
    int disc_present;
    struct disc_timeval disc_length;
@@ -422,16 +417,28 @@ int cd_set_volume(cddesc_t cd_desc,const struct disc_volume *vol);
 
 /* CDDB function declarations */
 
-long cddb_discid(int cd_desc);
+/* Return CDDB ID for CD in device with handle cd_desc.  */
+long cddb_discid(cddesc_t cd_desc);
+
+/* Allocate exact ammount of memory required for CDDB data structure.  */
+int cddb_mc_alloc(struct disc_mc_data *data, int tracks);
+
+/* Free memory allocated for CDDB data structure.  */
+void cddb_mc_free(struct disc_mc_data *data);
+
+/* Copy data from (large) fixed size structure to dynamically sized structure.  */
+int cddb_mc_copy_from_data(struct disc_mc_data *out,const struct disc_data *in);
+
+/* Copy data from dynamically allocated structure to (large) fixed size structure.  */
+int cddb_data_copy_from_mc(struct disc_data *out,const struct disc_mc_data *in);
+
+/* Extract CDDB protocol, server address and port, and CGI script from URL.  */
 int cddb_process_url(struct cddb_host *host, const char *url);
+
 int cddb_read_serverlist(struct cddb_conf *conf, struct cddb_serverlist *list, struct cddb_server *proxy);
 int cddb_write_serverlist(const struct cddb_conf *conf,const  struct cddb_serverlist *list,const struct cddb_server *proxy);
 char *cddb_genre(int genre);
-int cddb_direct_mc_alloc(struct disc_mc_data *data, int tracks);
-int cddb_mc_alloc(int cd_desc, struct disc_mc_data *data);
-void cddb_mc_free(struct disc_mc_data *data);
-int cddb_mc_copy_from_data(struct disc_mc_data *outdata,const struct disc_data *indata);
-int cddb_data_copy_from_mc(struct disc_data *outdata,const struct disc_mc_data *indata);
+
 int cddb_connect(const struct cddb_server *server);
 int cddb_connect_server(const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello *hello,...);
 int cddb_skip_http_header(int sock);
@@ -446,6 +453,7 @@ int cddb_read_disc_data(int cd_desc, struct disc_data *data);
 int cddb_write_data(int cd_desc,const struct disc_data *data);
 int cddb_erase_data(const struct disc_data *data);
 int cddb_stat_disc_data(int cd_desc, struct cddb_entry *entry);
+
 int cddb_http_query(int cd_desc,const struct cddb_host *host,const struct cddb_hello *hello, struct cddb_query *query);
 int cddb_http_proxy_query(int cd_desc,const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello *hello, struct cddb_query *query);
 int cddb_http_read(int cd_desc,const struct cddb_host *host,const struct cddb_hello *hello,const struct cddb_entry *entry, struct disc_data *data);
@@ -453,6 +461,7 @@ int cddb_http_proxy_read(int cd_desc,const struct cddb_host *host,const struct c
 int cddb_http_sites(int cd_desc,const struct cddb_host *host,const struct cddb_hello *hello, struct cddb_serverlist *list);
 int cddb_http_proxy_sites(int cd_desc,const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello *hello, struct cddb_serverlist *list);
 int cddb_http_submit(int cd_desc,const struct cddb_host *host, struct cddb_server *proxy, char *email_address);
+
 
 int cdindex_discid(int cd_desc, char *discid, int len);
 int cdindex_connect_server(const struct cddb_host *host, struct cddb_server *proxy, char *http_string, int len);

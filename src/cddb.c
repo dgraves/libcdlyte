@@ -46,8 +46,6 @@ Boston, MA  02111-1307, USA.
 
 #endif
 
-#define __LIBCDAUDIO_INTERNAL
-
 #ifndef INADDR_NONE
 #define INADDR_NONE 0xFFFFFFFF
 #endif
@@ -55,16 +53,13 @@ Boston, MA  02111-1307, USA.
 #include "cdlyte.h"
 #include "data.h"
 
-/* Static function prototypes */
-static int cddb_sum(long val);
 static int cddb_serverlist_process_line(char *line,struct cddb_conf *conf,struct cddb_serverlist *list,struct cddb_server *proxy);
 static int cddb_process_line(char *line,struct __unprocessed_disc_data *data);
 static int cddb_sites_process_line(char *line,struct cddb_host *host);
-int __internal_cdindex_discid(const struct disc_info *disc,char *discid,int len);
+
 
 /* Global definitions */
 char cddb_message[256];
-int use_cddb_message=1;
 int parse_disc_artist=1;
 int cddb_submit_method=CDDB_SUBMIT_EMAIL;
 char *cddb_submit_email_address=CDDB_EMAIL_SUBMIT_ADDRESS;
@@ -88,10 +83,21 @@ static int cddb_sum(long val)
   return ret;
 }
 
-/* Produce CDDB ID for the CD in the device referred to by cd_desc */
-unsigned long cddb_direct_discid(const struct disc_info *disc)
+/**
+ * Return CDDB ID for CD in device with handle cd_desc */
+ * @param cd_desc the handle to the cd device containing CD from which to obtain CDDB ID.  
+ * @return calculated CDDB ID on success, -1 on failure.  
+ */
+long cddb_discid(int cd_desc)
 {
-  int index,tracksum=0,discid;
+  int index,discid,tracksum=0;
+  struct disc_info disc;
+
+  if(cd_stat(cd_desc,&disc)<0)
+    return -1;
+
+  if(!disc.disc_present)
+    return -1;
 
   for(index=0;index<disc->disc_total_tracks;index++)
     tracksum+=cddb_sum(disc->disc_track[index].track_pos.minutes*60+disc->disc_track[index].track_pos.seconds);
@@ -101,26 +107,13 @@ unsigned long cddb_direct_discid(const struct disc_info *disc)
   return ((tracksum%0xFF)<<24|discid<<8|disc->disc_total_tracks)&0xFFFFFFFF;
 }
 
-unsigned long __internal_cddb_discid(struct disc_info *disc)
-{
-  return cddb_direct_discid(disc);
-}
-
-long cddb_discid(int cd_desc)
-{
-  struct disc_info disc;
-
-  if(cd_stat(cd_desc,&disc)<0)
-    return -1;
-
-  if(!disc.disc_present)
-    return -1;
-
-  return __internal_cddb_discid(&disc);
-}
-
-/* Allocate structure space for CDDB information */
-int cddb_direct_mc_alloc(struct disc_mc_data *data, int tracks)
+/**
+ * Allocate exact ammount of memory required for CDDB data structure.  
+ * @param data pointer for allocated memory.  
+ * @param tracks number of tracks to allocate space for.  
+ * @return 0 on success, -1 on failure.  
+ */
+int cddb_mc_alloc(struct disc_mc_data *data, int tracks)
 {
   int index,deindex;
 
@@ -132,7 +125,7 @@ int cddb_direct_mc_alloc(struct disc_mc_data *data, int tracks)
   data->data_extended_len=-1;
   data->data_extended=NULL;
 
-  if((data->data_track=calloc(tracks+1,sizeof(struct track_mc_data)))==NULL)
+  if((data->data_track=calloc(tracks,sizeof(struct track_mc_data)))==NULL)
     return -1;
 
   for(index=0;index<tracks;index++)
@@ -152,24 +145,16 @@ int cddb_direct_mc_alloc(struct disc_mc_data *data, int tracks)
     data->data_track[index]->track_extended=NULL;
   }
 
-  data->data_track[index+1]=NULL;
-
   return 0;
 }
 
-int cddb_mc_alloc(int cd_desc,struct disc_mc_data *data)
-{
-  struct disc_info disc;
-
-  if(cd_stat(cd_desc,&disc)<0)
-    return -1;
-
-  return cddb_direct_mc_alloc(data,disc.disc_total_tracks);
-}
-
+/**
+ * Free memory allocated for CDDB data structure.  
+ * data pointer to memory to be freed.  
+ */
 void cddb_mc_free(struct disc_mc_data *data)
 {
-  int index=0;
+  int index=0,tracks=data->data_total_tracks;
 
   if(data->data_title!=NULL)
     free(data->data_title);
@@ -180,7 +165,7 @@ void cddb_mc_free(struct disc_mc_data *data)
   if(data->data_extended!=NULL)
     free(data->data_extended);
 
-  while(data->data_track[index]!=NULL&&index<100)
+  for(index=0;index<tracks;index++)
   {
     if(data->data_track[index]->track_name!=NULL)
       free(data->data_track[index]->track_name);
@@ -189,60 +174,67 @@ void cddb_mc_free(struct disc_mc_data *data)
     if(data->data_track[index]->track_extended!=NULL)
       free(data->data_track[index]->track_extended);
 
-    free(data->data_track[index++]);
+    free(data->data_track[index]);
   }
 
   free(data->data_track);
 }
 
-int cddb_mc_copy_from_data(struct disc_mc_data *outdata,const struct disc_data *indata)
+/**
+ * Copy data from (large) fixed size structure to dynamically sized structure.  
+ * @param out structure to copy data into.  Must have been previously allocated 
+          with cddb_mc_alloc.  
+ * @param in structure containing data to be copied.  
+ * @return 0 on success, -1 on failure.  
+ */
+int cddb_mc_copy_from_data(struct disc_mc_data *out,const struct disc_data *in)
 {
   int track;
 
-  outdata->data_id=indata->data_id;
-  strncpy(outdata->data_cdindex_id,indata->data_cdindex_id,CDINDEX_ID_SIZE);
+  out->data_id=in->data_id;
+  strncpy(out->data_cdindex_id,in->data_cdindex_id,CDINDEX_ID_SIZE);
 
-  outdata->data_revision=indata->data_revision;
-  outdata->data_genre=indata->data_genre;
-  outdata->data_artist_type=indata->data_artist_type;
+  out->data_revision=in->data_revision;
+  out->data_genre=in->data_genre;
+  out->data_artist_type=in->data_artist_type;
 
-  outdata->data_title_len=strlen(indata->data_title)+1;
-  if((outdata->data_title = malloc(outdata->data_title_len))==NULL)
+  if((out->data_title = malloc(strlen(in->data_title)+1))==NULL)
     return -1;
-  strncpy(outdata->data_title,indata->data_title,outdata->data_title_len);
+  strncpy(out->data_title,in->data_title,sizeof(out->data_title));
    
-  outdata->data_artist_len=strlen(indata->data_artist)+1;
-  if((outdata->data_artist=malloc(outdata->data_artist_len))==NULL)
+  if((out->data_artist=malloc(strlen(in->data_artist)+1))==NULL)
     return -1;
-  strncpy(outdata->data_artist,indata->data_artist,outdata->data_artist_len);
+  strncpy(out->data_artist,in->data_artist,sizeof(out->data_artist));
 
-  outdata->data_extended_len=strlen(indata->data_extended)+1;
-  if((outdata->data_extended=malloc(outdata->data_extended_len))==NULL)
+  if((out->data_extended=malloc(strlen(in->data_extended)+1))==NULL)
     return -1;
-  strncpy(outdata->data_extended,indata->data_extended,outdata->data_extended_len);
+  strncpy(out->data_extended,in->data_extended,sizeof(out->data_extended));
 
-  for(track=0;track<outdata->data_total_tracks;track++)
+  for(track=0;track<out->data_total_tracks;track++)
   {
-    outdata->data_track[track]->track_name_len=strlen(indata->data_track[track].track_name)+1;
-    if((outdata->data_track[track]->track_name=malloc(outdata->data_track[track]->track_name_len))==NULL)
+    if((out->data_track[track]->track_name=malloc(strlen(in->data_track[track].track_name)+1))==NULL)
       return -1;
-    strncpy(outdata->data_track[track]->track_name,indata->data_track[track].track_name,outdata->data_track[track]->track_name_len);
+    strncpy(out->data_track[track]->track_name,in->data_track[track].track_name,sizeof(out->data_track[track]->track_name));
 
-    outdata->data_track[track]->track_artist_len=strlen(indata->data_track[track].track_artist)+1;
-    if((outdata->data_track[track]->track_artist=malloc(outdata->data_track[track]->track_artist_len))==NULL)
+    if((out->data_track[track]->track_artist=malloc(strlen(in->data_track[track].track_artist)+1))==NULL)
       return -1;
-    strncpy(outdata->data_track[track]->track_artist, indata->data_track[track].track_artist, outdata->data_track[track]->track_artist_len);
+    strncpy(out->data_track[track]->track_artist, in->data_track[track].track_artist,sizeof(out->data_track[track]->track_artist));
 
-    outdata->data_track[track]->track_extended_len=strlen(indata->data_track[track].track_extended)+1;
-    if((outdata->data_track[track]->track_extended=malloc(outdata->data_track[track]->track_extended_len))==NULL)
+    if((out->data_track[track]->track_extended=malloc(strlen(in->data_track[track].track_extended)+1))==NULL)
       return -1;
-    strncpy(outdata->data_track[track]->track_extended,indata->data_track[track].track_extended,outdata->data_track[track]->track_extended_len);
+    strncpy(out->data_track[track]->track_extended,in->data_track[track].track_extended,sizeof(out->data_track[track]->track_extended));
   }
 
   return 0;
 }
 
-int cddb_data_copy_from_mc(struct disc_data *outdata,const struct disc_mc_data *indata)
+/**
+ * Copy data from dynamically allocated structure to (large) fixed size structure.  
+ * @param out structure to copy data into.  
+ * @param in structure containing data to be copied.  
+ * @return 0 on success, -1 on failure.  
+ */
+int cddb_data_copy_from_mc(struct disc_data *out,const struct disc_mc_data *in)
 {
   int track;
 
@@ -267,18 +259,21 @@ int cddb_data_copy_from_mc(struct disc_data *outdata,const struct disc_mc_data *
    return 0;
 }
 
-/* Transform a URL in the CDDB configuration file into a valid hostname */
+/**
+ * Extract CDDB protocol, server address and port, and CGI script from URL.  
+ * @param host structure into which extracted information is to be copied.  
+ * @param url string with the URL to be processed.  
+ * @return 0 on success, -1 on failure.  
+ */
 int cddb_process_url(struct cddb_host *host,const char *url)
 {
   int index=0;
-  char *procbuffer;
-
-  host->host_addressing[0]='\0';
+  char port[6];
 
   if(strchr(url,':')==NULL)
     return -1;
 
-  while(url[index++]!=':'&&index<527)
+  while(url[index++]!=':')
   {
     if(index>5)
       return -1;
@@ -305,51 +300,48 @@ int cddb_process_url(struct cddb_host *host,const char *url)
   url+=3;
 
   index=0;
-  while(url[index]!=':'&&url[index]!='\0'&&url[index]!='/'&&index<527)
+  while(url[index]!=':'&&url[index]!='\0'&&url[index]!='/')
   {
     index++;
-    if(index>256)
+    if(index>255)
       return -1;
   }
 
-  memset(host->host_server.server_name,'\0',256);
-  strncpy(host->host_server.server_name,url,(index<256)?index:256);
+  memset(host->host_server.server_name,'\0',sizeof(host->host_server.server_name));
+  strncpy(host->host_server.server_name,url,index);
 
   if(url[index]==':')
   {
     url+=(index+1);
     index=0;
-    while(url[index]!='\0'&&url[index]!='/'&&index<527)
+    while(url[index]!='\0'&&url[index]!='/')
     {
       index++;
       if(index>5)
         return -1;
     }
 
-    if((procbuffer=malloc(index+1))==NULL)
-      return -1;
-
-    memset(procbuffer,'\0',index+1);
-    strncpy(procbuffer,url,index);
+    memset(port,'\0',sizeof(port));
+    strncpy(port,url,index);
     host->host_server.server_port=strtol(procbuffer,NULL,10);
-    free(procbuffer);
   }
 
-  if(url[index]=='/')
+  if(url[index]=='/'&&url[index+1]!='\0')
   {
     url+=(index+1);
-    if(url[0]=='\0')
-      return 0;
     index=0;
     while(url[index++]!='\0')
     {
-      if(index>256)
+      if(index>255)
         return -1;
     }
 
-    strncpy(host->host_addressing, url, index);
-
-    return 0;
+    memset(host->host_addressing,'\0',sizeof(host->host_addressing));
+    strncpy(host->host_addressing,url,index);
+  }
+  else
+  {
+    host->host_addressing[0]='\0';
   }
 
   return 0;

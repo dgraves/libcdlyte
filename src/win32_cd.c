@@ -22,13 +22,7 @@ Boston, MA  02111-1307, USA.
 
 #ifdef WIN32
 
-#include <stdio.h>
-#include <assert.h>
-#include <errno.h>
-#include <malloc.h>
-#include <string.h>
-#include <sys/types.h>
-
-#include <dmedia/cdaudio.h>
 
 #include "cdlyte.h"
+
+#endif
