@@ -5,7 +5,7 @@
 
 int main(int argc,char **argv)
 {
-  int i;
+  int i,len;
   char querystr[BUFSIZ],version[BUFSIZ],genre[BUFSIZ],*prog,*ver;
   unsigned long discid;
   cddesc_t cd_desc;
@@ -41,11 +41,14 @@ int main(int argc,char **argv)
     printf("Processing disc in \"/dev/cdrom\"\n");
   }
 
+  cd_init_disc_info(&disc);
+
   /* Check for disc */
   if(cd_stat(cd_desc,&disc)<0)
   {
     printf("Error accessing CD-ROM drive: %d\n",errno);
     cd_finish(cd_desc);
+    cd_free_disc_info(&disc);
     return 0;
   }
 
@@ -53,8 +56,12 @@ int main(int argc,char **argv)
   {
     printf("CD-ROM drive does not contain a disc\n");
     cd_finish(cd_desc);
+    cd_free_disc_info(&disc);
     return 0;
   }
+
+  /* Done with disc_info structure */
+  cd_free_disc_info(&disc);
 
   if((discid=cddb_discid(cd_desc))==-1)
   {
@@ -63,7 +70,8 @@ int main(int argc,char **argv)
     return 0;
   }
 
-  if(cddb_query_string(cd_desc,querystr,BUFSIZ)==NULL)
+  len=BUFSIZ;
+  if(cddb_query_string(cd_desc,querystr,&len)==NULL)
   {
     printf("Error computing CDDB Query string\n");
     cd_finish(cd_desc);
@@ -71,7 +79,8 @@ int main(int argc,char **argv)
   }
 
   /* Connect */
-  strncpy(host.host_server.server_name,"freedb.freedb.org",256);
+  cddb_init_cddb_host(&host);
+  host.host_server.server_name=strdup("freedb.freedb.org");
   host.host_server.server_port=8880;
   host.host_protocol=CDDB_MODE_CDDBP;
 
@@ -80,6 +89,7 @@ int main(int argc,char **argv)
   {
     printf("%s\n",cddb_message);
     cd_finish(cd_desc);
+    cddb_free_cddb_host(&host);
     return 0;
   }
   printf("%s\n",cddb_message);
@@ -89,10 +99,16 @@ int main(int argc,char **argv)
   prog=version;
   ver=strchr(version,' ');
   *ver++='\0';
-  strncpy(hello.hello_user,"anonymous",64);
-  strncpy(hello.hello_hostname,"localhost",256);
-  strncpy(hello.hello_program,prog,256);
-  strncpy(hello.hello_version,ver,256);
+
+  /* Initialize data objects */
+  cddb_init_cddb_hello(&hello);
+  cddb_init_disc_data(&data);
+  cddb_init_cddb_query(&query);
+
+  hello.hello_user=strdup("anonymous");
+  hello.hello_hostname=strdup("localhost");
+  hello.hello_program=strdup(prog);
+  hello.hello_version=strdup(ver);
 
   printf ("\nInitiating connection: %s %s %s %s\n",hello.hello_user,hello.hello_hostname,hello.hello_program,hello.hello_version);
   if(cddb_handshake(sock,&hello)!=1)
@@ -120,7 +136,10 @@ int main(int argc,char **argv)
   printf("\tFound\t= %s\n",(query.query_match==QUERY_NOMATCH)?"No match":(query.query_match==QUERY_EXACT)?"Exact match(es)":"Inexact match(es)");
   printf("\tTotal\t= %d\n",query.query_matches);
   for(i=0;i<query.query_matches;i++)
-    printf("\tMatch\t= %s %08lx %s %s\n",cddb_category(query.query_list[i].list_category,genre,BUFSIZ),query.query_list[i].list_id,query.query_list[i].list_artist,query.query_list[i].list_title);
+  {
+    len=BUFSIZ;
+    printf("\tMatch\t= %s %08lx %s %s\n",cddb_category(query.query_list[i].list_category,genre,&len),query.query_list[i].list_id,query.query_list[i].list_artist,query.query_list[i].list_title);
+  }
 
   if(query.query_match!=QUERY_NOMATCH)
   {
@@ -133,7 +152,8 @@ int main(int argc,char **argv)
 
     printf("\nRetrieved data:\n");
     printf("\tID\t\t= %08lx\n",data.data_id);
-    printf("\tCategory\t= %s\n",cddb_category(data.data_category,genre,BUFSIZ));
+    len=BUFSIZ;
+    printf("\tCategory\t= %s\n",cddb_category(data.data_category,genre,&len));
     printf("\tRevision\t= %d\n",data.data_revision);
     printf("\tArtist\t\t= %s\n",data.data_artist);
     printf("\tTitle\t\t= %s\n",data.data_title);
@@ -149,6 +169,10 @@ int main(int argc,char **argv)
 
   cddb_quit(sock,host.host_protocol);
   printf("%s\n",cddb_message);
+  cddb_free_disc_data(&data);
+  cddb_free_cddb_query(&query);
+  cddb_free_cddb_host(&host);
+  cddb_free_cddb_hello(&hello);
   cd_finish(cd_desc);
 
   return 0;
@@ -157,6 +181,10 @@ quit:
   printf("%s\n",cddb_message);
   cddb_quit(sock,host.host_protocol);
   printf("%s\n",cddb_message);
+  cddb_free_disc_data(&data);
+  cddb_free_cddb_query(&query);
+  cddb_free_cddb_host(&host);
+  cddb_free_cddb_hello(&hello);
   cd_finish(cd_desc);
 
   return 0;

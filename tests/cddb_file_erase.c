@@ -43,16 +43,19 @@ int main(int argc,char **argv)
   }
 
   /* Check for disc */
+  cd_init_disc_info(&disc);
   if(cd_stat(cd_desc,&disc)<0)
   {
     printf("Error accessing CD-ROM drive: %d\n",errno);
     cd_finish(cd_desc);
+    cd_free_disc_info(&disc);
     return 0;
   }
 
   if(!disc.disc_present)
   {
     printf("CD-ROM drive does not contain a disc\n");
+    cd_free_disc_info(&disc);
     cd_finish(cd_desc);
     return 0;
   }
@@ -65,5 +68,6 @@ int main(int argc,char **argv)
     printf("Successfully Removed file .%c%08lx\n",PATHSEP,cddb_discid(cd_desc));
 
   cd_finish(cd_desc);
+  cd_free_disc_info(&disc);
   return 0;
 }

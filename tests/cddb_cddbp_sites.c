@@ -19,7 +19,8 @@ int main(int argc,char **argv)
   }
 
   /* Connect */
-  strncpy(host.host_server.server_name,"freedb.freedb.org",256);
+  cddb_init_cddb_host(&host);
+  host.host_server.server_name=strdup("freedb.freedb.org");
   host.host_server.server_port=8880;
   host.host_protocol=CDDB_MODE_CDDBP;
 
@@ -27,6 +28,7 @@ int main(int argc,char **argv)
   if((sock=cddb_connect(&host,NULL))==INVALID_CDSOCKET)
   {
     printf("%s\n",cddb_message);
+    cddb_free_cddb_host(&host);
     return 0;
   }
   printf("%s\n",cddb_message);
@@ -36,10 +38,15 @@ int main(int argc,char **argv)
   prog=version;
   ver=strchr(version,' ');
   *ver++='\0';
-  strncpy(hello.hello_user,"anonymous",64);
-  strncpy(hello.hello_hostname,"localhost",256);
-  strncpy(hello.hello_program,prog,256);
-  strncpy(hello.hello_version,ver,256);
+
+  /* Initialize data objects */
+  cddb_init_cddb_hello(&hello);
+  cddb_init_cddb_serverlist(&list);
+
+  hello.hello_user=strdup("anonymous");
+  hello.hello_hostname=strdup("localhost");
+  hello.hello_program=strdup(prog);
+  hello.hello_version=strdup(ver);
 
   printf ("\nInitiating connection: %s %s %s %s\n",hello.hello_user,hello.hello_hostname,hello.hello_program,hello.hello_version);
   if(cddb_handshake(sock,&hello)!=1)
@@ -77,6 +84,9 @@ int main(int argc,char **argv)
 
   cddb_quit(sock,host.host_protocol);
   printf("%s\n",cddb_message);
+  cddb_free_cddb_host(&host);
+  cddb_free_cddb_hello(&hello);
+  cddb_free_cddb_serverlist(&list);
 
   return 0;
 
@@ -84,6 +94,9 @@ quit:
   printf("%s\n",cddb_message);
   cddb_quit(sock,host.host_protocol);
   printf("%s\n",cddb_message);
+  cddb_free_cddb_host(&host);
+  cddb_free_cddb_hello(&hello);
+  cddb_free_cddb_serverlist(&list);
 
   return 0;
 }

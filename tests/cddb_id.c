@@ -4,6 +4,7 @@
 
 int main(int argc,char **argv)
 {
+  int len;
   char buffer[BUFSIZ];
   unsigned long discid;
   cddesc_t cd_desc;
@@ -35,17 +36,22 @@ int main(int argc,char **argv)
   }
 
   /* Check for disc */
+  cd_init_disc_info(&disc);
   if(cd_stat(cd_desc,&disc)<0)
   {
     printf("Error accessing CD-ROM drive: %d\n",errno);
+    cd_free_disc_info(&disc);
     return 0;
   }
 
   if(!disc.disc_present)
   {
     printf("CD-ROM drive does not contain a disc\n");
+    cd_free_disc_info(&disc);
     return 0;
   }
+
+  cd_free_disc_info(&disc);
 
   if((discid=cddb_discid(cd_desc))==-1)
   {
@@ -53,7 +59,8 @@ int main(int argc,char **argv)
     return 0;
   }
 
-  if(cddb_query_string(cd_desc,buffer,BUFSIZ)==NULL)
+  len=BUFSIZ;
+  if(cddb_query_string(cd_desc,buffer,&len)==NULL)
   {
     printf("Error computing CDDB Query string\n");
     return 0;

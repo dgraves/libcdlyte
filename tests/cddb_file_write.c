@@ -48,10 +48,12 @@ int main(int argc,char **argv)
   }
 
   /* Check for disc */
+  cd_init_disc_info(&disc);
   if(cd_stat(cd_desc,&disc)<0)
   {
     printf("Error accessing CD-ROM drive: %d\n",errno);
     cd_finish(cd_desc);
+    cd_free_disc_info(&disc);
     return 0;
   }
 
@@ -59,40 +61,53 @@ int main(int argc,char **argv)
   {
     printf("CD-ROM drive does not contain a disc\n");
     cd_finish(cd_desc);
+    cd_free_disc_info(&disc);
     return 0;
   }
 
+  cd_free_disc_info(&disc);
+
   /* Get data */
-  strncpy(host.host_server.server_name,"freedb.freedb.org",256);
+  cddb_init_cddb_host(&host);
+  host.host_server.server_name=strdup("freedb.freedb.org");
   host.host_server.server_port=80;
   host.host_protocol=CDDB_MODE_HTTP;
-  strncpy(host.host_addressing,CDDB_HTTP_QUERY_CGI,256);
+  host.host_addressing=strdup(CDDB_HTTP_QUERY_CGI);
 
   cd_version(version,BUFSIZ);
   prog=version;
   ver=strchr(version,' ');
   *ver++='\0';
-  strncpy(hello.hello_user,"anonymous",64);
-  strncpy(hello.hello_hostname,"localhost",256);
-  strncpy(hello.hello_program,prog,256);
-  strncpy(hello.hello_version,ver,256);
+
+  cddb_init_cddb_hello(&hello);
+  hello.hello_user=strdup("anonymous");
+  hello.hello_hostname=strdup("localhost");
+  hello.hello_program=strdup(prog);
+  hello.hello_version=strdup(ver);
 
   /* Retrieve data for disc in device */
   printf("\nRetrieving data for disc id: %08lx\n",cddb_discid(cd_desc));
+  cddb_init_disc_data(&data);
   if(cddb_read_data(cd_desc,&host,NULL,&hello,&data)!=1)
   {
     printf("%s\n",cddb_message);
     cd_finish(cd_desc);
+    cddb_free_cddb_host(&host);
+    cddb_free_cddb_hello(&hello);
+    cddb_free_disc_data(&data);
     return 0;
   }
   printf("Retrieved data\n",cddb_message);
-  
+
   /* Write to current directory; disc_info was retrieved above */
   printf("\nWriting file .%c%08lx\n",PATHSEP,cddb_discid(cd_desc));
   if(cddb_write_local(".",&hello,&disc,&data,"[cdlyte write test]")<0)
   {
     printf("Error writing file .%c%08lx\n",PATHSEP,cddb_discid(cd_desc));
     cd_finish(cd_desc);
+    cddb_free_cddb_host(&host);
+    cddb_free_cddb_hello(&hello);
+    cddb_free_disc_data(&data);
     return 0;
   }
   else
@@ -108,5 +123,8 @@ int main(int argc,char **argv)
   system(cmd);
 
   cd_finish(cd_desc);
+  cddb_free_cddb_host(&host);
+  cddb_free_cddb_hello(&hello);
+  cddb_free_disc_data(&data);
   return 0;
 }
