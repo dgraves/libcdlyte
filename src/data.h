@@ -22,7 +22,7 @@ Boston, MA  02111-1307, USA.
 #ifndef _DATA_H
 #define _DATA_H
 
-#include <cdaudio2.h>
+#include <cdlyte.h>
 
 #ifdef __cplusplus
 extern "C" {

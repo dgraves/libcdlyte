@@ -40,7 +40,7 @@ Applied Cryptography by Bruce Schneier
 
 #define __LIBCDAUDIO_INTERNAL
 
-#include <cdaudio2.h>
+#include <cdlyte.h>
 #include <data.h>
 #include <config.h>
 

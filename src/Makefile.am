@@ -19,4 +19,4 @@ libcdaudio2_la_SOURCES = \
 libcdaudio2_la_LDFLAGS = -version-info 1:0:0
 
 include_HEADERS = \
-	cdaudio2.h
+	cdlyte.h

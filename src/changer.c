@@ -25,7 +25,7 @@ Boston, MA  02111-1307, USA.
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
-#include <cdaudio2.h>
+#include <cdlyte.h>
 
 /* For Linux */
 #ifdef HAVE_LINUX_CDROM_H

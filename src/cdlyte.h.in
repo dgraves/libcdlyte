@@ -296,7 +296,6 @@ struct disc_summary {
    unsigned long disc_id;			/* CDDB ID */
    char data_cdindex_id[CDINDEX_ID_SIZE];	/* CDI ID */
    char disc_info[128];				/* Artist name / Disc name */
-   struct art_data data_art;			/* Disc art */
 };
 
 /** Disc changer structure */
@@ -314,7 +313,6 @@ struct disc_mc_summary {
    char data_cdindex_id[CDINDEX_ID_SIZE];
    int disc_info_len;
    char *disc_info;
-   struct art_mc_data data_art;
 };
 
 /** Compact disc changer structure */

@@ -442,7 +442,7 @@ int cd_play_track(cddesc_t cd_desc,int starttrack,int endtrack)
           in seconds, at which to begin play.  
  * @return 0 on success, -1 on failure.  
  */
-int cd_play_track_pos(cddesct_t cd_desc,int starttrack,int endtrack,int startpos)
+int cd_play_track_pos(cddesc_t cd_desc,int starttrack,int endtrack,int startpos)
 {
   struct disc_timeval time;
 
@@ -705,7 +705,6 @@ void cd_lba_to_msf(struct disc_timeval *time,int lba)
   cd_frames_to_msf(time, lba + 150);
 }
 
-#ifdef 0 /* Make documentation tools ignore this function.  */
 /* Internal advance function.  */
 int __internal_cd_track_advance(cddesc_t cd_desc,const struct disc_info *disc,int endtrack,const struct disc_timeval *time)
 {
@@ -758,7 +757,6 @@ int __internal_cd_track_advance(cddesc_t cd_desc,const struct disc_info *disc,in
 
   return cd_play_track_pos(cd_desc,internal_disc.disc_current_track,endtrack,internal_disc.disc_track_time.minutes*60+internal_disc.disc_track_time.seconds);
 }
-#endif
 
 /**
  * Advance the position within a track while preserving an end track.  
@@ -833,7 +831,7 @@ int cd_playctl(cddesc_t cd_desc,int options,int starttrack,...)
   struct disc_timeval *startpos, *endpos, start_position, end_position;
   va_list arglist;
 
-  va_start(arglist,start_track);
+  va_start(arglist,starttrack);
   if(cd_stat(cd_desc,&disc)<0)
     return -1;
 
@@ -856,15 +854,15 @@ int cd_playctl(cddesc_t cd_desc,int options,int starttrack,...)
 
   if(options&PLAY_START_POSITION)
   {
-    start_position.minutes=disc.disc_track[start_track-1].track_pos.minutes+startpos->minutes;
-    start_position.seconds=disc.disc_track[start_track-1].track_pos.seconds+startpos->seconds;
-    start_position.frames=disc.disc_track[start_track-1].track_pos.frames+startpos->frames;
+    start_position.minutes=disc.disc_track[starttrack-1].track_pos.minutes+startpos->minutes;
+    start_position.seconds=disc.disc_track[starttrack-1].track_pos.seconds+startpos->seconds;
+    start_position.frames=disc.disc_track[starttrack-1].track_pos.frames+startpos->frames;
   }
   else
   {
-    start_position.minutes=disc.disc_track[start_track-1].track_pos.minutes;
-    start_position.seconds=disc.disc_track[start_track-1].track_pos.seconds;
-    start_position.frames=disc.disc_track[start_track-1].track_pos.frames;
+    start_position.minutes=disc.disc_track[starttrack-1].track_pos.minutes;
+    start_position.seconds=disc.disc_track[starttrack-1].track_pos.seconds;
+    start_position.frames=disc.disc_track[starttrack-1].track_pos.frames;
   }
 
   if(options&PLAY_END_TRACK)

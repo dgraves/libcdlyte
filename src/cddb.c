@@ -42,7 +42,7 @@ Boston, MA  02111-1307, USA.
 #define INADDR_NONE 0xFFFFFFFF
 #endif
 
-#include <cdaudio2.h>
+#include <cdlyte.h>
 #include <data.h>
 
 /* Static function prototypes */
@@ -1890,9 +1890,9 @@ int cddb_http_submit(int cd_desc,const struct cddb_host *host,struct cddb_server
   }
 
   if(proxy!=NULL)
-    snprintf(outbuffer,512,"POST http://%s:%d%s HTTP/1.0\n",host->host_server.server_name,host->host_server.server_port,HTTP_SUBMIT_CGI);
+    snprintf(outbuffer,512,"POST http://%s:%d%s HTTP/1.0\n",host->host_server.server_name,host->host_server.server_port,CDDB_HTTP_SUBMIT_CGI);
   else
-    snprintf(outbuffer,512,"POST %s HTTP/1.0\n",HTTP_SUBMIT_CGI);
+    snprintf(outbuffer,512,"POST %s HTTP/1.0\n",CDDB_HTTP_SUBMIT_CGI);
   write(sock,outbuffer,strlen(outbuffer));
 
   snprintf(outbuffer,512,"Category: %s\n",cddb_genre(data.data_genre));
