@@ -2310,6 +2310,17 @@ int cddb_read_data(cddesc_t cd_desc,const struct cddb_host *host,const struct cd
     return 0;
   }
 
+  /* One HTTP command per socket session; Connect again.  */
+  if(host->host_protocol==CDDB_MODE_HTTP)
+  {
+    /* Close old socket.  */
+    cddb_quit(sock,host->host_protocol);
+
+    /* Open new socket.  */
+    if((sock=cddb_initiate(host,proxy,hello,http_string,sizeof(http_string)))==INVALID_CDSOCKET)
+      return -1;
+  }
+
   /* Grab first match in list.  */
   if(cddb_read(query.query_list[0].list_category,query.query_list[0].list_id,sock,host->host_protocol,data,http_string)<1)
   {
