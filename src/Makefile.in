@@ -80,12 +80,12 @@ VERSION = @VERSION@
 noinst_HEADERS =  	data.h           compat.h
 
 
-lib_LTLIBRARIES = libcdaudio2.la
+lib_LTLIBRARIES = libcdlyte.la
 
-libcdaudio2_la_SOURCES =  	cd.c       	irix_cd.c  	cddb.c          	cdindex.c		data.c          	changer.c		base64.c                extra_objs.c
+libcdlyte_la_SOURCES =  	cd.c       	irix_cd.c  	cddb.c          	cdindex.c		data.c          	changer.c		base64.c                extra_objs.c
 
 
-libcdaudio2_la_LDFLAGS = -version-info 1:0:0
+libcdlyte_la_LDFLAGS = -version-info 1:0:0
 
 include_HEADERS =  	cdlyte.h
 
@@ -98,8 +98,8 @@ LTLIBRARIES =  $(lib_LTLIBRARIES)
 DEFS = @DEFS@ -I. -I$(srcdir) -I..
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
-libcdaudio2_la_LIBADD = 
-libcdaudio2_la_OBJECTS =  cd.lo irix_cd.lo cddb.lo cdindex.lo data.lo \
+libcdlyte_la_LIBADD = 
+libcdlyte_la_OBJECTS =  cd.lo irix_cd.lo cddb.lo cdindex.lo data.lo \
 changer.lo base64.lo extra_objs.lo
 CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -117,8 +117,8 @@ TAR = gtar
 GZIP_ENV = --best
 DEP_FILES =  .deps/base64.P .deps/cd.P .deps/cddb.P .deps/cdindex.P \
 .deps/changer.P .deps/data.P .deps/extra_objs.P .deps/irix_cd.P
-SOURCES = $(libcdaudio2_la_SOURCES)
-OBJECTS = $(libcdaudio2_la_OBJECTS)
+SOURCES = $(libcdlyte_la_SOURCES)
+OBJECTS = $(libcdlyte_la_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
@@ -190,8 +190,8 @@ distclean-libtool:
 
 maintainer-clean-libtool:
 
-libcdaudio2.la: $(libcdaudio2_la_OBJECTS) $(libcdaudio2_la_DEPENDENCIES)
-	$(LINK) -rpath $(libdir) $(libcdaudio2_la_LDFLAGS) $(libcdaudio2_la_OBJECTS) $(libcdaudio2_la_LIBADD) $(LIBS)
+libcdlyte.la: $(libcdlyte_la_OBJECTS) $(libcdlyte_la_DEPENDENCIES)
+	$(LINK) -rpath $(libdir) $(libcdlyte_la_LDFLAGS) $(libcdlyte_la_OBJECTS) $(libcdlyte_la_LIBADD) $(LIBS)
 
 install-includeHEADERS: $(include_HEADERS)
 	@$(NORMAL_INSTALL)

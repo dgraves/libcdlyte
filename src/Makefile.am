@@ -4,9 +4,9 @@ noinst_HEADERS = \
 	data.h   \
         compat.h
 
-lib_LTLIBRARIES = libcdaudio2.la
+lib_LTLIBRARIES = libcdlyte.la
 
-libcdaudio2_la_SOURCES = \
+libcdlyte_la_SOURCES = \
 	cd.c       \
 	irix_cd.c  \
 	cddb.c          \
@@ -16,7 +16,7 @@ libcdaudio2_la_SOURCES = \
 	base64.c        \
         extra_objs.c
 
-libcdaudio2_la_LDFLAGS = -version-info 1:0:0
+libcdlyte_la_LDFLAGS = -version-info 1:0:0
 
 include_HEADERS = \
 	cdlyte.h
