@@ -88,6 +88,7 @@ extern "C" {
 
 /* External declarations */
 extern char cddb_message[256];
+extern int cddb_test_submit;
 
 
 /* Library typedefs */
