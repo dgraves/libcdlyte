@@ -1,7 +1,7 @@
 /*
 This is part of the audio CD player library
 Copyright (C)1998-99 Tony Arcieri
-Copyright (C)2001 Dustin Graves <dgraves@computer.org>
+Copyright (C)2001,2004 Dustin Graves <dgraves@computer.org>
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Library General Public
