@@ -1,6 +1,6 @@
 /*
 Windows CD-ROM interface for libcdlyte
-Copyright (C)2001 Dustin Graves <dgraves@computer.org>
+Copyright (C)2001,2004 Dustin Graves <dgraves@computer.org>
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Library General Public
@@ -35,8 +35,6 @@ static struct cdrom_t
 {
   MCIDEVICEID cdrom_id;
   int cdrom_paused;
-  int cdrom_offset;
-  int *cdrom_track_offset;
 } *cdrom[MAXDRIVES]={NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
                      NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
                      NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
@@ -74,10 +72,8 @@ cddesc_t cd_init_device(char *device_name)
   cdrom[cd_desc]=(struct cdrom_t*)malloc(sizeof(struct cdrom_t));
   cdrom[cd_desc]->cdrom_id=params.wDeviceID;
   cdrom[cd_desc]->cdrom_paused=0;
-  cdrom[cd_desc]->cdrom_offset=-1;
-  cdrom[cd_desc]->cdrom_track_offset=NULL;
 
-  set.dwTimeFormat=MCI_FORMAT_TMSF;
+  set.dwTimeFormat=MCI_FORMAT_MSF;
   if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_SET,MCI_SET_TIME_FORMAT,(DWORD)(LPVOID)&set)!=0)
   {
     mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_CLOSE,0,0);
@@ -141,8 +137,6 @@ int cd_finish(cddesc_t cd_desc)
   if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_CLOSE,0,0)!=0)
     return -1;
 
-  if(cdrom[cd_desc]->cdrom_track_offset!=NULL)
-    free(cdrom[cd_desc]->cdrom_track_offset);
   free(cdrom[cd_desc]);
   cdrom[cd_desc]=NULL;
 
@@ -178,12 +172,19 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
   disc->disc_total_tracks=msp.dwReturn;
   if(disc->disc_track!=NULL)
     free(disc->disc_track);
-  disc->disc_track=(struct track_info*)malloc(disc->disc_total_tracks*(struct track_info));
+  disc->disc_track=(struct track_info*)malloc((disc->disc_total_tracks+1)*sizeof(struct track_info));
 
   for(readtracks=0;readtracks<disc->disc_total_tracks;readtracks++)
   {
-    /* Set offsets.  */
-    cd_frames_to_msf(&disc->disc_track[readtracks].track_pos,cdrom[cd_desc]->cdrom_track_offset[readtracks]);
+    /* Get offsets.  */
+    msp.dwTrack=readtracks+1;
+    msp.dwItem=MCI_STATUS_POSITION;
+    if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_TRACK,(DWORD)(LPVOID)&msp)!=0)
+      return -1;
+
+    disc->disc_track[readtracks].track_pos.minutes=MCI_MSF_MINUTE(msp.dwReturn);
+    disc->disc_track[readtracks].track_pos.seconds=MCI_MSF_SECOND(msp.dwReturn);
+    disc->disc_track[readtracks].track_pos.frames=MCI_MSF_FRAME(msp.dwReturn);
     disc->disc_track[readtracks].track_lba=cd_msf_to_lba(&disc->disc_track[readtracks].track_pos);
 
     /* Get length.  */
@@ -223,9 +224,7 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
   disc->disc_track[disc->disc_total_tracks].track_lba=cd_msf_to_lba(&disc->disc_track[readtracks].track_pos);
   disc->disc_track[disc->disc_total_tracks].track_type=CDLYTE_TRACK_AUDIO;
 
-  cd_frames_to_msf(&disc->disc_length,
-                   cd_msf_to_frames(&disc->disc_track[disc->disc_total_tracks].track_pos)-
-                   cd_msf_to_frames(&disc->disc_track[0].track_pos));
+  cd_frames_to_msf(&disc->disc_length,cd_msf_to_frames(&disc->disc_track[disc->disc_total_tracks].track_pos));
 
   cd_update(disc,&status);
 
@@ -262,7 +261,7 @@ int cd_poll(cddesc_t cd_desc,struct disc_status *status)
   msp.dwItem=MCI_STATUS_MODE;
   if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM,(DWORD)(LPVOID)&msp)!=0)
     return -1;
-  switch(msp.dwItem)
+  switch(msp.dwReturn)
   {
     case MCI_MODE_PLAY:
       status->status_mode=CDLYTE_PLAYING;
@@ -271,42 +270,10 @@ int cd_poll(cddesc_t cd_desc,struct disc_status *status)
       status->status_mode=CDLYTE_PAUSED;
       break;
     case MCI_MODE_STOP:
-      status->status_mode=CDLYTE_STOPPED;
+      status->status_mode=cdrom[cd_desc]->cdrom_paused?CDLYTE_PAUSED:CDLYTE_STOPPED;
       break;
     default:
       status->status_mode=CDLYTE_NOSTATUS;
-  }
-
-  /* Check for initialization.  */
-  if(cdrom[cd_desc]->cdrom_track_offset==NULL)
-  {
-    int i,tracks;
-
-    /* Get offset from beginning of disc.  */
-    msp.dwItem=MCI_STATUS_POSITION;
-    if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_STATUS_START,(DWORD)(LPVOID)&msp)!=0)
-      return -1;
-    cdrom[cd_desc]->cdrom_offset=MSF_TO_FRAMES(MCI_MSF_MINUTE(msp.dwReturn),MCI_MSF_SECOND(msp.dwReturn),MCI_MSF_FRAME(msp.dwReturn));
-
-    /* Get track offsets.  */
-    msp.dwItem=MCI_STATUS_NUMBER_OF_TRACKS;
-    if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM,(DWORD)(LPVOID)&msp)!=0)
-      return -1;
-    tracks=msp.dwReturn;
-    cdrom[cd_desc]->cdrom_track_offset=(int*)malloc(sizeof(int)*tracks);
-
-    for(i=0;i<tracks;i++)
-    {
-      msp.dwTrack=i+1;
-      msp.dwItem=MCI_STATUS_POSITION;
-      if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_TRACK,(DWORD)(LPVOID)&msp)!=0)
-      {
-        free(cdrom[cd_desc]->cdrom_track_offset);
-        cdrom[cd_desc]->cdrom_track_offset=NULL;
-        return -1;
-      }
-      cdrom[cd_desc]->cdrom_track_offset[i]=MSF_TO_FRAMES(MCI_MSF_MINUTE(msp.dwReturn),MCI_MSF_SECOND(msp.dwReturn),MCI_MSF_FRAME(msp.dwReturn));
-    }
   }
 
   /* Get current position.  */
@@ -321,9 +288,15 @@ int cd_poll(cddesc_t cd_desc,struct disc_status *status)
     return -1;
   status->status_current_track=msp.dwReturn;
 
+  /* Get offset for current track.  */
+  msp.dwTrack=status->status_current_track;
+  msp.dwItem=MCI_STATUS_POSITION;
+  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_TRACK,(DWORD)(LPVOID)&msp)!=0)
+    return -1;
+
   /* Current disc and track times.  */
-  cd_frames_to_msf(&status->status_disc_time,position-cdrom[cd_desc]->cdrom_offset);
-  cd_frames_to_msf(&status->status_track_time,position-cdrom[cd_desc]->cdrom_track_offset[status->status_current_track]);
+  cd_frames_to_msf(&status->status_disc_time,position);
+  cd_frames_to_msf(&status->status_track_time,position-MSF_TO_FRAMES(MCI_MSF_MINUTE(msp.dwReturn),MCI_MSF_SECOND(msp.dwReturn),MCI_MSF_FRAME(msp.dwReturn)));
 
   return 0;
 }
@@ -337,10 +310,33 @@ int cd_poll(cddesc_t cd_desc,struct disc_status *status)
  */
 int cd_play_frames(int cd_desc,int startframe,int endframe)
 {
+  int tracks, leadout;
+  MCI_STATUS_PARMS msp;
   MCI_PLAY_PARMS mciPlayParms;
 
   if(cdrom[cd_desc]==NULL)
     return -1;
+
+  /* Calculate end position to fix broken leadout */
+  msp.dwItem=MCI_STATUS_NUMBER_OF_TRACKS;
+  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM,(DWORD)(LPVOID)&msp)!=0)
+    return -1;
+  tracks=msp.dwReturn;
+
+  msp.dwTrack=tracks;
+  msp.dwItem=MCI_STATUS_POSITION;
+  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_TRACK,(DWORD)(LPVOID)&msp)!=0)
+    return -1;
+  leadout=MSF_TO_FRAMES(MCI_MSF_MINUTE(msp.dwReturn),MCI_MSF_SECOND(msp.dwReturn),MCI_MSF_FRAME(msp.dwReturn));
+
+  msp.dwTrack=tracks;
+  msp.dwItem=MCI_STATUS_LENGTH;
+  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_TRACK,(DWORD)(LPVOID)&msp)!=0)
+    return -1;
+  leadout+=MSF_TO_FRAMES(MCI_MSF_MINUTE(msp.dwReturn),MCI_MSF_SECOND(msp.dwReturn),MCI_MSF_FRAME(msp.dwReturn))+1;
+
+  if(leadout==endframe)
+    endframe--;
 
   mciPlayParms.dwFrom=MCI_MAKE_MSF(startframe/4500,(startframe%4500)/75,startframe%75);
   mciPlayParms.dwTo=MCI_MAKE_MSF(endframe/4500,(endframe%4500)/75,endframe%75);
@@ -348,6 +344,7 @@ int cd_play_frames(int cd_desc,int startframe,int endframe)
   if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_PLAY,MCI_FROM|MCI_TO,(DWORD)(LPVOID)&mciPlayParms)!=0)
     return -1;
 
+  cdrom[cd_desc]->cdrom_paused=0;
   return 0;
 }
 
@@ -361,9 +358,10 @@ int cd_stop(cddesc_t cd_desc)
   if(cdrom[cd_desc]==NULL)
     return -1;
 
-  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STOP,0,0)!=0);
+  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STOP,0,0)!=0)
     return -1;
 
+  cdrom[cd_desc]->cdrom_paused=0;
   return 0;
 }
 
@@ -377,7 +375,7 @@ int cd_pause(cddesc_t cd_desc)
   if(cdrom[cd_desc]==NULL)
     return -1;
 
-  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_PAUSE,0,0)!=0);
+  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_PAUSE,0,0)!=0)
     return -1;
 
   cdrom[cd_desc]->cdrom_paused=1;
@@ -394,7 +392,7 @@ int cd_resume(int cd_desc)
   if(cdrom[cd_desc]==NULL)
     return -1;
 
-  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_PLAY,0,0)!=0);
+  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_PLAY,0,0)!=0)
     return -1;
 
   cdrom[cd_desc]->cdrom_paused=0;
@@ -414,6 +412,7 @@ int cd_eject(cddesc_t cd_desc)
   if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_SET,MCI_SET_DOOR_OPEN,0)!=0)
     return -1;
 
+  cdrom[cd_desc]->cdrom_paused=0;
   return 0;
 }
 
@@ -430,6 +429,7 @@ int cd_close(int cd_desc)
   if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_SET,MCI_SET_DOOR_CLOSED,0)!=0)
     return -1;
 
+  cdrom[cd_desc]->cdrom_paused=0;
   return 0;
 }
 
