@@ -28,7 +28,7 @@ extern "C" {
 
 #define LIBCDLYTE_MAJOR_VERSION 0
 #define LIBCDLYTE_MINOR_VERSION 9
-#define LIBCDLYTE_PATCH_LEVEL   6
+#define LIBCDLYTE_PATCH_LEVEL   8
 
 #define LIBCDLYTE_VERSION \
         ((LIBCDLYTE_MAJOR_VERSION<<16)| \
@@ -105,8 +105,8 @@ typedef int cddesc_t;
 typedef int cdsock_t;
 
 /* Socket error codes */
-#define INVALID_CDSOCKET                        -1
-#define CDSOCKET_ERROR                          -1
+#define INVALID_CDSOCKET -1
+#define CDSOCKET_ERROR   -1
 
 #else
 
@@ -210,8 +210,8 @@ struct disc_info {
 
 /** "Invisible" volume structure */
 struct __volume { 
-   int left;
-   int right;
+   float left;
+   float right;
 };
 
 /** Volume structure */
@@ -391,7 +391,7 @@ unsigned long cddb_discid(cddesc_t cd_desc);
 char* cddb_query_string(cddesc_t cd_desc,char *query,int len);
 
 /* Create a generic entry for an unknown disc.  */
-int cddb_gen_unknown_entry(cddesc_t cd_desc,struct disc_data *data);
+int cddb_gen_unknown_entry(int cd_desc,struct disc_data *data);
 
 /* Allocate exact ammount of memory required for CDDB data structure.  */
 int cddb_mc_alloc(struct disc_mc_data *data, int tracks);

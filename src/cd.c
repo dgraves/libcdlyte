@@ -476,10 +476,17 @@ int cd_close(int cd_desc)
 #endif
 }
 
+/* Convert volume level from a byte to a percentage.  */
+static float __internal_cd_get_volume_percentage(char level)
+{
+  return (float)level/255.0f;
+}
+
 /**
  * Return the current volume level.  
  * @param cd_desc the handle to the device to query.  
  * @param vol a disc_volume structure to fill with current volume level.  
+ *            The volume level is represented as a percentage (scale 0.0-1.0).  
  * @return 0 on success, -1 on failure.  
  */
 int cd_get_volume(cddesc_t cd_desc,struct disc_volume *vol)
@@ -495,16 +502,16 @@ int cd_get_volume(cddesc_t cd_desc,struct disc_volume *vol)
   if(ioctl(cd_desc,CDLYTE_GET_VOLUME,&cdvol)<0)
     return -1;
 
-  vol->vol_front.left=cdvol.CDVOLSTAT_FRONT_LEFT;
-  vol->vol_front.right=cdvol.CDVOLSTAT_FRONT_RIGHT;
-  vol->vol_back.left=cdvol.CDVOLSTAT_BACK_LEFT;
-  vol->vol_back.right=cdvol.CDVOLSTAT_BACK_RIGHT;
+  vol->vol_front.left=__internal_cd_get_volume_percentage(cdvol.CDVOLSTAT_FRONT_LEFT);
+  vol->vol_front.right=__internal_cd_get_volume_percentage(cdvol.CDVOLSTAT_FRONT_RIGHT);
+  vol->vol_back.left=__internal_cd_get_volume_percentage(cdvol.CDVOLSTAT_BACK_LEFT);
+  vol->vol_back.right=__internal_cd_get_volume_percentage(cdvol.CDVOLSTAT_BACK_RIGHT);
 
 #ifdef CDLYTE_VOLSTAT_DATA
-  vol->vol_front.left=cdvol_data.CDVOLSTAT_FRONT_LEFT;
-  vol->vol_front.right=cdvol_data.CDVOLSTAT_FRONT_RIGHT;
-  vol->vol_back.left=cdvol_data.CDVOLSTAT_BACK_LEFT;
-  vol->vol_back.right=cdvol_data.CDVOLSTAT_BACK_RIGHT;
+  vol->vol_front.left=__internal_cd_get_volume_percentage(cdvol_data.CDVOLSTAT_FRONT_LEFT);
+  vol->vol_front.right=__internal_cd_get_volume_percentage(cdvol_data.CDVOLSTAT_FRONT_RIGHT);
+  vol->vol_back.left=__internal_cd_get_volume_percentage(cdvol_data.CDVOLSTAT_BACK_LEFT);
+  vol->vol_back.right=__internal_cd_get_volume_percentage(cdvol_data.CDVOLSTAT_BACK_RIGHT);
 #endif
    
   return 0;
@@ -514,14 +521,22 @@ int cd_get_volume(cddesc_t cd_desc,struct disc_volume *vol)
 #endif
 }
 
+/* Convert volume level from a percentage to a byte.  */
+static char __internal_cd_get_volume_val(float ratio)
+{
+  return (char)(255*ratio);
+}
+
 /**
  * Set the volume level.  
  * @param cd_desc the handle to the device to modify.  
- * @param vol a disc_volume structure specifying the new volume level.  
+ * @param vol a disc_volume structure specifying the new volume level 
+ *            as a percentage (scale 0.0-1.0).  
  * @return 0 on success, -1 on failure.  
  */
 int cd_set_volume(cddesc_t cd_desc,const struct disc_volume *vol)
 {
+#ifdef CDLYTE_SET_VOLUME
   struct CDLYTE_VOLCTRL cdvol;
 #ifdef CDLYTE_VOLCTRL_DATA
   struct cd_playback cdvol_data;
@@ -529,13 +544,13 @@ int cd_set_volume(cddesc_t cd_desc,const struct disc_volume *vol)
   cdvol.CDVOLCTRL_DATA_LEN=sizeof(cdvol_data);
 #endif
 
-  if(vol->vol_front.left>255||vol->vol_front.left<0||vol->vol_front.right>255||vol->vol_front.right<0||vol->vol_back.left>255||vol->vol_back.left<0||vol->vol_back.right>255||vol->vol_back.right<0)
+  if(vol->vol_front.left>1.0f||vol->vol_front.left<0.0f||vol->vol_front.right>1.0f||vol->vol_front.right<0.0f||vol->vol_back.left>1.0f||vol->vol_back.left<0.0f||vol->vol_back.right>1.0f||vol->vol_back.right<0.0f)
     return -1;
 
-  cdvol.CDVOLCTRL_FRONT_LEFT=vol->vol_front.left;
-  cdvol.CDVOLCTRL_FRONT_RIGHT=vol->vol_front.right;
-  cdvol.CDVOLCTRL_BACK_LEFT=vol->vol_back.left;
-  cdvol.CDVOLCTRL_BACK_RIGHT=vol->vol_back.right;
+  cdvol.CDVOLCTRL_FRONT_LEFT=__internal_cd_get_volume_val(vol->vol_front.left);
+  cdvol.CDVOLCTRL_FRONT_RIGHT=__internal_cd_get_volume_val(vol->vol_front.right);
+  cdvol.CDVOLCTRL_BACK_LEFT=__internal_cd_get_volume_val(vol->vol_back.left);
+  cdvol.CDVOLCTRL_BACK_RIGHT=__internal_cd_get_volume_val(vol->vol_back.right);
 
 #ifdef CDLYTE_VOLCTRL_SELECT
   cdvol_data.CDVOLCTRL_FRONT_LEFT_SELECT=CDLYTE_MAX_VOLUME;
@@ -548,6 +563,10 @@ int cd_set_volume(cddesc_t cd_desc,const struct disc_volume *vol)
     return -1;
 
   return 0;
+#else
+  errno = ENOTTY;
+  return -1;
+#endif
 }
 
 #endif  /* IRIX_CDLYTE || WIN32*/

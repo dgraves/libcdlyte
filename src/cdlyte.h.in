@@ -210,8 +210,8 @@ struct disc_info {
 
 /** "Invisible" volume structure */
 struct __volume { 
-   int left;
-   int right;
+   float left;
+   float right;
 };
 
 /** Volume structure */
