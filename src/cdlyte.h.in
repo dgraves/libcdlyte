@@ -38,10 +38,11 @@ extern "C" {
 /* Used with disc_info */
 #define CDLYTE_PLAYING				0
 #define CDLYTE_PAUSED				1
-#define CDLYTE_COMPLETED			2
-#define CDLYTE_NOSTATUS				3
-#define CDLYTE_INVALID				4
-#define CDLYTE_ERROR				5
+#define CDLYTE_STOPPED				2
+#define CDLYTE_COMPLETED			3
+#define CDLYTE_NOSTATUS				4
+#define CDLYTE_INVALID				5
+#define CDLYTE_ERROR				6
 
 #define CDLYTE_TRACK_AUDIO 			0
 #define CDLYTE_TRACK_DATA 			1
@@ -93,13 +94,13 @@ extern int cddb_test_submit;
 
 /* Library typedefs */
 
-#ifndef WIN32
 /** The type descriptor for a CD device handle.  */
 typedef int cddesc_t;
 
 /* CD error return values */
 #define INVALID_CDDESC				-1
 
+#ifndef WIN32
 /** The type descriptor for a socket used to communicate with cddb and cdindex.  */
 typedef int cdsock_t;
 
@@ -109,14 +110,7 @@ typedef int cdsock_t;
 
 #else
 
-#include <winsock2.h>
-#include <mmsystem.h>
-
-/** The type descriptor for a CD device handle.  */
-typedef MCIDEVICEID cddesc_t;
-
-/* CD error return values */
-#define INVALID_CDDESC				(~0)
+#include <windows.h>
 
 /** The type descriptor for a socket used to communicate with cddb and cdindex.  */
 typedef SOCKET cdsock_t;

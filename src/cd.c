@@ -20,7 +20,7 @@ Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 Boston, MA  02111-1307, USA.
 */
 
-#include <config.h>
+#include "config.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
@@ -296,14 +296,11 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
     disc->disc_track[readtracks].track_lba=cd_msf_to_lba(&disc->disc_track[readtracks].track_pos);
   }
 #endif /* CDLYTE_READTOCENTRY */
-  for(readtracks=0;readtracks<=disc->disc_total_tracks;readtracks++)
+  for(readtracks=1;readtracks<=disc->disc_total_tracks;readtracks++)
   {
-    if(readtracks>0)
-    {
-      pos=cd_msf_to_frames(&disc->disc_track[readtracks].track_pos)-
-	  cd_msf_to_frames(&disc->disc_track[readtracks - 1].track_pos);
-      cd_frames_to_msf(&disc->disc_track[readtracks-1].track_length,pos);
-    }
+    pos=cd_msf_to_frames(&disc->disc_track[readtracks].track_pos)-
+        cd_msf_to_frames(&disc->disc_track[readtracks - 1].track_pos);
+    cd_frames_to_msf(&disc->disc_track[readtracks-1].track_length,pos);
   }
 
   disc->disc_length.minutes=disc->disc_track[disc->disc_total_tracks].track_pos.minutes;
@@ -381,91 +378,6 @@ int cd_poll(cddesc_t cd_desc,struct disc_status *status)
   return 0;
 }
 
-/** Update information in a disc_info structure using a disc_status structure.  
- * @param disc a disc_info structure to be updated.  
- * @param status a disc_status structure containing current data to be copied 
- *        into 'disc'.  
- * @return 0 on success, -1 on failure.  
- */
-int cd_update(struct disc_info *disc,const struct disc_status *status)
-{
-  if(!(disc->disc_present=status->status_present))
-    return -1;
-
-  disc->disc_mode=status->status_mode;
-  memcpy(&disc->disc_time,&status->status_disc_time,sizeof(struct disc_timeval));
-  memcpy(&disc->disc_track_time,&status->status_track_time,sizeof(struct disc_timeval));
-
-  disc->disc_current_track = 0;
-  while(disc->disc_current_track<disc->disc_total_tracks&&
-    cd_msf_to_frames(&disc->disc_time)>=cd_msf_to_frames(&disc->disc_track[disc->disc_current_track].track_pos))
-  disc->disc_current_track++;
-
-  return 0;
-}
-
-/**
- * Play from a selected track to end of CD.  
- * @param cd_desc the handle to the device to play.  
- * @param track an integer indicating the track with which to begin play.  
- * @return 0 on success, -1 on failure.  
- */
-int cd_play(int cd_desc,int track)
-{
-  return cd_playctl(cd_desc,PLAY_START_TRACK,track);
-}
-
-/**
- * Play from specified position within a selected track to end of CD.  
- * @param cd_desc the handle to the device to play.  
- * @param track an integer indicating the track with which to begin play.  
- * @param startpos an integer specifying the position within 'track', in seconds, at which to begin play.  
- * @return 0 on success, -1 on failure.  
- */
-int cd_play_pos(cddesc_t cd_desc,int track,int startpos)
-{
-  struct disc_timeval time;
-
-  time.minutes=startpos/60;
-  time.seconds=startpos%60;
-  time.frames=0;
-
-  return cd_playctl(cd_desc,PLAY_START_POSITION,track,&time);
-}
-
-/**
- * Play a range of tracks from a CD.  
- * @param cd_desc the handle to the device to play.  
- * @param starttrack an integer indicating the track with which to begin play.  
- * @param endtrack an integer indicating the track with which to end play.  
- * @return 0 on success, -1 on failure.  
- */
-int cd_play_track(cddesc_t cd_desc,int starttrack,int endtrack)
-{
-  return cd_playctl(cd_desc,PLAY_END_TRACK,starttrack,endtrack);
-}
-
-/**
- * Play a range of tracks, starting at a specified position within a 
-   track, from a CD.  
- * @param cd_desc the handle to the device to play.  
- * @param starttrack an integer indicating the track with which to begin play.  
- * @param endtrack an integer indicating the track with which to end play.  
- * @param startpos an integer specifying the position within 'starttrack', 
-          in seconds, at which to begin play.  
- * @return 0 on success, -1 on failure.  
- */
-int cd_play_track_pos(cddesc_t cd_desc,int starttrack,int endtrack,int startpos)
-{
-  struct disc_timeval time;
-
-  time.minutes=startpos/60;
-  time.seconds=startpos%60;
-  time.frames=0;
-   
-  return cd_playctl(cd_desc,PLAY_END_TRACK|PLAY_START_POSITION,starttrack,endtrack,&time);
-}
-
 /** 
  * Play a range of frames from a CD.  
  * @param cd_desc the handle to the device to play.  
@@ -488,13 +400,8 @@ int cd_play_frames(int cd_desc,int startframe,int endframe)
   cdmsf.CDMSF_END_S=(endframe%4500)/75;
   cdmsf.CDMSF_END_F=endframe%75;
 
-#ifdef CDLYTE_START
-  /* Some CDROM drives don't support this so lets try things without it */
-  /* ioctl(cd_desc, CDLYTE_START); */
-#endif
-
   if(ioctl(cd_desc,CDLYTE_PLAY_MSF,&cdmsf)<0)
-    return -2;
+    return -1;
 
   return 0;
 }
@@ -643,7 +550,7 @@ int cd_set_volume(cddesc_t cd_desc,const struct disc_volume *vol)
   return 0;
 }
 
-#endif  /* IRIX_CDLYTE */
+#endif  /* IRIX_CDLYTE || WIN32*/
 
 /*
  * Because all these functions are solely mathematical and/or only make 
@@ -814,6 +721,91 @@ int cd_advance(cddesc_t cd_desc,const struct disc_timeval *time)
     return -1;
 
   return 0;
+}
+
+/** Update information in a disc_info structure using a disc_status structure.  
+ * @param disc a disc_info structure to be updated.  
+ * @param status a disc_status structure containing current data to be copied 
+ *        into 'disc'.  
+ * @return 0 on success, -1 on failure.  
+ */
+int cd_update(struct disc_info *disc,const struct disc_status *status)
+{
+  if(!(disc->disc_present=status->status_present))
+    return -1;
+
+  disc->disc_mode=status->status_mode;
+  memcpy(&disc->disc_time,&status->status_disc_time,sizeof(struct disc_timeval));
+  memcpy(&disc->disc_track_time,&status->status_track_time,sizeof(struct disc_timeval));
+
+  disc->disc_current_track = 0;
+  while(disc->disc_current_track<disc->disc_total_tracks&&
+    cd_msf_to_frames(&disc->disc_time)>=cd_msf_to_frames(&disc->disc_track[disc->disc_current_track].track_pos))
+  disc->disc_current_track++;
+
+  return 0;
+}
+
+/**
+ * Play from a selected track to end of CD.  
+ * @param cd_desc the handle to the device to play.  
+ * @param track an integer indicating the track with which to begin play.  
+ * @return 0 on success, -1 on failure.  
+ */
+int cd_play(int cd_desc,int track)
+{
+  return cd_playctl(cd_desc,PLAY_START_TRACK,track);
+}
+
+/**
+ * Play from specified position within a selected track to end of CD.  
+ * @param cd_desc the handle to the device to play.  
+ * @param track an integer indicating the track with which to begin play.  
+ * @param startpos an integer specifying the position within 'track', in seconds, at which to begin play.  
+ * @return 0 on success, -1 on failure.  
+ */
+int cd_play_pos(cddesc_t cd_desc,int track,int startpos)
+{
+  struct disc_timeval time;
+
+  time.minutes=startpos/60;
+  time.seconds=startpos%60;
+  time.frames=0;
+
+  return cd_playctl(cd_desc,PLAY_START_POSITION,track,&time);
+}
+
+/**
+ * Play a range of tracks from a CD.  
+ * @param cd_desc the handle to the device to play.  
+ * @param starttrack an integer indicating the track with which to begin play.  
+ * @param endtrack an integer indicating the track with which to end play.  
+ * @return 0 on success, -1 on failure.  
+ */
+int cd_play_track(cddesc_t cd_desc,int starttrack,int endtrack)
+{
+  return cd_playctl(cd_desc,PLAY_END_TRACK,starttrack,endtrack);
+}
+
+/**
+ * Play a range of tracks, starting at a specified position within a 
+   track, from a CD.  
+ * @param cd_desc the handle to the device to play.  
+ * @param starttrack an integer indicating the track with which to begin play.  
+ * @param endtrack an integer indicating the track with which to end play.  
+ * @param startpos an integer specifying the position within 'starttrack', 
+          in seconds, at which to begin play.  
+ * @return 0 on success, -1 on failure.  
+ */
+int cd_play_track_pos(cddesc_t cd_desc,int starttrack,int endtrack,int startpos)
+{
+  struct disc_timeval time;
+
+  time.minutes=startpos/60;
+  time.seconds=startpos%60;
+  time.frames=0;
+   
+  return cd_playctl(cd_desc,PLAY_END_TRACK|PLAY_START_POSITION,starttrack,endtrack,&time);
 }
 
 /**

@@ -1530,7 +1530,7 @@ static int cddb_write_file_line(FILE* fd,const char *key,const char* value)
 /*  Write data to file.  */
 static int cddb_write_local_file(FILE* fd,const struct cddb_hello *hello,const struct disc_info *info,const struct disc_data *data,const char *comment)
 {
-  int len,index;
+  int index;
   char key[256],outbuffer[EXTENDED_DATA_SIZE];
 
   fprintf(fd,"# xmcd\n#\n# Track frame offset:\n");
@@ -1598,8 +1598,8 @@ static int cddb_write_local_file(FILE* fd,const struct cddb_hello *hello,const s
  */
 int cddb_write_local(const char *path,const struct cddb_hello *hello,const struct disc_info *info,const struct disc_data *data,const char *comment)
 {
-  int len,index;
-  char file[PATH_MAX],key[256],outbuffer[EXTENDED_DATA_SIZE];
+  int len;
+  char file[PATH_MAX];
   FILE* fd;
 
   len=strlen(path);
@@ -1690,7 +1690,7 @@ int cddb_erase_local(const char *path,unsigned long discid)
  */
 int cddb_submit(const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello *hello,const struct disc_info *info,const struct disc_data *data,const char *comment,const char *email_address,...)
 {
-  int index,mime_type;
+  int mime_type;
   long length;
   char outbuffer[512],inbuffer[256],*submit_address;
   cdsock_t sock;

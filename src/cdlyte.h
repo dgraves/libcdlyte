@@ -38,10 +38,11 @@ extern "C" {
 /* Used with disc_info */
 #define CDLYTE_PLAYING				0
 #define CDLYTE_PAUSED				1
-#define CDLYTE_COMPLETED			2
-#define CDLYTE_NOSTATUS				3
-#define CDLYTE_INVALID				4
-#define CDLYTE_ERROR				5
+#define CDLYTE_STOPPED				2
+#define CDLYTE_COMPLETED			3
+#define CDLYTE_NOSTATUS				4
+#define CDLYTE_INVALID				5
+#define CDLYTE_ERROR				6
 
 #define CDLYTE_TRACK_AUDIO 			0
 #define CDLYTE_TRACK_DATA 			1
@@ -93,30 +94,23 @@ extern int cddb_test_submit;
 
 /* Library typedefs */
 
-#ifndef WIN32
 /** The type descriptor for a CD device handle.  */
 typedef int cddesc_t;
 
 /* CD error return values */
 #define INVALID_CDDESC				-1
 
+#ifndef WIN32
 /** The type descriptor for a socket used to communicate with cddb and cdindex.  */
 typedef int cdsock_t;
 
 /* Socket error codes */
-#define INVALID_CDSOCKET -1
-#define CDSOCKET_ERROR   -1
+#define INVALID_CDSOCKET                        -1
+#define CDSOCKET_ERROR                          -1
 
 #else
 
-#include <winsock2.h>
-#include <mmsystem.h>
-
-/** The type descriptor for a CD device handle.  */
-typedef MCIDEVICEID cddesc_t;
-
-/* CD error return values */
-#define INVALID_CDDESC				(~0)
+#include <windows.h>
 
 /** The type descriptor for a socket used to communicate with cddb and cdindex.  */
 typedef SOCKET cdsock_t;
@@ -397,7 +391,7 @@ unsigned long cddb_discid(cddesc_t cd_desc);
 char* cddb_query_string(cddesc_t cd_desc,char *query,int len);
 
 /* Create a generic entry for an unknown disc.  */
-int cddb_gen_unknown_entry(int cd_desc,struct disc_data *data);
+int cddb_gen_unknown_entry(cddesc_t cd_desc,struct disc_data *data);
 
 /* Allocate exact ammount of memory required for CDDB data structure.  */
 int cddb_mc_alloc(struct disc_mc_data *data, int tracks);

@@ -19,13 +19,14 @@ Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 Boston, MA  02111-1307, USA.
 */
 
-#include <config.h>
-#include <sys/ioctl.h>
+#include "config.h"
 #include <sys/types.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
-#include <cdlyte.h>
+
+#ifndef WIN32
+#include <sys/ioctl.h>
 
 /* For Linux */
 #ifdef HAVE_LINUX_CDROM_H
@@ -36,6 +37,12 @@ Boston, MA  02111-1307, USA.
 #ifdef HAVE_LINUX_UCDROM_H
 #include <linux/ucdrom.h>
 #endif
+#else
+/* WIN32 version of snprintf */
+#define snprintf _snprintf
+#endif
+
+#include "cdlyte.h"
 
 /* Choose a particular disc from the CD changer */
 int cd_changer_select_disc(int cd_desc,int disc)
@@ -105,9 +112,9 @@ int cd_changer_stat(const char *path,int cd_desc,struct disc_changer *changer)
     if(strlen(data.data_artist)>0)
     {
       if(data.data_artist[strlen(data.data_artist)-1]==' ')
-	snprintf(changer->changer_disc[discindex].disc_info,128,"%s/ %s",data.data_artist,data.data_title);
+        snprintf(changer->changer_disc[discindex].disc_info,128,"%s/ %s",data.data_artist,data.data_title);
       else
-	snprintf(changer->changer_disc[discindex].disc_info,128,"%s / %s",data.data_artist,data.data_title);
+        snprintf(changer->changer_disc[discindex].disc_info,128,"%s / %s",data.data_artist,data.data_title);
     }
     else
       strncpy(changer->changer_disc[discindex].disc_info,data.data_title,128);
