@@ -1532,13 +1532,13 @@ static int cddb_write_local_file(FILE* fd,const struct cddb_hello *hello,const s
 
   fprintf(fd,"# xmcd\n#\n# Track frame offset:\n");
   for(index=0;index<info->disc_total_tracks;index++)
-    fprintf(fd,"#        %d\n",info->disc_track[index].track_pos.frames);
+    fprintf(fd,"#        %d\n",(info->disc_track[index].track_pos.minutes*60+info->disc_track[index].track_pos.seconds)*75+info->disc_track[index].track_pos.frames);
   fprintf(fd,"#\n# Disc length: %d seconds\n",(info->disc_length.minutes*60)+info->disc_length.seconds);
 
   if(comment!=NULL)
-    fprintf(fd,"#\n# Revision: %d\nSubmitted via: %s %s %s\n#\n",data->data_revision,hello->hello_program,hello->hello_version,comment);
+    fprintf(fd,"#\n# Revision: %d\n# Submitted via: %s %s %s\n#\n",data->data_revision,hello->hello_program,hello->hello_version,comment);
   else
-    fprintf(fd,"#\n# Revision: %d\nSubmitted via: %s %s\n#\n",data->data_revision,hello->hello_program,hello->hello_version);
+    fprintf(fd,"#\n# Revision: %d\n# Submitted via: %s %s\n#\n",data->data_revision,hello->hello_program,hello->hello_version);
 
   fprintf(fd,"DISCID=%08lx\n",data->data_id);
   if(data->data_title[0]=='\0')
@@ -1555,7 +1555,7 @@ static int cddb_write_local_file(FILE* fd,const struct cddb_hello *hello,const s
   for(index=0;index<data->data_total_tracks;index++)
   {
     snprintf(key,sizeof(key),"TTITLE%d",index);
-    if(data->data_track[index].track_artist=='\0')
+    if(data->data_track[index].track_artist[0]=='\0')
       cddb_write_file_line(fd,key,data->data_track[index].track_title);
     else
     {
