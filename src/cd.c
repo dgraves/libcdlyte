@@ -264,7 +264,7 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
   disc->disc_total_tracks=cdth.CDTH_ENDING_TRACK;
   if(disc->disc_track!=NULL)
     free(disc->disc_track);
-  disc->disc_track=(struct track_info*)malloc(disc->disc_total_tracks*sizeof(struct track_info));
+  disc->disc_track=(struct track_info*)calloc(disc->disc_total_tracks+1,sizeof(struct track_info));
 
 #ifdef CDLYTE_READTOCENTRYS
 
@@ -540,7 +540,7 @@ int cd_get_volume(cddesc_t cd_desc,struct disc_volume *vol)
 /* Convert volume level from a percentage to a byte.  */
 static char __internal_cd_get_volume_val(float ratio)
 {
-  return (char)(255*ratio);
+  return (char)(255.0f*ratio);
 }
 
 /**
@@ -797,9 +797,11 @@ int cd_update(struct disc_info *disc,const struct disc_status *status)
   memcpy(&disc->disc_track_time,&status->status_track_time,sizeof(struct disc_timeval));
 
   disc->disc_current_track = 0;
-  while(disc->disc_current_track<disc->disc_total_tracks&&
-    cd_msf_to_frames(&disc->disc_time)>=cd_msf_to_frames(&disc->disc_track[disc->disc_current_track].track_pos))
-  disc->disc_current_track++;
+  while((disc->disc_current_track<disc->disc_total_tracks)&&
+        (cd_msf_to_frames(&disc->disc_time)>=cd_msf_to_frames(&disc->disc_track[disc->disc_current_track].track_pos)))
+  {
+    disc->disc_current_track++;
+  }
 
   return 0;
 }
