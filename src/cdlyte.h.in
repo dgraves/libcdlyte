@@ -50,12 +50,14 @@ extern "C" {
 #define MAX_SLOTS				100 /* For CD changers */
 
 /* CDDB defaults */
-#define CDDB_PROTOCOL_LEVEL 			3
+#define CDDB_PROTOCOL_LEVEL 			5
 #define CDDBP_DEFAULT_PORT			8880
 #define HTTP_DEFAULT_PORT			80
+#define CDDB_HTTP_QUERY_CGI			"~cddb/cddb.cgi"
+#define CDINDEX_QUERY_CGI			"cgi-bin/cdi/get.pl"
 #define CDDB_EMAIL_SUBMIT_ADDRESS		"freedb-submit@freedb.org"
-#define CDDB_HTTP_SUBMIT_CGI 			"/~cddb/submit.cgi"
-#define CDINDEX_SUBMIT_CGI			"/cgi-bin/cdi/xsubmit.pl"
+#define CDDB_HTTP_SUBMIT_CGI 			"~cddb/submit.cgi"
+#define CDINDEX_SUBMIT_CGI			"cgi-bin/cdi/xsubmit.pl"
 #define CDDB_SUBMIT_HTTP			0
 #define CDDB_SUBMIT_EMAIL			1
 #define CDDB_SUBMIT_MODE 			0
