@@ -274,8 +274,8 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
   /* Read the Table Of Contents */
   cdte.CDTE_ADDRESS_FORMAT=CDLYTE_MSF_FORMAT;
   cdte.CDTE_STARTING_TRACK=0;
-  cdte.CDTE_DATA=cdte_buffer;
-  cdte.CDTE_DATA_LEN=sizeof(cdte_buffer);
+  cdte.CDTE_DATA=(struct CDLYTE_TOCENTRY_DATA*)calloc(disc->disc_total_tracks+1,sizeof(struct CDLYTE_TOCENTRY_DATA));
+  cdte.CDTE_DATA_LEN=disc->disc_total_tracks+1;
 
   if(ioctl(cd_desc,CDLYTE_READTOCENTRYS,&cdte)<0)
   {
@@ -292,6 +292,8 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
     disc->disc_track[readtracks].track_type=(cdte.CDTE_DATA[readtracks].CDTE_CONTROL & CDROM_DATA_TRACK) ? CDLYTE_TRACK_DATA : CDLYTE_TRACK_AUDIO;
     disc->disc_track[readtracks].track_lba=cd_msf_to_lba(disc->disc_track[readtracks].track_pos);
   }
+
+  free(cdte.CDTE_DATA);
 
 #else /* CDLYTE_READTOCENTRYS */
 
