@@ -450,8 +450,8 @@ int cd_get_volume(cddesc_t cd_desc,struct disc_volume *vol)
     mxcd.cChannels=2;
     if(mixerGetControlDetails((HMIXEROBJ)mixer,&mxcd,MIXER_GETCONTROLDETAILSF_VALUE)==MMSYSERR_NOERROR)
     {
-      vol->vol_back.left=vol->vol_front.left=(int)(255*(((double)volStruct[0].dwValue)/((double)(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum))));
-      vol->vol_back.right=vol->vol_front.right=(int)(255*(((double)volStruct[1].dwValue)/((double)(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum))));
+      vol->vol_back.left=vol->vol_front.left=((float)volStruct[0].dwValue)/((float)(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
+      vol->vol_back.right=vol->vol_front.right=((float)volStruct[1].dwValue)/((float)(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
       return 0;
     }
   }
@@ -475,14 +475,18 @@ int cd_set_volume(cddesc_t cd_desc,const struct disc_volume *vol)
 
   if(mixer!=NULL)
   {
+    /* The windows mixer does not support front and back.  Use the larger of the two.  */
+    float left=(vol->vol_back.left>vol->vol_front.left)?vol->vol_back.left:vol->vol_front.left;
+    float right=(vol->vol_back.right>vol->vol_front.right)?vol->vol_back.right:vol->vol_front.right;
+
     memset(&mxcd,0,sizeof(mxcd));
     mxcd.cbStruct=sizeof(mxcd);
     mxcd.cbDetails=sizeof(volStruct);
     mxcd.dwControlID=mxc.dwControlID;
     mxcd.paDetails=&volStruct;
     mxcd.cChannels=2;
-    volStruct[0].dwValue=(int)((double)(vol->vol_back.left/255))*(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum);
-    volStruct[1].dwValue=(int)((double)(vol->vol_back.right/255))*(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum);
+    volStruct[0].dwValue=(DWORD)(left*(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
+    volStruct[1].dwValue=(DWORD)(right*(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
     if(mixerSetControlDetails((HMIXEROBJ)mixer,&mxcd,MIXER_GETCONTROLDETAILSF_VALUE)==MMSYSERR_NOERROR)
       return 0;
   }
