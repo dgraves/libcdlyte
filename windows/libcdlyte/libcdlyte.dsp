@@ -63,8 +63,8 @@ LIB32=link.exe -lib
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ  /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ  /c
+# ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "../.." /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -83,10 +83,62 @@ LIB32=link.exe -lib
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
+# Begin Source File
+
+SOURCE=..\..\src\base64.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\cd.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\cddb.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\cdindex.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\changer.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\data.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\extra_objs.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\win32_cd.c
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Source File
+
+SOURCE=..\..\acconfig.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\cdlyte.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\compat.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\config.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\data.h
+# End Source File
 # End Group
 # End Target
 # End Project

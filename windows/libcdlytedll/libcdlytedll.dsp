@@ -66,8 +66,8 @@ LINK32=link.exe
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBCDLYTEDLL_EXPORTS" /YX /FD /GZ  /c
-# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBCDLYTEDLL_EXPORTS" /YX /FD /GZ  /c
+# ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBCDLYTEDLL_EXPORTS" /YX /FD /GZ /c
+# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "../.." /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBCDLYTEDLL_EXPORTS" /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -88,10 +88,62 @@ LINK32=link.exe
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
+# Begin Source File
+
+SOURCE=..\..\src\base64.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\cd.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\cddb.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\cdindex.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\changer.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\data.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\extra_objs.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\win32_cd.c
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Source File
+
+SOURCE=..\..\acconfig.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\cdlyte.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\compat.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\config.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\data.h
+# End Source File
 # End Group
 # Begin Group "Resource Files"
 
