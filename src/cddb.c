@@ -43,6 +43,8 @@ Boston, MA  02111-1307, USA.
 #include <netdb.h>
 #endif
 
+#include "cdlyte.h"
+
 #ifndef INADDR_NONE
 #define INADDR_NONE 0xFFFFFFFF
 #endif
@@ -57,8 +59,6 @@ Boston, MA  02111-1307, USA.
 #endif
 #endif
 
-#include "cdlyte.h"
-
 /* Some procedures differ on Windows.  */
 #ifndef WIN32
 #define PATHSEP '/'
@@ -71,7 +71,7 @@ Boston, MA  02111-1307, USA.
 #define snprintf _snprintf
 #endif
 
-#define CDDB_INT_STRLEN(x) ((x<0)?log10(x)+2:log10(x)+1)
+#define CDDB_INT_STRLEN(x) (((x)<0)?((int)log10(x))+2:((int)log10(x))+1)
 
 /* Global cddb_message definition */
 char cddb_message[CDDB_LINE_SIZE];
