@@ -37,6 +37,9 @@ and we have access to the Irix cdaudio library to do the dirty work. */
 /* Define to 1 if you have the <io/cam/cdrom.h> header file. */
 #undef HAVE_IO_CAM_CDROM_H
 
+/* Define to 1 if you have the `m' library (-lm). */
+#undef HAVE_LIBM
+
 /* Define to 1 if you have the <linux/cdrom.h> header file. */
 #undef HAVE_LINUX_CDROM_H
 

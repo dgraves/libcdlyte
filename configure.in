@@ -51,7 +51,7 @@ else
         threads=no
 fi])
 
-dnl POSIX.4 threads   
+dnl POSIX.4 threads
 if test "$threads" = "yes"
 then
         AC_CHECK_LIB(pthread,pthread_create,threads=-lpthread,threads=no)
@@ -62,7 +62,7 @@ then
 fi
 
 case "$host_os" in
-  irix*) 
+  irix*)
     AC_DEFINE(IRIX_CDLYTE)
     LIBRARY_LIBS="-lcdaudio -lmediad -lds $LIBS"
     ;;
@@ -78,7 +78,7 @@ AC_CHECK_HEADERS(fcntl.h sys/ioctl.h unistd.h linux/cdrom.h linux/ucdrom.h sys/c
 AC_C_CONST
 
 case "$cross_compiling" in
-  yes) 
+  yes)
     echo "You are cross compiling.  You will need to edit config.h and specify the target machine's endianness and word size manually."
     ;;
   no)
@@ -93,6 +93,8 @@ AC_PROG_GCC_TRADITIONAL
 AC_CHECK_FUNCS(gethostbyname gethostbyname_r mkdir socket strerror strstr strtol snprintf getmntinfo)
 AC_FUNC_GETMNTENT
 
+AC_CHECK_LIB(m,main)
+
 if test "$threads" != "no"
 then
         AC_DEFINE(HAVE_PTHREAD)
@@ -106,7 +108,7 @@ AC_SUBST(LIBS)
 AC_SUBST(LIB_LDADD)
 
 AC_OUTPUT([
-Makefile 
+Makefile
 src/Makefile
 src/cdver.h
 tests/Makefile
