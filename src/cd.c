@@ -97,9 +97,9 @@ Boston, MA  02111-1307, USA.
 char* cd_version(char *buffer,int len)
 {
 #ifndef WIN32
-  snprintf(buffer,len,"%s %s",PACKAGE,VERSION);
+  snprintf(buffer,len,"%s %s",LIBCDLYTE_PACKAGE,LIBCDLYTE_VERSION);
 #else
-  _snprintf(buffer,len,"%s %s",PACKAGE,VERSION);
+  _snprintf(buffer,len,"%s %s",LIBCDLYTE_PACKAGE,LIBCDLYTE_VERSION);
 #endif
   return buffer;
 }
@@ -110,7 +110,7 @@ char* cd_version(char *buffer,int len)
  */
 long cd_getversion()
 {
-  return LIBCDLYTE_VERSION;
+  return LIBCDLYTE_VERSION_NUMBER;
 }
 
 #if !defined IRIX_CDLYTE && !defined WIN32
