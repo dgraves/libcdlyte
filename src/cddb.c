@@ -2253,20 +2253,93 @@ cdsock_t cddb_initiate(const struct cddb_host *host,const struct cddb_server *pr
   return sock;
 }
 
-/* Do full process to read entry.  */
+/**
+ * Complete a full CDDB transaction for retrieving the data from a specified 
+ * CD.  If multiple data entries are available, the first one will be 
+ * chosen.  Provided as a convenience.  
+ * @param cd_desc the handle to the cd device containing CD for which to 
+ *        obtain CDDB data.  
+ * @param host a cddb_host structure specifying the CDDB 
+ *        server with which to connect.  
+ * @param proxy a cddb_server structure specifying the proxy server
+ *        to connect through.  If there is no proxy server this value 
+ *        should be NULL.  
+ * @param hello a cddb_hello structure specifying the name and version 
+ *        of the application connecting to the CDDB server.  
+ * @param data a disc_data structure to be filled with the retrieved CDDB data.  
+ * @return 1 if an entry is found, 0 if no entry is found, and -1 if an 
+ *         error is encountered.  
+ */
 int cddb_read_data(cddesc_t cd_desc,const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello *hello,struct disc_data *data)
 {
-  return 0;
+  char inbuffer[256],http_string[1024];
+  cdsock_t sock;
+  struct cddb_query query;
+
+  /* Get Query string.  */
+  if(cddb_query_string(cd_desc,inbuffer,sizeof(inbuffer))==NULL)
+    return -1;
+
+  /* Connect.  */
+  if((sock=cddb_initiate(host,proxy,hello,http_string,sizeof(http_string)))==INVALID_CDSOCKET)
+    return -1;
+
+  /* Query.  */
+  if(cddb_query(inbuffer,sock,host->host_protocol,&query,http_string)<1)
+  {
+    cddb_close(sock);
+    return -1;
+  }
+
+  /* Check for match.  */
+  if(query.query_match==QUERY_NOMATCH||query.query_matches==0)
+  {
+    cddb_close(sock);
+    return 0;
+  }
+
+  /* Grab first match in list.  */
+  if(cddb_read(query.query_list[0].list_category,query.query_list[0].list_id,sock,host->host_protocol,data,http_string)<1)
+  {
+    cddb_close(sock);
+    return -1;
+  }
+
+  cddb_quit(sock,host->host_protocol);
+
+  return 1;
 }
 
-/* Do full sites read.  */
-int cddb_read_sites(cddesc_t cd_desc,const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello *hello,struct cddb_serverlist *list)
+/**
+ * Complete a full CDDB transaction for a retrieving a list of CDDB server
+ * sites.  Provided as a convenience.  
+ * @param host a cddb_host structure specifying the CDDB 
+ *        server with which to connect.  
+ * @param proxy a cddb_server structure specifying the proxy server
+ *        to connect through.  If there is no proxy server this value 
+ *        should be NULL.  
+ * @param hello a cddb_hello structure specifying the name and version 
+ *        of the application connecting to the CDDB server.  
+ * @param list a cddb_serverlist structure to be filled with the retrieved server data.  
+ * @return 0 on success, -1 on failure.  
+ */
+int cddb_read_sites(const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello *hello,struct cddb_serverlist *list)
 {
-  return 0;
-}
+  char http_string[1024];
+  cdsock_t sock;
 
-/* Do full submit.  */
-int cddb_http_submit(int cd_desc,const struct cddb_host *host, struct cddb_server *proxy, char *email_address,...)
-{
+  /* Connect.  */
+  if((sock=cddb_initiate(host,proxy,hello,http_string,sizeof(http_string)))==INVALID_CDSOCKET)
+    return -1;
+
+  /* Get server list.  */
+  if(cddb_sites(sock,host->host_protocol,list,http_string)<1)
+  {
+    cddb_close(sock);
+    return -1;
+  }
+
+  cddb_quit(sock,host->host_protocol);
+
   return 0;
 }

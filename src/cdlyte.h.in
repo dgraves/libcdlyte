@@ -468,10 +468,7 @@ cdsock_t cddb_initiate(const struct cddb_host *host,const struct cddb_server *pr
 int cddb_read_data(cddesc_t cd_desc,const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello *hello,struct disc_data *data);
 
 /* Do full sites read.  */
-int cddb_read_sites(cddesc_t cd_desc,const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello *hello,struct cddb_serverlist *list);
-
-/* Do full submit.  */
-int cddb_http_submit(int cd_desc,const struct cddb_host *host, struct cddb_server *proxy, char *email_address,...);
+int cddb_read_sites(const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello *hello,struct cddb_serverlist *list);
 
 
 /* CD Changer function declarations */
