@@ -108,6 +108,6 @@ AC_SUBST(LIB_LDADD)
 AC_OUTPUT([
 Makefile 
 src/Makefile
-src/cdlyte.h
+src/cdver.h
 tests/Makefile
 ])
