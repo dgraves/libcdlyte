@@ -90,7 +90,6 @@ AC_SUBST(LIBCDLYTE_VERSION_MINOR)
 AC_SUBST(LIBCDLYTE_VERSION_MICRO)
 
 AC_OUTPUT([
-libcdlyte-config
 Makefile 
 src/Makefile
-src/cdlyte.h], [chmod +x libcdlyte-config])
+src/cdlyte.h])

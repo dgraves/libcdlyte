@@ -62,6 +62,8 @@ host_triplet = @host@
 AS = @AS@
 CC = @CC@
 DLLTOOL = @DLLTOOL@
+ECHO = @ECHO@
+EXEEXT = @EXEEXT@
 LIBCDLYTE_VERSION = @LIBCDLYTE_VERSION@
 LIBCDLYTE_VERSION_MAJOR = @LIBCDLYTE_VERSION_MAJOR@
 LIBCDLYTE_VERSION_MICRO = @LIBCDLYTE_VERSION_MICRO@
@@ -72,9 +74,11 @@ LIB_LDADD = @LIB_LDADD@
 LN_S = @LN_S@
 MAKEINFO = @MAKEINFO@
 OBJDUMP = @OBJDUMP@
+OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
 REENTRANT = @REENTRANT@
+STRIP = @STRIP@
 VERSION = @VERSION@
 
 noinst_HEADERS = \
@@ -130,7 +134,7 @@ OBJECTS = $(libcdlyte_la_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
-.SUFFIXES: .S .c .lo .o .s
+.SUFFIXES: .S .c .lo .o .obj .s
 $(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
 	cd $(top_srcdir) && $(AUTOMAKE) --gnu src/Makefile
 
@@ -166,6 +170,11 @@ uninstall-libLTLIBRARIES:
 	  $(LIBTOOL)  --mode=uninstall rm -f $(DESTDIR)$(libdir)/$$p; \
 	done
 
+# FIXME: We should only use cygpath when building on Windows,
+# and only if it is available.
+.c.obj:
+	$(COMPILE) -c `cygpath -w $<`
+
 .s.o:
 	$(COMPILE) -c $<
 
@@ -174,6 +183,7 @@ uninstall-libLTLIBRARIES:
 
 mostlyclean-compile:
 	-rm -f *.o core *.core
+	-rm -f *.$(OBJEXT)
 
 clean-compile:
 

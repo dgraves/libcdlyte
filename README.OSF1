@@ -1,9 +1,0 @@
-README for OSF/1
-----------------
-
-libcdaudio has limited and untested support for OSF/1.  Although it may be
-able to list the tracks and read the CDDB/CD Index information, playing will
-probably fail and stopping will not work at all.
-
-If you are willing to test this on OSF/1, please e-mail me at
-bascule@inferno.tusculum.edu.
