@@ -2,7 +2,7 @@
 This is part of the audio CD player library
 Copyright (C)1998-99 Tony Arcieri <bascule@inferno.tusculum.edu>
 Parts Copyright (C)1999 Quinton Dolan <q@OntheNet.com.au>
-Copyright (C)2001-03 Dustin Graves <dgraves@computer.org>
+Copyright (C)2001-04 Dustin Graves <dgraves@computer.org>
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Library General Public
@@ -694,6 +694,7 @@ static int __internal_cd_track_advance(cddesc_t cd_desc,const struct disc_info *
   internal_disc.disc_track_time.seconds=disc->disc_track_time.seconds+time->seconds;
   internal_disc.disc_track_time.frames=disc->disc_track_time.frames+time->frames;
   internal_disc.disc_current_track=disc->disc_current_track;
+  internal_disc.disc_track=disc->disc_track;
 
   if(internal_disc.disc_track_time.frames>74)
   {
@@ -803,12 +804,7 @@ int cd_update(struct disc_info *disc,const struct disc_status *status)
   memcpy(&disc->disc_time,&status->status_disc_time,sizeof(struct disc_timeval));
   memcpy(&disc->disc_track_time,&status->status_track_time,sizeof(struct disc_timeval));
 
-  disc->disc_current_track = 0;
-  while((disc->disc_current_track<disc->disc_total_tracks)&&
-        (cd_msf_to_frames(&disc->disc_time)>=cd_msf_to_frames(&disc->disc_track[disc->disc_current_track].track_pos)))
-  {
-    disc->disc_current_track++;
-  }
+  disc->disc_current_track=status->status_current_track;
 
   return 0;
 }
