@@ -90,14 +90,16 @@ Boston, MA  02111-1307, USA.
  * @param buffer a character array to be filled with a ' ' separated string
  *        specifying the name and version of libcdlyte.  
  * @param len an integer specifying the length of 'buffer'
+ * @return a pointer to 'buffer'.  
  */
-void cd_version(char *buffer,int len)
+char* cd_version(char *buffer,int len)
 {
 #ifndef WIN32
   snprintf(buffer,len,"%s %s",PACKAGE,VERSION);
 #else
   _snprintf(buffer,len,"%s %s",PACKAGE,VERSION);
 #endif
+  return buffer;
 }
 
 /**

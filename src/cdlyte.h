@@ -302,7 +302,7 @@ struct disc_mc_changer {
 /* CD function declarations */
 
 /* Return the name and version number of libcdlyte as a string.  */
-void cd_version(char *buffer,int len);
+char* cd_version(char *buffer,int len);
 
 /* Return the version number of libcdlyte as an integer.  */
 long cd_getversion();
@@ -475,7 +475,7 @@ int cddb_read_sites(const struct cddb_host *host,const struct cddb_server *proxy
 
 int cd_changer_select_disc(int cd_desc,int disc);
 int cd_changer_slots(int cd_desc);
-int cd_changer_stat(int cd_desc,struct disc_changer *changer);
+int cd_changer_stat(const char *path,int cd_desc,struct disc_changer *changer);
 
 #ifdef __cplusplus
 }

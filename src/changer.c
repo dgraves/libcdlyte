@@ -75,7 +75,7 @@ int cd_changer_slots(int cd_desc)
 /* This gives a brief summary of what the CD-ROM changer contains... this can
    take awhile to execute, especially on larger CD-ROM changers, so it
    shouldn't be called excessively */
-int cd_changer_stat(int cd_desc, struct disc_changer *changer)
+int cd_changer_stat(const char *path,int cd_desc,struct disc_changer *changer)
 {
   int discindex;
   struct disc_info disc;
@@ -92,7 +92,7 @@ int cd_changer_stat(int cd_desc, struct disc_changer *changer)
     if(cd_stat(cd_desc,&disc)<0)
       return -1;
 
-    if(cddb_read_disc_data(cd_desc,&data)<0)
+    if(cddb_read_local(path,cddb_discid(cd_desc),&data)<0)
       return -1;
 
     changer->changer_disc[discindex].disc_present=disc.disc_present;

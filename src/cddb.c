@@ -438,28 +438,40 @@ char* cddb_category(int category,char* buffer,int len)
   {
     case CDDB_BLUES:
       strncpy(buffer,"blues",len);
+      break;
     case CDDB_CLASSICAL:
       strncpy(buffer,"classical",len);
+      break;
     case CDDB_COUNTRY:
       strncpy(buffer,"country",len);
+      break;
     case CDDB_DATA:
       strncpy(buffer,"data",len);
+      break;
     case CDDB_FOLK:
       strncpy(buffer,"folk",len);
+      break;
     case CDDB_JAZZ:
       strncpy(buffer,"jazz",len);
+      break;
     case CDDB_MISC:
       strncpy(buffer,"misc",len);
+      break;
     case CDDB_NEWAGE:
       strncpy(buffer,"newage",len);
+      break;
     case CDDB_REGGAE:
       strncpy(buffer,"reggae",len);
+      break;
     case CDDB_ROCK:
       strncpy(buffer,"rock",len);
+      break;
     case CDDB_SOUNDTRACK:
       strncpy(buffer,"soundtrack",len);
+      break;
     default:
       strncpy(buffer,"unknown",len);
+      break;
   }
 
   return buffer;
@@ -645,7 +657,7 @@ cdsock_t cddb_connect(const struct cddb_host *host,const struct cddb_server *pro
   }
   else
   {
-    if(cddb_read_response(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
+    if(cddb_read_reply(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
     {
       snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
       cddb_close(sock);
@@ -683,7 +695,7 @@ int cddb_handshake(cdsock_t sock,const struct cddb_hello *hello)
     return CDSOCKET_ERROR;
   }
 
-  if(cddb_read_response(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
+  if(cddb_read_reply(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
   {
     snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
     cddb_close(sock);
@@ -719,7 +731,7 @@ int cddb_proto(cdsock_t sock)
     return CDSOCKET_ERROR;
   }
 
-  if(cddb_read_response(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
+  if(cddb_read_reply(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
   {
     snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
     cddb_close(sock);
@@ -901,12 +913,12 @@ int cddb_query(const char* querystr,cdsock_t sock,int mode,struct cddb_query *qu
       return CDSOCKET_ERROR;
     }
   }
-  else if(cddb_message[1]==1)
+  else if(cddb_message[1]=='1')
   {
     /* Either multiple exact matches or inexact matches.  */
-    if(cddb_message[2]==0)
+    if(cddb_message[2]=='0')
       query->query_match=QUERY_EXACT;
-    else if(cddb_message[2]==1)
+    else if(cddb_message[2]=='1')
       query->query_match=QUERY_INEXACT;
     else
     {
@@ -1000,8 +1012,8 @@ static int cddb_proc_read_string(char *line,struct disc_data *data,struct __disc
     if(strstr(line,"Revision:")!=NULL)
     {
       value=strchr(line,':');
-      while(!isdigit(value[index])&&value[index]!='\0')
-        index++;
+      while(!isdigit(*value)&&*value!='\0')
+        value++;
       data->data_revision=strtol(value,NULL,10);
     }
   }
@@ -1139,7 +1151,7 @@ int cddb_read(int category,unsigned long discid,cdsock_t sock,int mode,struct di
     snprintf(outtemp,sizeof(outtemp),"cddb+read+%s+%08lx",cddb_category(category,inbuffer,sizeof(inbuffer)),discid);
     cddb_generate_http_request(outbuffer,outtemp,http_string,sizeof(outbuffer));
 
-    va_endlist(arglist);
+    va_end(arglist);
   }
   else
   {
@@ -1163,7 +1175,7 @@ int cddb_read(int category,unsigned long discid,cdsock_t sock,int mode,struct di
     return CDSOCKET_ERROR;
   }
 
-  if(cddb_message[0]!=2&&cddb_message[1]!=1)
+  if(cddb_message[0]!='2'&&cddb_message[1]!='1')
     return 0;
 
   data->data_id=discid;
@@ -1312,7 +1324,7 @@ int cddb_sites(cdsock_t sock,int mode,struct cddb_serverlist *list,...)
     return CDSOCKET_ERROR;
   }
 
-  if(cddb_message[0]!=2)
+  if(cddb_message[0]!='2')
     return 0;
 
   list->list_len=0;
@@ -1325,7 +1337,7 @@ int cddb_sites(cdsock_t sock,int mode,struct cddb_serverlist *list,...)
 
   while(inbuffer[0]!='.')
   {
-    if(cddb_sites_process_line(inbuffer,&list->list_host[list->list_len])!=-1)
+    if(cddb_proc_sites_line(inbuffer,&list->list_host[list->list_len])!=-1)
       list->list_len++;
   
     if(cddb_read_line(sock,inbuffer,sizeof(inbuffer))==CDSOCKET_ERROR)
@@ -1761,7 +1773,7 @@ int cddb_submit(const struct cddb_host *host,const struct cddb_server *proxy,con
       return -1;
     }
 
-    if(cddb_read_response(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
+    if(cddb_read_reply(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
     {
       snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
       cddb_close(sock);
@@ -1786,7 +1798,7 @@ int cddb_submit(const struct cddb_host *host,const struct cddb_server *proxy,con
       return -1;
     }
 
-    if(cddb_read_response(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
+    if(cddb_read_reply(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
     {
       snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
       cddb_close(sock);
@@ -1811,7 +1823,7 @@ int cddb_submit(const struct cddb_host *host,const struct cddb_server *proxy,con
       return -1;
     }
 
-    if(cddb_read_response(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
+    if(cddb_read_reply(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
     {
       snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
       cddb_close(sock);
@@ -1836,7 +1848,7 @@ int cddb_submit(const struct cddb_host *host,const struct cddb_server *proxy,con
       return -1;
     }
 
-    if(cddb_read_response(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
+    if(cddb_read_reply(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
     {
       snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
       cddb_close(sock);
@@ -2002,7 +2014,7 @@ int cddb_submit(const struct cddb_host *host,const struct cddb_server *proxy,con
 
   if(host->host_protocol==CDDB_SUBMIT_SMTP)
   {
-    if(cddb_read_response(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
+    if(cddb_read_reply(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
     {
       snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
       cddb_close(sock);
@@ -2027,7 +2039,7 @@ int cddb_submit(const struct cddb_host *host,const struct cddb_server *proxy,con
       return -1;
     }
 
-    if(cddb_read_response(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
+    if(cddb_read_reply(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
     {
       snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
       cddb_close(sock);
