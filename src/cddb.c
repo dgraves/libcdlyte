@@ -59,6 +59,8 @@ Boston, MA  02111-1307, USA.
 #define cddb_close closesocket
 #endif
 
+#undef strncpy
+
 /* Global cddb_message definition */
 char cddb_message[256];
 
@@ -72,6 +74,7 @@ struct __track_data {
 struct __disc_data {
   int dtitle_len;                  /* Amount of data in dtitle field */
   char dtitle[EXTENDED_DATA_SIZE]; /* Concatenate all DTITLE lines before parsing */
+  int genre_len;                   /* Amount of data in corresponding disc_data field */
   int ext_len;                     /* Amount of data in corresponding disc_data field */
   int track_total;                 /* Number of tracks */
   struct __track_data track[MAX_TRACKS];
@@ -91,7 +94,7 @@ static int cddb_sum(int val)
 }
 
 /**
- * Return CDDB ID for CD in device with handle cd_desc */
+ * Return CDDB ID for CD in device with handle cd_desc.  
  * @param cd_desc the handle to the cd device containing CD from which to obtain CDDB ID.  
  * @return calculated CDDB ID on success, -1 on failure.  
  */
@@ -106,12 +109,12 @@ unsigned long cddb_discid(cddesc_t cd_desc)
   if(!disc.disc_present)
     return -1;
 
-  for(index=0;index<disc->disc_total_tracks;index++)
-    tracksum+=cddb_sum(disc->disc_track[index].track_pos.minutes*60+disc->disc_track[index].track_pos.seconds);
+  for(index=0;index<disc.disc_total_tracks;index++)
+    tracksum+=cddb_sum(disc.disc_track[index].track_pos.minutes*60+disc.disc_track[index].track_pos.seconds);
 
-  discid=(disc->disc_length.minutes*60+disc->disc_length.seconds)-(disc->disc_track[0].track_pos.minutes*60+disc->disc_track[0].track_pos.seconds);
+  discid=(disc.disc_length.minutes*60+disc.disc_length.seconds)-(disc.disc_track[0].track_pos.minutes*60+disc.disc_track[0].track_pos.seconds);
 
-  return ((tracksum%0xFF)<<24|discid<<8|disc->disc_total_tracks)&0xFFFFFFFF;
+  return ((tracksum%0xFF)<<24|discid<<8|disc.disc_total_tracks)&0xFFFFFFFF;
 }
 
 /**
@@ -128,7 +131,7 @@ char* cddb_query_string(cddesc_t cd_desc,char *query,int len)
 {
   int index;
   unsigned long discid;
-  char outtemp[1024]
+  char outtemp[1024];
   struct disc_info disc;
 
   if(cd_stat(cd_desc,&disc)<0)
@@ -137,7 +140,7 @@ char* cddb_query_string(cddesc_t cd_desc,char *query,int len)
   if((discid=cddb_discid(cd_desc))==-1)
     return NULL;
 
-  snprintf(outtemp,len,"%d",disc.disc_total_tracks);
+  snprintf(outtemp,sizeof(outtemp),"%d",disc.disc_total_tracks);
   for(index=0;index<disc.disc_total_tracks;index++)
   {
     strncpy(query,outtemp,len);
@@ -169,7 +172,7 @@ int cddb_gen_unknown_entry(cddesc_t cd_desc,struct disc_data *data)
     return -1;
 
   memset(data,0,sizeof(*data));
-  data->data_genre=CDDB_UNKNOWN;
+  data->data_category=CDDB_UNKNOWN;
 
   return 0;
 }
@@ -180,13 +183,18 @@ int cddb_gen_unknown_entry(cddesc_t cd_desc,struct disc_data *data)
  * @param tracks number of tracks to allocate space for.  
  * @return 0 on success, -1 on failure.  
  */
-int cddb_mc_alloc(struct disc_mc_data *data, int tracks)
+int cddb_mc_alloc(struct disc_mc_data *data,int tracks)
 {
-  int index,deindex;
+  int index;
 
+  data->data_id=0;
+  data->data_category=CDDB_UNKNOWN;
+  data->data_revision=0;
   data->data_total_tracks=tracks;
-  data->data_title=NULL;
   data->data_artist=NULL;
+  data->data_title=NULL;
+  data->data_year=NULL;
+  data->data_genre=NULL;
   data->data_extended=NULL;
 
   if((data->data_track=calloc(tracks,sizeof(struct track_mc_data)))==NULL)
@@ -194,14 +202,7 @@ int cddb_mc_alloc(struct disc_mc_data *data, int tracks)
 
   for(index=0;index<tracks;index++)
   {
-    if((data->data_track[index]=malloc(sizeof(struct track_mc_data)))==NULL)
-    {
-      for(deindex=0;deindex<index;deindex++)
-	free(data->data_track[deindex]);
-      free(data->data_track);
-      return -1;
-    }
-    data->data_track[index]->track_name=NULL;
+    data->data_track[index]->track_title=NULL;
     data->data_track[index]->track_artist=NULL;
     data->data_track[index]->track_extended=NULL;
   }
@@ -211,31 +212,35 @@ int cddb_mc_alloc(struct disc_mc_data *data, int tracks)
 
 /**
  * Free memory allocated for CDDB data structure.  
- * data pointer to memory to be freed.  
+ * @param data pointer to memory to be freed.  
  */
 void cddb_mc_free(struct disc_mc_data *data)
 {
   int index=0,tracks=data->data_total_tracks;
 
+  if(data->data_artist!=NULL)
+    free(data->data_artist);
+
   if(data->data_title!=NULL)
     free(data->data_title);
 
-  if(data->data_artist!=NULL)
-    free(data->data_artist);
+  if(data->data_year!=NULL)
+    free(data->data_year);
+
+  if(data->data_genre!=NULL)
+    free(data->data_genre);
 
   if(data->data_extended!=NULL)
     free(data->data_extended);
 
   for(index=0;index<tracks;index++)
   {
-    if(data->data_track[index]->track_name!=NULL)
-      free(data->data_track[index]->track_name);
+    if(data->data_track[index]->track_title!=NULL)
+      free(data->data_track[index]->track_title);
     if(data->data_track[index]->track_artist!=NULL)
       free(data->data_track[index]->track_artist);
     if(data->data_track[index]->track_extended!=NULL)
       free(data->data_track[index]->track_extended);
-
-    free(data->data_track[index]);
   }
 
   free(data->data_track);
@@ -253,33 +258,38 @@ int cddb_mc_copy_from_data(struct disc_mc_data *out,const struct disc_data *in)
   int track;
 
   out->data_id=in->data_id;
-  strncpy(out->data_cdindex_id,in->data_cdindex_id,CDINDEX_ID_SIZE);
-
+  out->data_category=in->data_category;
   out->data_revision=in->data_revision;
-  out->data_genre=in->data_genre;
-  out->data_artist_type=in->data_artist_type;
 
-  if((out->data_title = malloc(strlen(in->data_title)+1))==NULL)
-    return -1;
-  strncpy(out->data_title,in->data_title,sizeof(out->data_title));
-   
   if((out->data_artist=malloc(strlen(in->data_artist)+1))==NULL)
     return -1;
   strncpy(out->data_artist,in->data_artist,sizeof(out->data_artist));
 
+  if((out->data_title=malloc(strlen(in->data_title)+1))==NULL)
+    return -1;
+  strncpy(out->data_title,in->data_title,sizeof(out->data_title));
+   
+  if((out->data_year=malloc(strlen(in->data_year)+1))==NULL)
+    return -1;
+  strncpy(out->data_year,in->data_year,sizeof(out->data_year));
+   
+  if((out->data_genre=malloc(strlen(in->data_genre)+1))==NULL)
+    return -1;
+  strncpy(out->data_genre,in->data_genre,sizeof(out->data_genre));
+   
   if((out->data_extended=malloc(strlen(in->data_extended)+1))==NULL)
     return -1;
   strncpy(out->data_extended,in->data_extended,sizeof(out->data_extended));
 
   for(track=0;track<out->data_total_tracks;track++)
   {
-    if((out->data_track[track]->track_name=malloc(strlen(in->data_track[track].track_name)+1))==NULL)
+    if((out->data_track[track]->track_title=malloc(strlen(in->data_track[track].track_title)+1))==NULL)
       return -1;
-    strncpy(out->data_track[track]->track_name,in->data_track[track].track_name,sizeof(out->data_track[track]->track_name));
+    strncpy(out->data_track[track]->track_title,in->data_track[track].track_title,sizeof(out->data_track[track]->track_title));
 
     if((out->data_track[track]->track_artist=malloc(strlen(in->data_track[track].track_artist)+1))==NULL)
       return -1;
-    strncpy(out->data_track[track]->track_artist, in->data_track[track].track_artist,sizeof(out->data_track[track]->track_artist));
+    strncpy(out->data_track[track]->track_artist,in->data_track[track].track_artist,sizeof(out->data_track[track]->track_artist));
 
     if((out->data_track[track]->track_extended=malloc(strlen(in->data_track[track].track_extended)+1))==NULL)
       return -1;
@@ -299,22 +309,22 @@ int cddb_data_copy_from_mc(struct disc_data *out,const struct disc_mc_data *in)
 {
   int track;
 
-  outdata->data_id=indata->data_id;
-  strncpy(outdata->data_cdindex_id,indata->data_cdindex_id,CDINDEX_ID_SIZE);
+  out->data_id=in->data_id;
+  out->data_category=in->data_category;
+  out->data_revision=in->data_revision;
+  out->data_total_tracks=in->data_total_tracks;
 
-  outdata->data_revision=indata->data_revision;
-  outdata->data_genre=indata->data_genre;
-  outdata->data_artist_type=indata->data_artist_type;
+  strncpy(out->data_artist,in->data_artist,sizeof(out->data_artist));
+  strncpy(out->data_title,in->data_title,sizeof(out->data_title));
+  strncpy(out->data_year,in->data_year,sizeof(out->data_year));
+  strncpy(out->data_genre,in->data_genre,sizeof(out->data_genre));
+  strncpy(out->data_extended,in->data_extended,sizeof(out->data_extended));
 
-  strncpy(outdata->data_title,indata->data_title,sizeof(outdata->data_title));
-  strncpy(outdata->data_artist,indata->data_artist,sizeof(outdata->data_artist));
-  strncpy(outdata->data_extended,indata->data_extended,sizeof(outdata->data_extended));
-
-  for(track = 0; track < indata->data_total_tracks; track++)
+  for(track=0;track<in->data_total_tracks;track++)
   {
-    strncpy(outdata->data_track[track].track_name,indata->data_track[track]->track_name,sizeof(outdata->data_track[track].track_name));
-    strncpy(outdata->data_track[track].track_artist,indata->data_track[track]->track_artist,sizeof(outdata->data_track[track].track_artist));
-    strncpy(outdata->data_track[track].track_extended,indata->data_track[track]->track_extended,sizeof(outdata->data_track[track].track_extended);
+    strncpy(out->data_track[track].track_title,in->data_track[track]->track_title,sizeof(out->data_track[track].track_title));
+    strncpy(out->data_track[track].track_artist,in->data_track[track]->track_artist,sizeof(out->data_track[track].track_artist));
+    strncpy(out->data_track[track].track_extended,in->data_track[track]->track_extended,sizeof(out->data_track[track].track_extended));
   }
 
    return 0;
@@ -384,7 +394,7 @@ int cddb_process_url(struct cddb_host *host,const char *url)
 
     memset(port,'\0',sizeof(port));
     strncpy(port,url,index);
-    host->host_server.server_port=strtol(procbuffer,NULL,10);
+    host->host_server.server_port=strtol(port,NULL,10);
   }
 
   memset(host->host_addressing,'\0',sizeof(host->host_addressing));
@@ -407,77 +417,73 @@ int cddb_process_url(struct cddb_host *host,const char *url)
 
 /**
  * Convert numerical identifier to text descriptor.  
- * @param genre an integer identifying the genre.  
- * @param buffer a character array to be used to store the text converted genre type.  
+ * @param category an integer identifying the category.  
+ * @param buffer a character array to be used to store the text converted category type.  
  * @param len the size of the character array 'buffer'.  
  * @return a pointer to 'buffer'.  
  */
-char* cddb_genre(int genre,char* buffer,int len)
+char* cddb_category(int category,char* buffer,int len)
 {
   memset(buffer,0,len);
-  switch(genre)
+  switch(category)
   {
     case CDDB_BLUES:
-      strncpy(buffer,"Blues",len-1);
+      strncpy(buffer,"blues",len);
     case CDDB_CLASSICAL:
-      strncpy(buffer,"Classical",len-1);
+      strncpy(buffer,"classical",len);
     case CDDB_COUNTRY:
-      strncpy(buffer,"Country",len-1);
+      strncpy(buffer,"country",len);
     case CDDB_DATA:
-      strncpy(buffer,"Data",len-1);
+      strncpy(buffer,"data",len);
     case CDDB_FOLK:
-      strncpy(buffer,"Folk",len-1);
+      strncpy(buffer,"folk",len);
     case CDDB_JAZZ:
-      strncpy(buffer,"Jazz",len-1);
+      strncpy(buffer,"jazz",len);
     case CDDB_MISC:
-      strncpy(buffer,"Misc",len-1);
+      strncpy(buffer,"misc",len);
     case CDDB_NEWAGE:
-      strncpy(buffer,"Newage",len-1);
+      strncpy(buffer,"newage",len);
     case CDDB_REGGAE:
-      strncpy(buffer,"Reggae",len-1);
+      strncpy(buffer,"reggae",len);
     case CDDB_ROCK:
-      strncpy(buffer,"Rock",len-1);
+      strncpy(buffer,"rock",len);
     case CDDB_SOUNDTRACK:
-      strncpy(buffer,"Soundtrack",len-1);
+      strncpy(buffer,"soundtrack",len);
     default:
-      strncpy(buffer,"Unknown",len-1);
+      strncpy(buffer,"unknown",len);
   }
 
   return buffer;
 }
 
 /**
- * Convert genre text descriptor to numerical identifier.  
- * @param genre text descriptor to convert to numerical identifier.  
+ * Convert category text descriptor to numerical identifier.  
+ * @param category text descriptor to convert to numerical identifier.  
  * @return numerical identifier.  
  */
-int cddb_genre_value(char *genre)
+int cddb_category_value(const char *category)
 {
-  if(strcmp(genre,"blues")==0)
+  if(strcmp(category,"blues")==0)
     return CDDB_BLUES;
-  else if(strcasecmp(genre,"classical")==0)
+  else if(strcmp(category,"classical")==0)
     return CDDB_CLASSICAL;
-  else if(strcasecmp(genre,"country")==0)
+  else if(strcmp(category,"country")==0)
     return CDDB_COUNTRY;
-  else if(strcasecmp(genre,"data")==0)
+  else if(strcmp(category,"data")==0)
     return CDDB_DATA;
-  else if(strcasecmp(genre,"folk")==0)
+  else if(strcmp(category,"folk")==0)
     return CDDB_FOLK;
-  else if(strcasecmp(genre,"jazz")==0)
+  else if(strcmp(category,"jazz")==0)
     return CDDB_JAZZ;
-  else if(strcasecmp(genre,"misc")==0)
+  else if(strcmp(category,"misc")==0)
     return CDDB_MISC;
-  else if(strcasecmp(genre,"newage")==0)
+  else if(strcmp(category,"newage")==0)
     return CDDB_NEWAGE;
-  else if(strcasecmp(genre,"new age")==0)
-    return CDDB_NEWAGE;
-  else if(strcasecmp(genre,"reggae")==0)
+  else if(strcmp(category,"reggae")==0)
     return CDDB_REGGAE;
-  else if(strcasecmp(genre,"rock")==0)
+  else if(strcmp(category,"rock")==0)
     return CDDB_ROCK;
-  else if(strcasecmp(genre,"soundtrack")==0)
-    return CDDB_SOUNDTRACK;
-  else if(strcasecmp(genre,"sound track")==0)
+  else if(strcmp(category,"soundtrack")==0)
     return CDDB_SOUNDTRACK;
   else
     return CDDB_UNKNOWN;
@@ -503,8 +509,7 @@ static cdsock_t cddb_connect_server(const struct cddb_server *server)
   {
     if((host=gethostbyname(server->server_name))==NULL)
     {
-      if(use_cddb_message)
-        strncpy(cddb_message,strerror(errno),sizeof(cddb_message));
+      strncpy(cddb_message,strerror(errno),sizeof(cddb_message));
       return INVALID_CDSOCKET;
     }
       
@@ -513,15 +518,13 @@ static cdsock_t cddb_connect_server(const struct cddb_server *server)
 
   if((sock=socket(AF_INET,SOCK_STREAM,0))==INVALID_CDSOCKET)
   {
-    if(use_cddb_message)
-      strncpy(cddb_message,strerror(errno),sizeof(cddb_message));
+    strncpy(cddb_message,strerror(errno),sizeof(cddb_message));
     return INVALID_CDSOCKET;
   }
 
   if(connect(sock,(struct sockaddr *)&sin,sizeof(sin))==CDSOCKET_ERROR)
   {
-    if(use_cddb_message)
-      strncpy(cddb_message,strerror(errno),sizeof(cddb_message));
+    strncpy(cddb_message,strerror(errno),sizeof(cddb_message));
     return INVALID_CDSOCKET;
   }
 
@@ -559,7 +562,7 @@ static int cddb_read_line(cdsock_t sock,char *inbuffer,int len)
  * @param len an integer specifying the size of 'message'.  
  * @return 0 on success, CDSOCKET_ERROR on failure.  
  */
-static int cddb_read_reply(cdsock_t sock,char *message,int len);
+static int cddb_read_reply(cdsock_t sock,char *message,int len)
 {
   if(cddb_read_line(sock,message,len)==CDSOCKET_ERROR)
     return CDSOCKET_ERROR;
@@ -598,7 +601,6 @@ cdsock_t cddb_connect(const struct cddb_host *host,const struct cddb_server *pro
   int http_string_len;
   char *http_string;
   struct cddb_hello *hello;
-  va_list arglist;
 
   if(proxy!=NULL)
   {
@@ -612,15 +614,16 @@ cdsock_t cddb_connect(const struct cddb_host *host,const struct cddb_server *pro
   {
     if((sock=cddb_connect_server(&host->host_server))==INVALID_CDSOCKET)
     {
-      snprintf(cddb_message,sizeof(cddb_message),"Failed to connect with %s",host->host_server->server_name);
+      snprintf(cddb_message,sizeof(cddb_message),"Failed to connect with %s",host->host_server.server_name);
       return INVALID_CDSOCKET;
     }
   }
 
   if(host->host_protocol==CDDB_MODE_HTTP)
   {
-    va_start(arglist,hello);
-    hello=va_arg(arglist,char *);
+    va_list arglist;
+    va_start(arglist,proxy);
+    hello=va_arg(arglist,struct cddb_hello *);
     http_string=va_arg(arglist,char *);
     http_string_len=va_arg(arglist,int);
 
@@ -637,13 +640,13 @@ cdsock_t cddb_connect(const struct cddb_host *host,const struct cddb_server *pro
     {
       snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
       cddb_close(sock);
-      return INVALID_SOCKET;
+      return INVALID_CDSOCKET;
     }
 
     if(cddb_message[0]!='2')
     {
       cddb_close(sock);
-      return INVALID_SOCKET;
+      return INVALID_CDSOCKET;
     }
 
     return sock;
@@ -714,7 +717,7 @@ int cddb_proto(cdsock_t sock)
     return CDSOCKET_ERROR;
   }
 
-  if((cddb_message[0]!='2')&&(cddb_message[0]!='5'&&cddb_message[1]!='0'&&cddb_message[2]!='2')
+  if((cddb_message[0]!='2')&&(cddb_message[0]!='5'&&cddb_message[1]!='0'&&cddb_message[2]!='2'))
   {
     return 0;
   }
@@ -731,12 +734,12 @@ static int cddb_generate_http_request(char *outbuffer,const char *cmd,char *http
   if((reqstring=strchr(http_string,'?'))==NULL)
     return -1;
 
-  index=reqstr-http_string;
+  index=reqstring-http_string;
   http_string[index]='\0';
   reqstring++;
 
   snprintf(outbuffer,outbufferlen,"%s?cmd=%s&%s\n",http_string,cmd,reqstring);
-  http_string[index]='\?';
+  http_string[index]='?';
 
   return 0;
 }
@@ -767,15 +770,11 @@ static int cddb_proc_query_string(char *line,struct query_list_entry* entry)
   char *start,*end;
 
   /* Advance to category.  */
-  start=strchr(line,' ');
-  if(start==NULL)
-    return -1;
-
-  end=(strchr(++start,' ');
+  end=strchr(line,' ');
   if(end==NULL)
     return -1;
   *end='\0';
-  entry->list_genre=cddb_genre_value(start);
+  entry->list_category=cddb_category_value(line);
 
   /* Advance to discid.  */
   start=end+1;
@@ -809,8 +808,8 @@ static int cddb_proc_query_string(char *line,struct query_list_entry* entry)
  * The query provides a list of one or more exact and/or inexact matches
  * for the CDDB id specified.  After selecting an item from the list, the
  * corresponding CDDB entry can be retrieved with a subsequent call to 'cddb_read'.  
- * @param querystr a character string specifying the CDDB id and disk 
- *        track info required for a CDDB query.  
+ * @param querystr a character string, specifying the CDDB id and disk 
+ *        track info required for a CDDB query, obtained from 'cddb_query_string'.  
  * @param sock handle to the socket connected to the CDDB server.  
  * @param mode an integer indicating CDDB server mode, either CDDBP or HTTP.  
  * @param query a cddb_query structure to be filled with CDDB query info.  
@@ -822,13 +821,14 @@ static int cddb_proc_query_string(char *line,struct query_list_entry* entry)
  */
 int cddb_query(const char* querystr,cdsock_t sock,int mode,struct cddb_query *query,...)
 {
+  int index;
   char outbuffer[1024],outtemp[1024],inbuffer[256],*http_string;
-  va_list arglist;
 
   memset(query,0,sizeof(*query));
 
   if(mode==CDDB_MODE_HTTP)
   {
+    va_list arglist;
     va_start(arglist,query);
 
     http_string=va_arg(arglist,char *);
@@ -885,19 +885,19 @@ int cddb_query(const char* querystr,cdsock_t sock,int mode,struct cddb_query *qu
     /* Copy message to inbuffer for processing.  */
     strncpy(inbuffer,cddb_message,sizeof(inbuffer));
 
-    if(cddb_proc_query_string(inbuffer,&query->query_list[0])==-1)
+    if(cddb_proc_query_string(&inbuffer[4],&query->query_list[0])==-1)
     {
       snprintf(cddb_message,sizeof(cddb_message),"Error processing server reply");
       cddb_close(sock);
       return CDSOCKET_ERROR;
     }
   }
-  else if(token[1]==1)
+  else if(cddb_message[1]==1)
   {
     /* Either multiple exact matches or inexact matches.  */
-    if(token[2]==0)
+    if(cddb_message[2]==0)
       query->query_match=QUERY_EXACT;
-    else if(token[2]==1)
+    else if(cddb_message[2]==1)
       query->query_match=QUERY_INEXACT;
     else
     {
@@ -1010,17 +1010,17 @@ static int cddb_proc_read_string(char *line,struct disc_data *data,struct __disc
     if(strcmp(key,"DTITLE")==0)
     {
       /* Concatenate all DTITLE entries.  cddb_read will parse.  */
-      __data->dtitle_len=cddb_read_copy(&__data->dtitle[__data->dtitle_len],value,sizeof(__data->dtitle)-__data->dtitle_len-1);
+      __data->dtitle_len+=cddb_read_copy(&__data->dtitle[__data->dtitle_len],value,sizeof(__data->dtitle)-__data->dtitle_len-1);
     }
     else if(strcmp(key,"DYEAR")==0)
     {
       strncpy(data->data_year,value,4);
       data->data_year[4]='\0';
     }
-    else if(strcmp(key,"DGENRE")==0);
+    else if(strcmp(key,"DGENRE")==0)
     {
-      /* Use value from server.  */
-      data->data_genre=cddb_genre_value(value);
+      /* Length minus one to ensure that when the whole buffer is filled, the last item is the terminator.  */
+      __data->genre_len+=cddb_read_copy(&data->data_genre[__data->genre_len],value,sizeof(data->data_genre)-__data->genre_len-1);
     }
     else if(strncmp(key,"TTITLE",6)==0)
     {
@@ -1029,16 +1029,16 @@ static int cddb_proc_read_string(char *line,struct disc_data *data,struct __disc
       if(index>=0&&index<MAX_TRACKS)
       {
         /* Concatenate all DTITLE entries.  cddb_read will parse.  */
-        __data->track[index].ttitle_len=cddb_read_copy(&__data->track[index].ttitle[__data->track[index].ttitle_len],value,sizeof(__data->track[index].ttitle)-__data->track[index].ttitle_len-1);
+        __data->track[index].ttitle_len+=cddb_read_copy(&__data->track[index].ttitle[__data->track[index].ttitle_len],value,sizeof(__data->track[index].ttitle)-__data->track[index].ttitle_len-1);
 
         /* Update the number of tracks, with highest known track value.  */
-	if(data->track_total<index) data->track_total=index;
+	if(__data->track_total<index) __data->track_total=index;
       }
     }
     else if(strcmp(key,"EXTD")==0)
     {
       /* Length minus one to ensure that when the whole buffer is filled, the last item is the terminator.  */
-      __data->ext_len=cddb_read_copy(&data->dtitle[__data->ext_len],value,sizeof(data->data_extended)-__data->ext_len-1);
+      __data->ext_len+=cddb_read_copy(&data->data_extended[__data->ext_len],value,sizeof(data->data_extended)-__data->ext_len-1);
     }
     else if(strncmp(key,"EXTT",4)==0)
     {
@@ -1047,7 +1047,7 @@ static int cddb_proc_read_string(char *line,struct disc_data *data,struct __disc
       if(index>=0&&index<MAX_TRACKS)
       {
         /* Length minus one to ensure that when the whole buffer is filled, the last item is the terminator.  */
-        __data->track[index].ext_len=cddb_read_copy(&data->data_track[index].track_extended[__data->track[index].ext_len],value,sizeof(data->data_track[index].track_extended)-__data->track[index].ext_len-1);
+        __data->track[index].ext_len+=cddb_read_copy(&data->data_track[index].track_extended[__data->track[index].ext_len],value,sizeof(data->data_track[index].track_extended)-__data->track[index].ext_len-1);
       }
     }
   }
@@ -1057,10 +1057,10 @@ static int cddb_proc_read_string(char *line,struct disc_data *data,struct __disc
 
 /**
  * Read CDDB data for a specified CDDB entry.  
- * @param genre an integer specifying the genre for the disc whose 
+ * @param category an integer specifying the category for the disc whose 
  *        data is to be retrieved.  
- * @param discid a long specifuing the id for the disc whose data is
- *        to be retrieved.  
+ * @param discid an unsigned long specifying the id for the disc whose data
+ *        is to be retrieved.  
  * @param sock handle to the socket connected to the CDDB server.  
  * @param mode an integer indicating CDDB server mode, either CDDBP or HTTP.  
  * @param data a disc_data structure to be filled with retrieved CDDB data.  
@@ -1070,29 +1070,29 @@ static int cddb_proc_read_string(char *line,struct disc_data *data,struct __disc
  * @return 1 on read success, 0 on read failure, and CDSOCKET_ERROR 
  *         on socket failure.  
  */
-int cddb_read(int genre,long discid,cdsock_t sock,int mode,struct disc_data *data,...)
+int cddb_read(int category,unsigned long discid,cdsock_t sock,int mode,struct disc_data *data,...)
 {
   int index;
   char outbuffer[1024],outtemp[1024],inbuffer[256],*http_string,*artist,*title;
   struct __disc_data __data;
-  va_list arglist;
 
   memset(&__data,0,sizeof(__data));
   memset(data,0,sizeof(*data));
 
   if(mode==CDDB_MODE_HTTP)
   {
+    va_list arglist;
     va_start(arglist,data);
 
     http_string=va_arg(arglist,char *);
-    snprintf(outtemp,sizeof(outtemp),"cddb+read+%s+%08lx",cddb_genre(genre,inbuffer,sizeof(inbuffer)),discid);
+    snprintf(outtemp,sizeof(outtemp),"cddb+read+%s+%08lx",cddb_category(category,inbuffer,sizeof(inbuffer)),discid);
     cddb_generate_http_request(outbuffer,outtemp,http_string,sizeof(outbuffer));
 
     va_endlist(arglist);
   }
   else
   {
-    snprintf(outbuffer,sizeof(outbuffer),"cddb read %s %08lx\n",cddb_genre(genre,inbuffer,sizeof(inbuffer)),discid);
+    snprintf(outbuffer,sizeof(outbuffer),"cddb read %s %08lx\n",cddb_category(category,inbuffer,sizeof(inbuffer)),discid);
   }
 
   if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
@@ -1116,7 +1116,7 @@ int cddb_read(int genre,long discid,cdsock_t sock,int mode,struct disc_data *dat
     return 0;
 
   data->data_id=discid;
-  data->data_genre=genre;
+  data->data_category=category;
 
   if(cddb_read_line(sock,inbuffer,sizeof(inbuffer))==CDSOCKET_ERROR)
   {
@@ -1138,7 +1138,7 @@ int cddb_read(int genre,long discid,cdsock_t sock,int mode,struct disc_data *dat
   }
 
   /* Get album artist name and title.  */
-  artist=__data->dtitle;
+  artist=__data.dtitle;
   title=strstr(artist," / ");
   if(title==NULL)
   {
@@ -1153,13 +1153,13 @@ int cddb_read(int genre,long discid,cdsock_t sock,int mode,struct disc_data *dat
     strncpy(data->data_title,title+3,sizeof(data->data_title)-1);
   }
   
-  for(index=0;index<=__data->track_total;index++)
+  for(index=0;index<=__data.track_total;index++)
   {
-    artist=__data->track[index].ttitle;
-    title=strstr(value," / ");
+    artist=__data.track[index].ttitle;
+    title=strstr(artist," / ");
     if(title==NULL)
     {
-      strncpy(data->data_track[index].track_title,artist,sizeof(data->data_track[index]->track_title)-1);
+      strncpy(data->data_track[index].track_title,artist,sizeof(data->data_track[index].track_title)-1);
       data->data_track[index].track_artist[0]='\0';
     }
     else
@@ -1169,6 +1169,9 @@ int cddb_read(int genre,long discid,cdsock_t sock,int mode,struct disc_data *dat
       strncpy(data->data_track[index].track_title,title+3,sizeof(data->data_track[index].track_title)-1);
     }
   }
+
+  /* Set the total number of track entries in list.  */
+  data->data_total_tracks=__data.track_total+1;
 
   return 1;
 }
@@ -1250,13 +1253,13 @@ static int cddb_proc_sites_line(char *line,struct cddb_host *host)
 /* Read the CDDB sites list */
 int cddb_sites(cdsock_t sock,int mode,struct cddb_serverlist *list,...)
 {
-  char outbuffer[1024],*http_string;
-  va_list arglist;
+  char outbuffer[1024],inbuffer[256],*http_string;
 
   memset(list,0,sizeof(*list));
 
   if(mode==CDDB_MODE_HTTP)
   {
+    va_list arglist;
     va_start(arglist,list);
     http_string=va_arg(arglist,char *);
     cddb_generate_http_request(outbuffer,"sites",http_string,sizeof(outbuffer));
@@ -1310,22 +1313,25 @@ int cddb_sites(cdsock_t sock,int mode,struct cddb_serverlist *list,...)
 }
 
 /* Terminate the connection */
-int cddb_quit(cdsock_t sock)
+int cddb_quit(cdsock_t sock,int mode)
 {
   char outbuffer[]="quit\n";
 
-  if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
+  if(mode==CDDB_MODE_CDDBP)
   {
-    snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
-    cddb_close(sock);
-    return CDSOCKET_ERROR;
-  }
+    if(send(sock,outbuffer,strlen(outbuffer),0)==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      return CDSOCKET_ERROR;
+    }
 
-  if(cddb_read_reply(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
-  {
-    snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
-    cddb_close(sock);
-    return CDSOCKET_ERROR;
+    if(cddb_read_reply(sock,cddb_message,sizeof(cddb_message))==CDSOCKET_ERROR)
+    {
+      snprintf(cddb_message,sizeof(cddb_message),"Connection to server lost");
+      cddb_close(sock);
+      return CDSOCKET_ERROR;
+    }
   }
 
   cddb_close(sock);
@@ -1340,6 +1346,7 @@ int cddb_quit(cdsock_t sock)
 
 
 
+/*
 
 int cddb_http_submit(int cd_desc,const struct cddb_host *host,struct cddb_server *proxy,char *email_address)
 {
@@ -1500,3 +1507,5 @@ int cddb_http_submit(int cd_desc,const struct cddb_host *host,struct cddb_server
 
   return 0;
 }
+
+*/

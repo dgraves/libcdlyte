@@ -1,6 +1,6 @@
-# Makefile.in generated automatically by automake 1.4 from Makefile.am
+# Makefile.in generated automatically by automake 1.4-p5 from Makefile.am
 
-# Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
+# Copyright (C) 1994, 1995-8, 1999, 2001 Free Software Foundation, Inc.
 # This Makefile.in is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
 # with or without modifications, as long as this notice is preserved.
@@ -77,17 +77,25 @@ RANLIB = @RANLIB@
 REENTRANT = @REENTRANT@
 VERSION = @VERSION@
 
-noinst_HEADERS =  	data.h           compat.h
+noinst_HEADERS = \
+        compat.h
 
 
 lib_LTLIBRARIES = libcdlyte.la
 
-libcdlyte_la_SOURCES =  	cd.c       	irix_cd.c  	win32_cd.c  	cddb.c          	cdindex.c		data.c          	changer.c		base64.c                extra_objs.c
+libcdlyte_la_SOURCES = \
+	cd.c       \
+	irix_cd.c  \
+	win32_cd.c  \
+	cddb.c          \
+	changer.c	\
+        extra_objs.c
 
 
 libcdlyte_la_LDFLAGS = -version-info 1:0:0
 
-include_HEADERS =  	cdlyte.h
+include_HEADERS = \
+	cdlyte.h
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
@@ -99,8 +107,8 @@ DEFS = @DEFS@ -I. -I$(srcdir) -I..
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 libcdlyte_la_LIBADD = 
-libcdlyte_la_OBJECTS =  cd.lo irix_cd.lo win32_cd.lo cddb.lo cdindex.lo \
-data.lo changer.lo base64.lo extra_objs.lo
+libcdlyte_la_OBJECTS =  cd.lo irix_cd.lo win32_cd.lo cddb.lo changer.lo \
+extra_objs.lo
 CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -115,9 +123,8 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = gtar
 GZIP_ENV = --best
-DEP_FILES =  .deps/base64.P .deps/cd.P .deps/cddb.P .deps/cdindex.P \
-.deps/changer.P .deps/data.P .deps/extra_objs.P .deps/irix_cd.P \
-.deps/win32_cd.P
+DEP_FILES =  .deps/cd.P .deps/cddb.P .deps/changer.P .deps/extra_objs.P \
+.deps/irix_cd.P .deps/win32_cd.P
 SOURCES = $(libcdlyte_la_SOURCES)
 OBJECTS = $(libcdlyte_la_OBJECTS)
 
