@@ -58,7 +58,7 @@ AC_CHECK_FUNCS(gethostbyname gethostbyname_r mkdir socket strerror strstr strtol
 dnl Check operating system
 case "$host_os" in
   irix*)
-    AC_DEFINE(IRIX_CDLYTE,1,[Enable IRIX support])
+    AC_DEFINE(IRIX_CDPLAYER,1,[Enable IRIX support])
     LIBRARY_LIBS="-lcdaudio -lmediad -lds $LIBS"
     ;;
   *solaris*)

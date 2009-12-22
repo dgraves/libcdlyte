@@ -209,7 +209,7 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
     msp.dwItem=MCI_CDA_STATUS_TYPE_TRACK;
     if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_TRACK,(DWORD)(LPVOID)&msp)!=0)
       return -1;
-    disc->disc_track[readtracks].track_type=(msp.dwReturn==MCI_CDA_TRACK_AUDIO)?CDLYTE_TRACK_AUDIO:CDLYTE_TRACK_DATA;
+    disc->disc_track[readtracks].track_type=(msp.dwReturn==MCI_CDA_TRACK_AUDIO)?CDPLAYER_TRACK_AUDIO:CDPLAYER_TRACK_DATA;
   }
 
   /* Now calculate leadout. */
@@ -222,7 +222,7 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
   disc->disc_track[disc->disc_total_tracks].track_length.frames=0;
 
   disc->disc_track[disc->disc_total_tracks].track_lba=cd_msf_to_lba(&disc->disc_track[readtracks].track_pos);
-  disc->disc_track[disc->disc_total_tracks].track_type=CDLYTE_TRACK_AUDIO;
+  disc->disc_track[disc->disc_total_tracks].track_type=CDPLAYER_TRACK_AUDIO;
 
   cd_frames_to_msf(&disc->disc_length,cd_msf_to_frames(&disc->disc_track[disc->disc_total_tracks].track_pos));
 
@@ -264,16 +264,16 @@ int cd_poll(cddesc_t cd_desc,struct disc_status *status)
   switch(msp.dwReturn)
   {
     case MCI_MODE_PLAY:
-      status->status_mode=CDLYTE_PLAYING;
+      status->status_mode=CDPLAYER_PLAYING;
       break;
     case MCI_MODE_PAUSE:
-      status->status_mode=CDLYTE_PAUSED;
+      status->status_mode=CDPLAYER_PAUSED;
       break;
     case MCI_MODE_STOP:
-      status->status_mode=cdrom[cd_desc]->cdrom_paused?CDLYTE_PAUSED:CDLYTE_STOPPED;
+      status->status_mode=cdrom[cd_desc]->cdrom_paused?CDPLAYER_PAUSED:CDPLAYER_STOPPED;
       break;
     default:
-      status->status_mode=CDLYTE_NOSTATUS;
+      status->status_mode=CDPLAYER_NOSTATUS;
   }
 
   /* Get current position.  */

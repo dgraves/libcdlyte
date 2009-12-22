@@ -19,24 +19,24 @@ Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 Boston, MA  02111-1307, USA.
 */
 
-#ifndef _CDLYTE_H
-#define _CDLYTE_H
+#ifndef _CDPLAYER_H
+#define _CDPLAYER_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* Used with disc_info */
-#define CDLYTE_PLAYING			0
-#define CDLYTE_PAUSED			1
-#define CDLYTE_STOPPED			2
-#define CDLYTE_COMPLETED		3
-#define CDLYTE_NOSTATUS			4
-#define CDLYTE_INVALID			5
-#define CDLYTE_ERROR			6
+#define CDPLAYER_PLAYING			0
+#define CDPLAYER_PAUSED			1
+#define CDPLAYER_STOPPED			2
+#define CDPLAYER_COMPLETED		3
+#define CDPLAYER_NOSTATUS			4
+#define CDPLAYER_INVALID			5
+#define CDPLAYER_ERROR			6
 
-#define CDLYTE_TRACK_AUDIO 		0
-#define CDLYTE_TRACK_DATA 		1
+#define CDPLAYER_TRACK_AUDIO 		0
+#define CDPLAYER_TRACK_DATA 		1
 
 /* CDDB defaults */
 #define CDDB_PROTOCOL_LEVEL 		5
@@ -190,7 +190,7 @@ struct track_info
    struct disc_timeval track_length;		/* Length of track */
    struct disc_timeval track_pos;		/* Position of track */
    int                 track_lba;		/* Logical Block Address */
-   int                 track_type;              /* CDLYTE_TRACK_AUDIO or CDLYTE_TRACK_DATA */
+   int                 track_type;              /* CDPLAYER_TRACK_AUDIO or CDPLAYER_TRACK_DATA */
 };
 
 /** Disc information such as current track, amount played, etc */
