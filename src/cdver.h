@@ -22,7 +22,7 @@ Boston, MA  02111-1307, USA.
 #ifndef _CDVER_H
 #define _CDVER_H
 
-#define LIBCDPLAYER_PACKAGE "libcdlyte"
+#define LIBCDPLAYER_PACKAGE "libcdplayer"
 #define LIBCDPLAYER_VERSION "0.9.8"
 
 #define LIBCDPLAYER_MAJOR_VERSION 0
