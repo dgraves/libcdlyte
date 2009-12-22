@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
 INCLUDES = -I$(top_srcdir)/src
-LDADD = $(top_builddir)/src/libcdlyte.la
+LDADD = $(top_builddir)/src/libcdplayer.la
 
 noinst_PROGRAMS = \
         cddb_id   \

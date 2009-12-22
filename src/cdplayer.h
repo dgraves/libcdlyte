@@ -264,10 +264,10 @@ struct disc_changer
 
 /* CD function declarations */
 
-/* Return the name and version number of libcdlyte as a string.  */
+/* Return the name and version number of libcdplayer as a string.  */
 char* cd_version(char *buffer,int len);
 
-/* Return the version number of libcdlyte as an integer.  */
+/* Return the version number of libcdplayer as an integer.  */
 long cd_getversion();
 
 /* Convert frames to a logical block address. */

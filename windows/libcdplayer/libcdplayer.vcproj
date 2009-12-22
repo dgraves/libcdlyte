@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="7.00"
-	Name="libcdlyte"
+	Name="libcdplayer"
 	ProjectGUID="{76FC34EE-EEB8-41FA-B7EE-F9BC5397BAD3}"
 	SccProjectName=""
 	SccLocalPath="">
@@ -27,7 +27,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="2"
-				PrecompiledHeaderFile=".\Debug/libcdlyte.pch"
+				PrecompiledHeaderFile=".\Debug/libcdplayer.pch"
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
 				ProgramDataBaseFileName=".\Debug/"
@@ -38,7 +38,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile=".\Debug\libcdlyte.lib"
+				OutputFile=".\Debug\libcdplayer.lib"
 				SuppressStartupBanner="TRUE"/>
 			<Tool
 				Name="VCMIDLTool"/>
@@ -72,7 +72,7 @@
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="TRUE"
 				UsePrecompiledHeader="2"
-				PrecompiledHeaderFile=".\Release/libcdlyte.pch"
+				PrecompiledHeaderFile=".\Release/libcdplayer.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
@@ -82,7 +82,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile=".\Release\libcdlyte.lib"
+				OutputFile=".\Release\libcdplayer.lib"
 				SuppressStartupBanner="TRUE"/>
 			<Tool
 				Name="VCMIDLTool"/>
@@ -124,7 +124,7 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl">
 			<File
-				RelativePath="..\..\src\cdlyte.h">
+				RelativePath="..\..\src\cdplayer.h">
 			</File>
 			<File
 				RelativePath="..\..\src\compat.h">

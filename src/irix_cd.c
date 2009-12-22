@@ -1,5 +1,5 @@
 /*
-Irix CD-ROM interface for libcdlyte
+Irix CD-ROM interface for libcdplayer
 Copyright (C)1999 David Rose <David.R.Rose@disney.com>
 
 This library is free software; you can redistribute it and/or
@@ -36,7 +36,7 @@ Boston, MA  02111-1307, USA.
 #include <string.h>
 #include <sys/types.h>
 #include <dmedia/cdaudio.h>
-#include "cdlyte.h"
+#include "cdplayer.h"
 
 /* Eliminated collisions with some macros defined in dmedia/cdaudio.h. */
 #undef cd_open
@@ -56,7 +56,7 @@ Boston, MA  02111-1307, USA.
 #undef cd_get_volume
 #undef cd_set_volume
 
-/* We have to map ints to CDPLAYER pointers, since the libcdlyte
+/* We have to map ints to CDPLAYER pointers, since the libcdplayer
    specs require an int cd device handle, but the Irix library gives us
    CDPLAYER *. */
 

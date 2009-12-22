@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <errno.h>
-#include "cdlyte.h"
+#include "cdplayer.h"
 
 int main(int argc,char **argv)
 {

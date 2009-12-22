@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="7.00"
-	Name="libcdlytedll"
+	Name="libcdplayerdll"
 	SccProjectName=""
 	SccLocalPath="">
 	<Platforms>
@@ -27,7 +27,7 @@
 				RuntimeLibrary="1"
 				EnableFunctionLevelLinking="TRUE"
 				UsePrecompiledHeader="2"
-				PrecompiledHeaderFile=".\Release/libcdlytedll.pch"
+				PrecompiledHeaderFile=".\Release/libcdplayerdll.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
@@ -39,18 +39,18 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="odbc32.lib odbccp32.lib winmm.lib ws2_32.lib"
-				OutputFile=".\Release/libcdlytedll.dll"
+				OutputFile=".\Release/libcdplayerdll.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
-				ProgramDatabaseFile=".\Release/libcdlytedll.pdb"
-				ImportLibrary=".\Release/libcdlytedll.lib"/>
+				ProgramDatabaseFile=".\Release/libcdplayerdll.pdb"
+				ImportLibrary=".\Release/libcdplayerdll.lib"/>
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="NDEBUG"
 				MkTypLibCompatible="TRUE"
 				SuppressStartupBanner="TRUE"
 				TargetEnvironment="1"
-				TypeLibraryName=".\Release/libcdlytedll.tlb"/>
+				TypeLibraryName=".\Release/libcdplayerdll.tlb"/>
 			<Tool
 				Name="VCPostBuildEventTool"/>
 			<Tool
@@ -82,7 +82,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="2"
-				PrecompiledHeaderFile=".\Debug/libcdlytedll.pch"
+				PrecompiledHeaderFile=".\Debug/libcdplayerdll.pch"
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
 				ProgramDataBaseFileName=".\Debug/"
@@ -95,19 +95,19 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="odbc32.lib odbccp32.lib winmm.lib ws2_32.lib"
-				OutputFile=".\Debug/libcdlytedll.dll"
+				OutputFile=".\Debug/libcdplayerdll.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
 				GenerateDebugInformation="TRUE"
-				ProgramDatabaseFile=".\Debug/libcdlytedll.pdb"
-				ImportLibrary=".\Debug/libcdlytedll.lib"/>
+				ProgramDatabaseFile=".\Debug/libcdplayerdll.pdb"
+				ImportLibrary=".\Debug/libcdplayerdll.lib"/>
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="_DEBUG"
 				MkTypLibCompatible="TRUE"
 				SuppressStartupBanner="TRUE"
 				TargetEnvironment="1"
-				TypeLibraryName=".\Debug/libcdlytedll.tlb"/>
+				TypeLibraryName=".\Debug/libcdplayerdll.tlb"/>
 			<Tool
 				Name="VCPostBuildEventTool"/>
 			<Tool
@@ -148,7 +148,7 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl">
 			<File
-				RelativePath="..\..\src\cdlyte.h">
+				RelativePath="..\..\src\cdplayer.h">
 			</File>
 			<File
 				RelativePath="..\..\src\compat.h">

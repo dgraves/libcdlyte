@@ -3,7 +3,7 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/time.h>
-#include "cdlyte.h"
+#include "cdplayer.h"
 
 #ifdef WIN32
 #define PATHSEP '\\'

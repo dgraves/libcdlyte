@@ -1,5 +1,5 @@
 /*
-Windows CD-ROM interface for libcdlyte
+Windows CD-ROM interface for libcdplayer
 Copyright (C)2001,2004 Dustin Graves <dgraves@computer.org>
 
 This library is free software; you can redistribute it and/or
@@ -20,7 +20,7 @@ Boston, MA  02111-1307, USA.
 
 #ifdef WIN32
 
-#include "cdlyte.h"
+#include "cdplayer.h"
 #include <windows.h>
 #include <mmsystem.h>
 #include <memory.h>

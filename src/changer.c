@@ -45,7 +45,7 @@ Boston, MA  02111-1307, USA.
 #define snprintf _snprintf
 #endif
 
-#include "cdlyte.h"
+#include "cdplayer.h"
 
 /* Choose a particular disc from the CD changer */
 int cd_changer_select_disc(int cd_desc,int disc)

@@ -42,7 +42,7 @@ Boston, MA  02111-1307, USA.
 #endif
 
 #include "cdver.h"
-#include "cdlyte.h"
+#include "cdplayer.h"
 
 #ifndef WIN32
 /* We can check to see if the CD-ROM is mounted if this is available */
@@ -91,29 +91,29 @@ Boston, MA  02111-1307, USA.
 #include "compat.h"
 
 /**
- * Return the name and version number of libcdlyte as a string.
+ * Return the name and version number of libcdplayer as a string.
  * @param buffer a character array to be filled with a ' ' separated string
- *        specifying the name and version of libcdlyte.
+ *        specifying the name and version of libcdplayer.
  * @param len an integer specifying the length of 'buffer'
  * @return a pointer to 'buffer'.
  */
 char* cd_version(char *buffer,int len)
 {
 #ifndef WIN32
-  snprintf(buffer,len,"%s %s",LIBCDLYTE_PACKAGE,LIBCDLYTE_VERSION);
+  snprintf(buffer,len,"%s %s",LIBCDPLAYER_PACKAGE,LIBCDPLAYER_VERSION);
 #else
-  _snprintf(buffer,len,"%s %s",LIBCDLYTE_PACKAGE,LIBCDLYTE_VERSION);
+  _snprintf(buffer,len,"%s %s",LIBCDPLAYER_PACKAGE,LIBCDPLAYER_VERSION);
 #endif
   return buffer;
 }
 
 /**
- * Return the version number of libcdlyte as an integer.
- * @return a long integer specifying the version of libcdlyte.
+ * Return the version number of libcdplayer as an integer.
+ * @return a long integer specifying the version of libcdplayer.
  */
 long cd_getversion()
 {
-  return LIBCDLYTE_VERSION_NUMBER;
+  return LIBCDPLAYER_VERSION_NUMBER;
 }
 
 #if !defined IRIX_CDLYTE && !defined WIN32

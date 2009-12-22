@@ -20,7 +20,7 @@ AC_SUBST(LT_VERSION)
 
 dnl Automake support
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(libcdlyte, ${LIBCDLYTE_VERSION})
+AM_INIT_AUTOMAKE(libcdplayer, ${LIBCDLYTE_VERSION})
 
 dnl Checks for programs.
 AC_PROG_MAKE_SET
@@ -100,7 +100,7 @@ dnl Check for threading support
 threads=no
 
 AC_ARG_ENABLE(threads,
-[  --enable-threads        build a thread-safe version of libcdlyte [default=guessed]],
+[  --enable-threads        build a thread-safe version of libcdplayer [default=guessed]],
 [if test "$enableval" = "yes"; then
   threads=yes
 else

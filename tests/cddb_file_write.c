@@ -3,7 +3,7 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/time.h>
-#include "cdlyte.h"
+#include "cdplayer.h"
 
 #ifdef WIN32
 #define PATHSEP '\\'
@@ -102,7 +102,7 @@ int main(int argc,char **argv)
 
   /* Write to current directory; disc_info was retrieved above */
   printf("\nWriting file .%c%08lx\n",PATHSEP,cddb_discid(cd_desc));
-  if(cddb_write_local(".",&hello,&disc,&data,"[cdlyte write test]")<0)
+  if(cddb_write_local(".",&hello,&disc,&data,"[cdplayer write test]")<0)
   {
     printf("Error writing file .%c%08lx\n",PATHSEP,cddb_discid(cd_desc));
     cd_finish(cd_desc);
