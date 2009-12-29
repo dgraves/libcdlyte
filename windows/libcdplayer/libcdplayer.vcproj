@@ -43,7 +43,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="../.."
-				PreprocessorDefinitions="_DEBUG,_LIB,WIN32,_WINDOWS"
+				PreprocessorDefinitions="_DEBUG;_LIB;WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
@@ -68,7 +68,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile=".\Debug\libcdplayer.lib"
+				OutputFile=".\Debug\cdplayerd.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -116,7 +116,7 @@
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="../.."
-				PreprocessorDefinitions="NDEBUG,_LIB,WIN32,_WINDOWS"
+				PreprocessorDefinitions="NDEBUG,_LIB,WIN32,_WINDOWS,_CRT_SECURE_NO_WARNINGS,_CRT_NONSTDC_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -141,7 +141,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile=".\Release\libcdplayer.lib"
+				OutputFile=".\Release\cdplayer.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -198,15 +198,11 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\cdver.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\compat.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\config.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\data.h"
 				>
 			</File>
 		</Filter>

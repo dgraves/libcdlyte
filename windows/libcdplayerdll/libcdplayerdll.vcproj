@@ -48,7 +48,7 @@
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="../.."
-				PreprocessorDefinitions="NDEBUG;_WINDOWS;_USRDLL;LIBCDPLAYERDLL_EXPORTS;WIN32"
+				PreprocessorDefinitions="NDEBUG;_WINDOWS;_USRDLL;LIBCDPLAYERDLL_EXPORTS;WIN32,_CRT_SECURE_NO_WARNINGS,_CRT_NONSTDC_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="1"
 				EnableFunctionLevelLinking="true"
@@ -75,13 +75,13 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="odbc32.lib odbccp32.lib winmm.lib ws2_32.lib"
-				OutputFile=".\Release/libcdplayerdll.dll"
+				OutputFile=".\Release/cdplayerdll.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				ProgramDatabaseFile=".\Release/libcdplayerdll.pdb"
+				ProgramDatabaseFile=".\Release/cdplayerdll.pdb"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
-				ImportLibrary=".\Release/libcdplayerdll.lib"
+				ImportLibrary=".\Release/cdplayerdll.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -139,7 +139,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="../.."
-				PreprocessorDefinitions="_DEBUG;_WINDOWS;_USRDLL;LIBCDPLAYERDLL_EXPORTS;WIN32"
+				PreprocessorDefinitions="_DEBUG;_WINDOWS;_USRDLL;LIBCDPLAYERDLL_EXPORTS;WIN32,_CRT_SECURE_NO_WARNINGS,_CRT_NONSTDC_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
@@ -166,14 +166,14 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="odbc32.lib odbccp32.lib winmm.lib ws2_32.lib"
-				OutputFile=".\Debug/libcdplayerdll.dll"
+				OutputFile=".\Debug/cdplayerdlld.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\Debug/libcdplayerdll.pdb"
+				ProgramDatabaseFile=".\Debug/cdplayerdlld.pdb"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
-				ImportLibrary=".\Debug/libcdplayerdll.lib"
+				ImportLibrary=".\Debug/cdplayerdlld.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -235,15 +235,11 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\cdver.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\compat.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\config.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\data.h"
 				>
 			</File>
 		</Filter>
