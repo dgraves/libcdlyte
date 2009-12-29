@@ -451,14 +451,17 @@ int cd_get_volume(cddesc_t cd_desc,struct disc_volume *vol)
   {
     memset(&mxcd,0,sizeof(mxcd));
     mxcd.cbStruct=sizeof(mxcd);
-    mxcd.cbDetails=sizeof(volStruct);
+	mxcd.cChannels=(mxl.cChannels==1) ? 1 : 2;
+    mxcd.cbDetails=mxcd.cChannels*sizeof(MIXERCONTROLDETAILS_UNSIGNED);
     mxcd.dwControlID=mxc.dwControlID;
     mxcd.paDetails=&volStruct;
-    mxcd.cChannels=2;
     if(mixerGetControlDetails((HMIXEROBJ)mixer,&mxcd,MIXER_GETCONTROLDETAILSF_VALUE)==MMSYSERR_NOERROR)
     {
       vol->vol_back.left=vol->vol_front.left=((float)volStruct[0].dwValue)/((float)(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
-      vol->vol_back.right=vol->vol_front.right=((float)volStruct[1].dwValue)/((float)(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
+      if(mxl.cChannels==1)
+        vol->vol_back.right=vol->vol_front.right=vol->vol_back.left;
+	  else
+        vol->vol_back.right=vol->vol_front.right=((float)volStruct[1].dwValue)/((float)(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
       return 0;
     }
   }
@@ -482,19 +485,35 @@ int cd_set_volume(cddesc_t cd_desc,const struct disc_volume *vol)
 
   if(mixer!=NULL)
   {
+    long result;
     /* The windows mixer does not support front and back.  Use the larger of the two.  */
     float left=(vol->vol_back.left>vol->vol_front.left)?vol->vol_back.left:vol->vol_front.left;
     float right=(vol->vol_back.right>vol->vol_front.right)?vol->vol_back.right:vol->vol_front.right;
 
     memset(&mxcd,0,sizeof(mxcd));
     mxcd.cbStruct=sizeof(mxcd);
-    mxcd.cbDetails=sizeof(volStruct);
+	mxcd.hwndOwner = 0;
     mxcd.dwControlID=mxc.dwControlID;
     mxcd.paDetails=&volStruct;
-    mxcd.cChannels=2;
-    volStruct[0].dwValue=(DWORD)(left*(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
-    volStruct[1].dwValue=(DWORD)(right*(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
-    if(mixerSetControlDetails((HMIXEROBJ)mixer,&mxcd,MIXER_GETCONTROLDETAILSF_VALUE)==MMSYSERR_NOERROR)
+
+	if(mxl.cChannels==1)
+	{
+      mxcd.cChannels=1;
+      mxcd.cbDetails=sizeof(MIXERCONTROLDETAILS_UNSIGNED);
+	  
+	  /* When left/right have different values for a single channel, use the larger */
+	  volStruct[0].dwValue=(DWORD)((left>right?left:right)*(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
+	}
+	else
+	{
+      mxcd.cChannels=2;
+      mxcd.cbDetails=2*sizeof(MIXERCONTROLDETAILS_UNSIGNED);
+      volStruct[0].dwValue=(DWORD)(left*(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
+      volStruct[1].dwValue=(DWORD)(right*(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
+	}
+
+	result = mixerSetControlDetails((HMIXEROBJ)mixer,&mxcd,MIXER_SETCONTROLDETAILSF_VALUE);
+    if(result==MMSYSERR_NOERROR)
       return 0;
   }
   return -1;
