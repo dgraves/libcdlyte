@@ -523,16 +523,16 @@ int cd_get_volume(cddesc_t cd_desc,struct disc_volume *vol)
   if(ioctl(cd_desc,CDPLAYER_GET_VOLUME,&cdvol)<0)
     return -1;
 
-  vol->vol_front.left=__internal_cd_get_volume_percentage(cdvol.CDVOLSTAT_FRONT_LEFT);
-  vol->vol_front.right=__internal_cd_get_volume_percentage(cdvol.CDVOLSTAT_FRONT_RIGHT);
-  vol->vol_back.left=__internal_cd_get_volume_percentage(cdvol.CDVOLSTAT_BACK_LEFT);
-  vol->vol_back.right=__internal_cd_get_volume_percentage(cdvol.CDVOLSTAT_BACK_RIGHT);
-
 #ifdef CDPLAYER_VOLSTAT_DATA
   vol->vol_front.left=__internal_cd_get_volume_percentage(cdvol_data.CDVOLSTAT_FRONT_LEFT);
   vol->vol_front.right=__internal_cd_get_volume_percentage(cdvol_data.CDVOLSTAT_FRONT_RIGHT);
   vol->vol_back.left=__internal_cd_get_volume_percentage(cdvol_data.CDVOLSTAT_BACK_LEFT);
   vol->vol_back.right=__internal_cd_get_volume_percentage(cdvol_data.CDVOLSTAT_BACK_RIGHT);
+#else
+  vol->vol_front.left=__internal_cd_get_volume_percentage(cdvol.CDVOLSTAT_FRONT_LEFT);
+  vol->vol_front.right=__internal_cd_get_volume_percentage(cdvol.CDVOLSTAT_FRONT_RIGHT);
+  vol->vol_back.left=__internal_cd_get_volume_percentage(cdvol.CDVOLSTAT_BACK_LEFT);
+  vol->vol_back.right=__internal_cd_get_volume_percentage(cdvol.CDVOLSTAT_BACK_RIGHT);
 #endif
 
   return 0;
@@ -568,16 +568,16 @@ int cd_set_volume(cddesc_t cd_desc,const struct disc_volume *vol)
   if(vol->vol_front.left>1.0f||vol->vol_front.left<0.0f||vol->vol_front.right>1.0f||vol->vol_front.right<0.0f||vol->vol_back.left>1.0f||vol->vol_back.left<0.0f||vol->vol_back.right>1.0f||vol->vol_back.right<0.0f)
     return -1;
 
-  cdvol.CDVOLCTRL_FRONT_LEFT=__internal_cd_get_volume_val(vol->vol_front.left);
-  cdvol.CDVOLCTRL_FRONT_RIGHT=__internal_cd_get_volume_val(vol->vol_front.right);
-  cdvol.CDVOLCTRL_BACK_LEFT=__internal_cd_get_volume_val(vol->vol_back.left);
-  cdvol.CDVOLCTRL_BACK_RIGHT=__internal_cd_get_volume_val(vol->vol_back.right);
-
 #ifdef CDPLAYER_VOLCTRL_SELECT
   cdvol_data.CDVOLCTRL_FRONT_LEFT_SELECT=CDPLAYER_MAX_VOLUME;
   cdvol_data.CDVOLCTRL_FRONT_RIGHT_SELECT=CDPLAYER_MAX_VOLUME;
   cdvol_data.CDVOLCTRL_BACK_LEFT_SELECT=CDPLAYER_MAX_VOLUME;
   cdvol_data.CDVOLCTRL_BACK_RIGHT_SELECT=CDPLAYER_MAX_VOLUME;
+#else
+  cdvol.CDVOLCTRL_FRONT_LEFT=__internal_cd_get_volume_val(vol->vol_front.left);
+  cdvol.CDVOLCTRL_FRONT_RIGHT=__internal_cd_get_volume_val(vol->vol_front.right);
+  cdvol.CDVOLCTRL_BACK_LEFT=__internal_cd_get_volume_val(vol->vol_back.left);
+  cdvol.CDVOLCTRL_BACK_RIGHT=__internal_cd_get_volume_val(vol->vol_back.right);
 #endif
 
   if(ioctl(cd_desc,CDPLAYER_SET_VOLUME,&cdvol)<0)
