@@ -1,15 +1,15 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(src/cd.c)
 
-LIBCDPLAYER_MAJOR_VERSION=0
-LIBCDPLAYER_MINOR_VERSION=9
-LIBCDPLAYER_PATCH_LEVEL=8
-AC_SUBST(LIBCDPLAYER_MAJOR_VERSION)
-AC_SUBST(LIBCDPLAYER_MINOR_VERSION)
-AC_SUBST(LIBCDPLAYER_PATCH_LEVEL)
+LIBCDLYTE_MAJOR_VERSION=0
+LIBCDLYTE_MINOR_VERSION=9
+LIBCDLYTE_PATCH_LEVEL=8
+AC_SUBST(LIBCDLYTE_MAJOR_VERSION)
+AC_SUBST(LIBCDLYTE_MINOR_VERSION)
+AC_SUBST(LIBCDLYTE_PATCH_LEVEL)
 
-LIBCDPLAYER_VERSION=$LIBCDPLAYER_MAJOR_VERSION.$LIBCDPLAYER_MINOR_VERSION.$LIBCDPLAYER_PATCH_LEVEL
-AC_SUBST(LIBCDPLAYER_VERSION)
+LIBCDLYTE_VERSION=$LIBCDLYTE_MAJOR_VERSION.$LIBCDLYTE_MINOR_VERSION.$LIBCDLYTE_PATCH_LEVEL
+AC_SUBST(LIBCDLYTE_VERSION)
 
 dnl Calculate libtool versioning information
 LT_CURRENT=1
@@ -24,7 +24,7 @@ AC_SUBST(LT_VERSION)
 
 dnl Automake support
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(libcdplayer, ${LIBCDPLAYER_VERSION})
+AM_INIT_AUTOMAKE(libcdlyte, ${LIBCDLYTE_VERSION})
 
 dnl Checks for programs.
 AC_PROG_MAKE_SET
@@ -58,7 +58,7 @@ AC_CHECK_FUNCS(gethostbyname gethostbyname_r mkdir socket strerror strstr strtol
 dnl Check operating system
 case "$host_os" in
   irix*)
-    AC_DEFINE(IRIX_CDPLAYER,1,[Enable IRIX support])
+    AC_DEFINE(IRIX_CDLYTE,1,[Enable IRIX support])
     LIBRARY_LIBS="-lcdaudio -lmediad -lds $LIBS"
     ;;
   *solaris*)
@@ -104,7 +104,7 @@ dnl Check for threading support
 threads=no
 
 AC_ARG_ENABLE(threads,
-[  --enable-threads        build a thread-safe version of libcdplayer [default=guessed]],
+[  --enable-threads        build a thread-safe version of libcdlyte [default=guessed]],
 [if test "$enableval" = "yes"; then
   threads=yes
 else

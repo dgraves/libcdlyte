@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include "cdplayer.h"
+#include "cdlyte.h"
 
 int main(int argc,char **argv)
 {

@@ -43,7 +43,7 @@ Boston, MA  02111-1307, USA.
 #include <netdb.h>
 #endif
 
-#include "cdplayer.h"
+#include "cdlyte.h"
 
 #ifndef INADDR_NONE
 #define INADDR_NONE 0xFFFFFFFF

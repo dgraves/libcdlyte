@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="libcdplayerdll"
+	Name="libcdlytedll"
 	ProjectGUID="{95870C37-A4D9-4DE6-B6DE-238F2DF8B585}"
 	TargetFrameworkVersion="131072"
 	>
@@ -42,18 +42,18 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\Release/libcdplayerdll.tlb"
+				TypeLibraryName=".\Release/libcdlytedll.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="../.."
-				PreprocessorDefinitions="NDEBUG;_WINDOWS;_USRDLL;LIBCDPLAYERDLL_EXPORTS;WIN32,_CRT_SECURE_NO_WARNINGS,_CRT_NONSTDC_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS"
+				PreprocessorDefinitions="NDEBUG;_WINDOWS;_USRDLL;LIBCDLYTEDLL_EXPORTS;WIN32,_CRT_SECURE_NO_WARNINGS,_CRT_NONSTDC_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="1"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\Release/libcdplayerdll.pch"
+				PrecompiledHeaderFile=".\Release/libcdlytedll.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
@@ -75,13 +75,13 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="odbc32.lib odbccp32.lib winmm.lib ws2_32.lib"
-				OutputFile=".\Release/cdplayerdll.dll"
+				OutputFile=".\Release/cdlytedll.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				ProgramDatabaseFile=".\Release/cdplayerdll.pdb"
+				ProgramDatabaseFile=".\Release/cdlytedll.pdb"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
-				ImportLibrary=".\Release/cdplayerdll.lib"
+				ImportLibrary=".\Release/cdlytedll.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -133,17 +133,17 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\Debug/libcdplayerdll.tlb"
+				TypeLibraryName=".\Debug/libcdlytedll.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="../.."
-				PreprocessorDefinitions="_DEBUG;_WINDOWS;_USRDLL;LIBCDPLAYERDLL_EXPORTS;WIN32,_CRT_SECURE_NO_WARNINGS,_CRT_NONSTDC_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS"
+				PreprocessorDefinitions="_DEBUG;_WINDOWS;_USRDLL;LIBCDLYTEDLL_EXPORTS;WIN32,_CRT_SECURE_NO_WARNINGS,_CRT_NONSTDC_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\Debug/libcdplayerdll.pch"
+				PrecompiledHeaderFile=".\Debug/libcdlytedll.pch"
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
 				ProgramDataBaseFileName=".\Debug/"
@@ -166,14 +166,14 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="odbc32.lib odbccp32.lib winmm.lib ws2_32.lib"
-				OutputFile=".\Debug/cdplayerdlld.dll"
+				OutputFile=".\Debug/cdlytedlld.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\Debug/cdplayerdlld.pdb"
+				ProgramDatabaseFile=".\Debug/cdlytedlld.pdb"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
-				ImportLibrary=".\Debug/cdplayerdlld.lib"
+				ImportLibrary=".\Debug/cdlytedlld.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -231,7 +231,7 @@
 			Filter="h;hpp;hxx;hm;inl"
 			>
 			<File
-				RelativePath="..\..\src\cdplayer.h"
+				RelativePath="..\..\src\cdlyte.h"
 				>
 			</File>
 			<File

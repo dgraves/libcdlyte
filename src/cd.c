@@ -42,7 +42,7 @@ Boston, MA  02111-1307, USA.
 #endif
 
 #include "cdver.h"
-#include "cdplayer.h"
+#include "cdlyte.h"
 
 #ifndef WIN32
 /* We can check to see if the CD-ROM is mounted if this is available */
@@ -91,32 +91,32 @@ Boston, MA  02111-1307, USA.
 #include "compat.h"
 
 /**
- * Return the name and version number of libcdplayer as a string.
+ * Return the name and version number of libcdlyte as a string.
  * @param buffer a character array to be filled with a ' ' separated string
- *        specifying the name and version of libcdplayer.
+ *        specifying the name and version of libcdlyte.
  * @param len an integer specifying the length of 'buffer'
  * @return a pointer to 'buffer'.
  */
 char* cd_version(char *buffer,int len)
 {
 #ifndef WIN32
-  snprintf(buffer,len,"%s %s",LIBCDPLAYER_PACKAGE,LIBCDPLAYER_VERSION);
+  snprintf(buffer,len,"%s %s",LIBCDLYTE_PACKAGE,LIBCDLYTE_VERSION);
 #else
-  _snprintf(buffer,len,"%s %s",LIBCDPLAYER_PACKAGE,LIBCDPLAYER_VERSION);
+  _snprintf(buffer,len,"%s %s",LIBCDLYTE_PACKAGE,LIBCDLYTE_VERSION);
 #endif
   return buffer;
 }
 
 /**
- * Return the version number of libcdplayer as an integer.
- * @return a long integer specifying the version of libcdplayer.
+ * Return the version number of libcdlyte as an integer.
+ * @return a long integer specifying the version of libcdlyte.
  */
 long cd_getversion()
 {
-  return LIBCDPLAYER_VERSION_NUMBER;
+  return LIBCDLYTE_VERSION_NUMBER;
 }
 
-#if !defined IRIX_CDPLAYER && !defined WIN32
+#if !defined IRIX_CDLYTE && !defined WIN32
 /*
 Because of Irix's different interface, most of this program is
 completely ignored when compiling under Irix.
@@ -241,10 +241,10 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
   /* Since every platform does this a little bit differently this gets pretty
      complicated... */
 
-  struct CDPLAYER_TOCHEADER cdth;
-  struct CDPLAYER_TOCENTRY cdte;
-#ifdef CDPLAYER_TOCENTRY_DATA
-  struct CDPLAYER_TOCENTRY_DATA cdte_buffer[MAX_TRACKS];
+  struct CDLYTE_TOCHEADER cdth;
+  struct CDLYTE_TOCENTRY cdte;
+#ifdef CDLYTE_TOCENTRY_DATA
+  struct CDLYTE_TOCENTRY_DATA cdte_buffer[MAX_TRACKS];
 #endif
 
   struct disc_status status;
@@ -260,7 +260,7 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
   }
 
   /* Read the Table Of Contents header */
-  if(ioctl(cd_desc,CDPLAYER_READTOCHEADER,&cdth)<0)
+  if(ioctl(cd_desc,CDLYTE_READTOCHEADER,&cdth)<0)
     return -1;
 
   disc->disc_first_track=cdth.CDTH_STARTING_TRACK;
@@ -269,15 +269,15 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
     free(disc->disc_track);
   disc->disc_track=(struct track_info*)calloc(disc->disc_total_tracks+1,sizeof(struct track_info));
 
-#ifdef CDPLAYER_READTOCENTRYS
+#ifdef CDLYTE_READTOCENTRYS
 
   /* Read the Table Of Contents */
-  cdte.CDTE_ADDRESS_FORMAT=CDPLAYER_MSF_FORMAT;
+  cdte.CDTE_ADDRESS_FORMAT=CDLYTE_MSF_FORMAT;
   cdte.CDTE_STARTING_TRACK=0;
-  cdte.CDTE_DATA=(struct CDPLAYER_TOCENTRY_DATA*)calloc(disc->disc_total_tracks+1,sizeof(struct CDPLAYER_TOCENTRY_DATA));
+  cdte.CDTE_DATA=(struct CDLYTE_TOCENTRY_DATA*)calloc(disc->disc_total_tracks+1,sizeof(struct CDLYTE_TOCENTRY_DATA));
   cdte.CDTE_DATA_LEN=disc->disc_total_tracks+1;
 
-  if(ioctl(cd_desc,CDPLAYER_READTOCENTRYS,&cdte)<0)
+  if(ioctl(cd_desc,CDLYTE_READTOCENTRYS,&cdte)<0)
   {
     free(disc->disc_track);
     disc->disc_track=NULL;
@@ -289,19 +289,19 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
     disc->disc_track[readtracks].track_pos.minutes=cdte.CDTE_DATA[readtracks].CDTE_MSF_M;
     disc->disc_track[readtracks].track_pos.seconds=cdte.CDTE_DATA[readtracks].CDTE_MSF_S;
     disc->disc_track[readtracks].track_pos.frames=cdte.CDTE_DATA[readtracks].CDTE_MSF_F;
-    disc->disc_track[readtracks].track_type=(cdte.CDTE_DATA[readtracks].CDTE_CONTROL & CDROM_DATA_TRACK) ? CDPLAYER_TRACK_DATA : CDPLAYER_TRACK_AUDIO;
+    disc->disc_track[readtracks].track_type=(cdte.CDTE_DATA[readtracks].CDTE_CONTROL & CDROM_DATA_TRACK) ? CDLYTE_TRACK_DATA : CDLYTE_TRACK_AUDIO;
     disc->disc_track[readtracks].track_lba=cd_msf_to_lba(disc->disc_track[readtracks].track_pos);
   }
 
   free(cdte.CDTE_DATA);
 
-#else /* CDPLAYER_READTOCENTRYS */
+#else /* CDLYTE_READTOCENTRYS */
 
   for(readtracks=0;readtracks<=disc->disc_total_tracks;readtracks++)
   {
     cdte.CDTE_STARTING_TRACK=(readtracks==disc->disc_total_tracks)?CDROM_LEADOUT:readtracks+1;
-    cdte.CDTE_ADDRESS_FORMAT=CDPLAYER_MSF_FORMAT;
-    if(ioctl(cd_desc,CDPLAYER_READTOCENTRY,&cdte)<0)
+    cdte.CDTE_ADDRESS_FORMAT=CDLYTE_MSF_FORMAT;
+    if(ioctl(cd_desc,CDLYTE_READTOCENTRY,&cdte)<0)
     {
       free(disc->disc_track);
       disc->disc_track=NULL;
@@ -311,11 +311,11 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
     disc->disc_track[readtracks].track_pos.minutes=cdte.CDTE_MSF_M;
     disc->disc_track[readtracks].track_pos.seconds=cdte.CDTE_MSF_S;
     disc->disc_track[readtracks].track_pos.frames=cdte.CDTE_MSF_F;
-    disc->disc_track[readtracks].track_type=(cdte.CDTE_CONTROL&CDROM_DATA_TRACK)?CDPLAYER_TRACK_DATA:CDPLAYER_TRACK_AUDIO;
+    disc->disc_track[readtracks].track_type=(cdte.CDTE_CONTROL&CDROM_DATA_TRACK)?CDLYTE_TRACK_DATA:CDLYTE_TRACK_AUDIO;
     disc->disc_track[readtracks].track_lba=cd_msf_to_lba(&disc->disc_track[readtracks].track_pos);
   }
 
-#endif /* CDPLAYER_READTOCENTRY */
+#endif /* CDLYTE_READTOCENTRY */
 
   for(readtracks=1;readtracks<=disc->disc_total_tracks;readtracks++)
   {
@@ -341,21 +341,21 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
  */
 int cd_poll(cddesc_t cd_desc,struct disc_status *status)
 {
-  struct CDPLAYER_SUBCHANNEL cdsc;
-#ifdef CDPLAYER_SUBCHANNEL_DATA
-  struct CDPLAYER_SUBCHANNEL_DATA cdsc_data;
+  struct CDLYTE_SUBCHANNEL cdsc;
+#ifdef CDLYTE_SUBCHANNEL_DATA
+  struct CDLYTE_SUBCHANNEL_DATA cdsc_data;
 #endif
 
 
-#ifdef CDPLAYER_SUBCHANNEL_DATA
+#ifdef CDLYTE_SUBCHANNEL_DATA
   memset(&cdsc_data,'\0',sizeof(cdsc_data));
   cdsc.CDSC_DATA=&cdsc_data;
   cdsc.CDSC_DATA_LEN=sizeof(cdsc_data);
-  cdsc.CDSC_DATA_FORMAT=CDPLAYER_CDSC_DATA_FORMAT;
+  cdsc.CDSC_DATA_FORMAT=CDLYTE_CDSC_DATA_FORMAT;
 #endif
-  cdsc.CDSC_ADDRESS_FORMAT=CDPLAYER_MSF_FORMAT;
+  cdsc.CDSC_ADDRESS_FORMAT=CDLYTE_MSF_FORMAT;
 
-  if(ioctl(cd_desc,CDPLAYER_READSUBCHANNEL,&cdsc)<0)
+  if(ioctl(cd_desc,CDLYTE_READSUBCHANNEL,&cdsc)<0)
   {
     status->status_present=0;
     return 0;
@@ -363,7 +363,7 @@ int cd_poll(cddesc_t cd_desc,struct disc_status *status)
 
   status->status_present=1;
 
-#ifdef CDPLAYER_SUBCHANNEL_DATA
+#ifdef CDLYTE_SUBCHANNEL_DATA
   status->status_disc_time.minutes=cdsc_data.CDSC_DATA_ABS_MSF_M;
   status->status_disc_time.seconds=cdsc_data.CDSC_DATA_ABS_MSF_S;
   status->status_disc_time.frames=cdsc_data.CDSC_DATA_ABS_MSF_F;
@@ -383,17 +383,17 @@ int cd_poll(cddesc_t cd_desc,struct disc_status *status)
   switch(cdsc.CDSC_AUDIO_STATUS)
 #endif
   {
-    case CDPLAYER_AS_PLAY_IN_PROGRESS:
-      status->status_mode=CDPLAYER_PLAYING;
+    case CDLYTE_AS_PLAY_IN_PROGRESS:
+      status->status_mode=CDLYTE_PLAYING;
       break;
-    case CDPLAYER_AS_PLAY_PAUSED:
-      status->status_mode=CDPLAYER_PAUSED;
+    case CDLYTE_AS_PLAY_PAUSED:
+      status->status_mode=CDLYTE_PAUSED;
       break;
-    case CDPLAYER_AS_PLAY_COMPLETED:
-      status->status_mode=CDPLAYER_COMPLETED;
+    case CDLYTE_AS_PLAY_COMPLETED:
+      status->status_mode=CDLYTE_COMPLETED;
       break;
     default:
-      status->status_mode=CDPLAYER_NOSTATUS;
+      status->status_mode=CDLYTE_NOSTATUS;
   }
 
   return 0;
@@ -408,7 +408,7 @@ int cd_poll(cddesc_t cd_desc,struct disc_status *status)
  */
 int cd_play_frames(int cd_desc,int startframe,int endframe)
 {
-  struct CDPLAYER_MSF cdmsf;
+  struct CDLYTE_MSF cdmsf;
 
 #ifdef BROKEN_SOLARIS_LEADOUT
   endframe-=1;
@@ -421,7 +421,7 @@ int cd_play_frames(int cd_desc,int startframe,int endframe)
   cdmsf.CDMSF_END_S=(endframe%4500)/75;
   cdmsf.CDMSF_END_F=endframe%75;
 
-  if(ioctl(cd_desc,CDPLAYER_PLAY_MSF,&cdmsf)<0)
+  if(ioctl(cd_desc,CDLYTE_PLAY_MSF,&cdmsf)<0)
     return -1;
 
   return 0;
@@ -434,7 +434,7 @@ int cd_play_frames(int cd_desc,int startframe,int endframe)
  */
 int cd_stop(cddesc_t cd_desc)
 {
-  if(ioctl(cd_desc,CDPLAYER_STOP)<0)
+  if(ioctl(cd_desc,CDLYTE_STOP)<0)
     return -1;
 
   return 0;
@@ -447,7 +447,7 @@ int cd_stop(cddesc_t cd_desc)
  */
 int cd_pause(cddesc_t cd_desc)
 {
-  if(ioctl(cd_desc,CDPLAYER_PAUSE)<0)
+  if(ioctl(cd_desc,CDLYTE_PAUSE)<0)
     return -1;
 
   return 0;
@@ -460,7 +460,7 @@ int cd_pause(cddesc_t cd_desc)
  */
 int cd_resume(int cd_desc)
 {
-  if(ioctl(cd_desc,CDPLAYER_RESUME)<0)
+  if(ioctl(cd_desc,CDLYTE_RESUME)<0)
     return -1;
 
   return 0;
@@ -473,7 +473,7 @@ int cd_resume(int cd_desc)
  */
 int cd_eject(cddesc_t cd_desc)
 {
-  if(ioctl(cd_desc,CDPLAYER_EJECT)<0)
+  if(ioctl(cd_desc,CDLYTE_EJECT)<0)
     return -1;
 
   return 0;
@@ -486,8 +486,8 @@ int cd_eject(cddesc_t cd_desc)
  */
 int cd_close(int cd_desc)
 {
-#ifdef CDPLAYER_CLOSE
-  if(ioctl(cd_desc,CDPLAYER_CLOSE)<0)
+#ifdef CDLYTE_CLOSE
+  if(ioctl(cd_desc,CDLYTE_CLOSE)<0)
     return -1;
 
   return 0;
@@ -512,18 +512,18 @@ static float __internal_cd_get_volume_percentage(unsigned char level)
  */
 int cd_get_volume(cddesc_t cd_desc,struct disc_volume *vol)
 {
-#ifdef CDPLAYER_GET_VOLUME
-  struct CDPLAYER_VOLSTAT cdvol;
-#ifdef CDPLAYER_VOLSTAT_DATA
-  struct CDPLAYER_VOLSTAT_DATA cdvol_data;
+#ifdef CDLYTE_GET_VOLUME
+  struct CDLYTE_VOLSTAT cdvol;
+#ifdef CDLYTE_VOLSTAT_DATA
+  struct CDLYTE_VOLSTAT_DATA cdvol_data;
   cdvol.CDVOLSTAT_DATA=&cdvol_data;
   cdvol.CDVOLSTAT_DATA_LEN=sizeof(cdvol_data);
 #endif
 
-  if(ioctl(cd_desc,CDPLAYER_GET_VOLUME,&cdvol)<0)
+  if(ioctl(cd_desc,CDLYTE_GET_VOLUME,&cdvol)<0)
     return -1;
 
-#ifdef CDPLAYER_VOLSTAT_DATA
+#ifdef CDLYTE_VOLSTAT_DATA
   vol->vol_front.left=__internal_cd_get_volume_percentage(cdvol_data.CDVOLSTAT_FRONT_LEFT);
   vol->vol_front.right=__internal_cd_get_volume_percentage(cdvol_data.CDVOLSTAT_FRONT_RIGHT);
   vol->vol_back.left=__internal_cd_get_volume_percentage(cdvol_data.CDVOLSTAT_BACK_LEFT);
@@ -557,9 +557,9 @@ static char __internal_cd_get_volume_val(float ratio)
  */
 int cd_set_volume(cddesc_t cd_desc,const struct disc_volume *vol)
 {
-#ifdef CDPLAYER_SET_VOLUME
-  struct CDPLAYER_VOLCTRL cdvol;
-#ifdef CDPLAYER_VOLCTRL_DATA
+#ifdef CDLYTE_SET_VOLUME
+  struct CDLYTE_VOLCTRL cdvol;
+#ifdef CDLYTE_VOLCTRL_DATA
   struct cd_playback cdvol_data;
   cdvol.CDVOLCTRL_DATA=&cdvol_data;
   cdvol.CDVOLCTRL_DATA_LEN=sizeof(cdvol_data);
@@ -568,11 +568,11 @@ int cd_set_volume(cddesc_t cd_desc,const struct disc_volume *vol)
   if(vol->vol_front.left>1.0f||vol->vol_front.left<0.0f||vol->vol_front.right>1.0f||vol->vol_front.right<0.0f||vol->vol_back.left>1.0f||vol->vol_back.left<0.0f||vol->vol_back.right>1.0f||vol->vol_back.right<0.0f)
     return -1;
 
-#ifdef CDPLAYER_VOLCTRL_SELECT
-  cdvol_data.CDVOLCTRL_FRONT_LEFT_SELECT=CDPLAYER_MAX_VOLUME;
-  cdvol_data.CDVOLCTRL_FRONT_RIGHT_SELECT=CDPLAYER_MAX_VOLUME;
-  cdvol_data.CDVOLCTRL_BACK_LEFT_SELECT=CDPLAYER_MAX_VOLUME;
-  cdvol_data.CDVOLCTRL_BACK_RIGHT_SELECT=CDPLAYER_MAX_VOLUME;
+#ifdef CDLYTE_VOLCTRL_SELECT
+  cdvol_data.CDVOLCTRL_FRONT_LEFT_SELECT=CDLYTE_MAX_VOLUME;
+  cdvol_data.CDVOLCTRL_FRONT_RIGHT_SELECT=CDLYTE_MAX_VOLUME;
+  cdvol_data.CDVOLCTRL_BACK_LEFT_SELECT=CDLYTE_MAX_VOLUME;
+  cdvol_data.CDVOLCTRL_BACK_RIGHT_SELECT=CDLYTE_MAX_VOLUME;
 #else
   cdvol.CDVOLCTRL_FRONT_LEFT=__internal_cd_get_volume_val(vol->vol_front.left);
   cdvol.CDVOLCTRL_FRONT_RIGHT=__internal_cd_get_volume_val(vol->vol_front.right);
@@ -580,7 +580,7 @@ int cd_set_volume(cddesc_t cd_desc,const struct disc_volume *vol)
   cdvol.CDVOLCTRL_BACK_RIGHT=__internal_cd_get_volume_val(vol->vol_back.right);
 #endif
 
-  if(ioctl(cd_desc,CDPLAYER_SET_VOLUME,&cdvol)<0)
+  if(ioctl(cd_desc,CDLYTE_SET_VOLUME,&cdvol)<0)
     return -1;
 
   return 0;
@@ -590,7 +590,7 @@ int cd_set_volume(cddesc_t cd_desc,const struct disc_volume *vol)
 #endif
 }
 
-#endif  /* IRIX_CDPLAYER || WIN32*/
+#endif  /* IRIX_CDLYTE || WIN32*/
 
 /*
  * Because all these functions are solely mathematical and/or only make

@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="libcdplayer"
+	Name="libcdlyte"
 	ProjectGUID="{76FC34EE-EEB8-41FA-B7EE-F9BC5397BAD3}"
 	TargetFrameworkVersion="131072"
 	>
@@ -47,7 +47,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\Debug/libcdplayer.pch"
+				PrecompiledHeaderFile=".\Debug/libcdlyte.pch"
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
 				ProgramDataBaseFileName=".\Debug/"
@@ -68,7 +68,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile=".\Debug\cdplayerd.lib"
+				OutputFile=".\Debug\cdlyted.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -121,7 +121,7 @@
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\Release/libcdplayer.pch"
+				PrecompiledHeaderFile=".\Release/libcdlyte.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
@@ -141,7 +141,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile=".\Release\cdplayer.lib"
+				OutputFile=".\Release\cdlyte.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -194,7 +194,7 @@
 			Filter="h;hpp;hxx;hm;inl"
 			>
 			<File
-				RelativePath="..\..\src\cdplayer.h"
+				RelativePath="..\..\src\cdlyte.h"
 				>
 			</File>
 			<File

@@ -38,7 +38,7 @@ int main(int argc,char **argv)
   socklen_t size;
   socket_t server,client;
   struct sockaddr_in sin;
-  const char response[]="HTTP/1.1 200 OK\r\nServer: libcdplayer freedb http server emulator\r\nConnection: close\r\nContent-Type: text/plain; charset=iso-8859-1\r\n\r\n200 OK, submission has been sent.\r\n";
+  const char response[]="HTTP/1.1 200 OK\r\nServer: libcdlyte freedb http server emulator\r\nConnection: close\r\nContent-Type: text/plain; charset=iso-8859-1\r\n\r\n200 OK, submission has been sent.\r\n";
 
   /* Listen for connections on user supplied port or port 8080 */
   if(argc>2)

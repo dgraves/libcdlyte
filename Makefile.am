@@ -2,7 +2,7 @@
 SUBDIRS = src tests
 
 EXTRA_DIST = \
-		windows/libcdplayer.sln                \
-		windows/libcdplayer/libcdplayer.vcproj \
-		windows/libcdplayerdll/libcdplayerdll.vcproj
+		windows/libcdlyte.sln                \
+		windows/libcdlyte/libcdlyte.vcproj \
+		windows/libcdlytedll/libcdlytedll.vcproj
 

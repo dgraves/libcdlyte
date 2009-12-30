@@ -4,9 +4,9 @@ noinst_HEADERS = \
         cdver.h  \
         compat.h
 
-lib_LTLIBRARIES = libcdplayer.la
+lib_LTLIBRARIES = libcdlyte.la
 
-libcdplayer_la_SOURCES = \
+libcdlyte_la_SOURCES = \
 	cd.c           \
 	irix_cd.c      \
 	win32_cd.c     \
@@ -14,8 +14,8 @@ libcdplayer_la_SOURCES = \
 	changer.c      \
         extra_objs.c
 
-libcdplayer_la_LDFLAGS = \
+libcdlyte_la_LDFLAGS = \
 	-version-info $(LT_VERSION)
 
 include_HEADERS = \
-	cdplayer.h
+	cdlyte.h

@@ -1,5 +1,5 @@
 /*
-Irix CD-ROM interface for libcdplayer
+Irix CD-ROM interface for libcdlyte
 Copyright (C)1999 David Rose <David.R.Rose@disney.com>
 
 This library is free software; you can redistribute it and/or
@@ -27,7 +27,7 @@ Boston, MA  02111-1307, USA.
 /* We assume that an Irix compiler will always be ANSI, so we don't
    bother to mess around with the K&R-compatibility stuff in here. */
 
-#ifdef IRIX_CDPLAYER
+#ifdef IRIX_CDLYTE
 
 #include <stdio.h>
 #include <assert.h>
@@ -36,7 +36,7 @@ Boston, MA  02111-1307, USA.
 #include <string.h>
 #include <sys/types.h>
 #include <dmedia/cdaudio.h>
-#include "cdplayer.h"
+#include "cdlyte.h"
 
 /* Eliminated collisions with some macros defined in dmedia/cdaudio.h. */
 #undef cd_open
@@ -56,13 +56,13 @@ Boston, MA  02111-1307, USA.
 #undef cd_get_volume
 #undef cd_set_volume
 
-/* We have to map ints to CDPLAYER pointers, since the libcdplayer
+/* We have to map ints to CDLYTE pointers, since the libcdlyte
    specs require an int cd device handle, but the Irix library gives us
-   CDPLAYER *. */
+   CDLYTE *. */
 
 typedef struct
 {
-  CDPLAYER *p;
+  CDLYTE *p;
   struct disc_info *disc;
 } CDInfo;
 
@@ -104,20 +104,20 @@ static int get_info(cddesc_t cd_desc)
   switch (status.state)
   {
     case CD_READY:
-      disc->disc_mode=CDPLAYER_COMPLETED;
+      disc->disc_mode=CDLYTE_COMPLETED;
       break;
     case CD_PLAYING:
-      disc->disc_mode=CDPLAYER_PLAYING;
+      disc->disc_mode=CDLYTE_PLAYING;
       break;
     case CD_PAUSED:
     case CD_STILL:
-      disc->disc_mode=CDPLAYER_PAUSED;
+      disc->disc_mode=CDLYTE_PAUSED;
       break;
     case CD_NODISC:
     case CD_ERROR:
     case CD_CDROM:
     default:
-      disc->disc_mode=CDPLAYER_NOSTATUS;
+      disc->disc_mode=CDLYTE_NOSTATUS;
       num_tracks=0;
       break;
   }
@@ -149,7 +149,7 @@ static int get_info(cddesc_t cd_desc)
       disc->disc_track[i].track_pos.frames=track.start_frame;
       disc->disc_track[i].track_lba=(track.start_min*60+track.start_sec)*75+track.start_frame-150;
       CDmsftoframe(track.start_min,track.start_sec,track.start_frame);
-      disc->disc_track[i].track_type=CDPLAYER_TRACK_AUDIO;
+      disc->disc_track[i].track_type=CDLYTE_TRACK_AUDIO;
     }
     else
     {
@@ -441,4 +441,4 @@ int cd_set_volume(cddesc_t cd_desc,struct disc_volume vol)
   return -1;
 }
 
-#endif  /* IRIX_CDPLAYER */
+#endif  /* IRIX_CDLYTE */
