@@ -26,35 +26,16 @@
 int live=1;
 jmp_buf env;
 
-void sighandler(int s)
-{
-  if(s==SIGINT)
-  {
-    live=0;
-    longjmp(env,1);
-  }
-}
+void sighandler(int s);
 
-int readline(socket_t client,char *line,int size)
-{
-  char c;
-  int bytes=0;
-  do
-  {
-    if(recv(client,&c,1,0)!=1)
-      return SOCKET_ERROR;
-    if(bytes<size-1) line[bytes++]=c;
-  } while(c!='\n');
-
-  line[bytes]='\0';
-  return bytes;
-}
+int readline(socket_t client,char *line,int size);
 
 int main(int argc,char **argv)
 {
   char line[BUFSIZ],data[BUFSIZ],*p,*e;
   short port;
-  int size,bytes,result;
+  int bytes,result;
+  socklen_t size;
   socket_t server,client;
   struct sockaddr_in sin;
 
@@ -262,4 +243,28 @@ readerror:
   printf("Stoping server\n");
   closesocket(server);
   return 0;
+}
+
+void sighandler(int s)
+{
+  if(s==SIGINT)
+  {
+    live=0;
+    longjmp(env,1);
+  }
+}
+
+int readline(socket_t client,char *line,int size)
+{
+  char c;
+  int bytes=0;
+  do
+  {
+    if(recv(client,&c,1,0)!=1)
+      return SOCKET_ERROR;
+    if(bytes<size-1) line[bytes++]=c;
+  } while(c!='\n');
+
+  line[bytes]='\0';
+  return bytes;
 }
