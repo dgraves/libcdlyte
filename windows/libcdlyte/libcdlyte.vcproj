@@ -50,7 +50,7 @@
 				PrecompiledHeaderFile=".\Debug/libcdlyte.pch"
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
-				ProgramDataBaseFileName=".\Debug/"
+				ProgramDataBaseFileName=".\Debug/cdlyted.pdb"
 				WarningLevel="3"
 				DebugInformationFormat="4"
 				CompileAs="0"
@@ -124,7 +124,7 @@
 				PrecompiledHeaderFile=".\Release/libcdlyte.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
-				ProgramDataBaseFileName=".\Release/"
+				ProgramDataBaseFileName=".\Release/cdlyte.pdb"
 				WarningLevel="3"
 				CompileAs="0"
 			/>

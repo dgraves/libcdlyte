@@ -56,7 +56,7 @@
 				PrecompiledHeaderFile=".\Release/libcdlytedll.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
-				ProgramDataBaseFileName=".\Release/"
+				ProgramDataBaseFileName=".\Release/cdlytedll.pdb"
 				WarningLevel="3"
 				CompileAs="0"
 			/>
@@ -146,7 +146,7 @@
 				PrecompiledHeaderFile=".\Debug/libcdlytedll.pch"
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
-				ProgramDataBaseFileName=".\Debug/"
+				ProgramDataBaseFileName=".\Debug/cdlytedlld.pdb"
 				WarningLevel="3"
 				DebugInformationFormat="4"
 				CompileAs="0"

@@ -394,6 +394,22 @@ void cddb_free_cddb_hello(struct cddb_hello *hello)
   }
 }
 
+/** Initialize cddb_server structure.
+ * @param server a cddb_server structure to be initialized.
+ */
+void cddb_init_cddb_server(struct cddb_server *server)
+{
+  server->server_name=NULL;
+}
+
+/** Free resources allocated for cddb_server.
+ * @param server a cddb_server structure with memory resources to be freed.
+ */
+void cddb_free_cddb_server(struct cddb_server *server)
+{
+  free(server->server_name);
+}
+
 /** Initialize cddb_serverlist structure.
  * @param list a cddb_serverlist structure to be initialized.
  */
