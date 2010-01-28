@@ -120,7 +120,10 @@ unsigned long cddb_discid(cddesc_t cd_desc)
   cd_init_disc_info(&disc);
 
   if(cd_stat(cd_desc,&disc)<0)
+  {
+    cd_free_disc_info(&disc);
     return 0;
+  }
 
   if(!disc.disc_present)
   {
@@ -172,6 +175,7 @@ char* cddb_query_string(cddesc_t cd_desc, char *query, int *len)
   if(cd_stat(cd_desc,&disc)<0)
   {
     *len=0;
+    cd_free_disc_info(&disc);
     return NULL;
   }
 
@@ -185,6 +189,7 @@ char* cddb_query_string(cddesc_t cd_desc, char *query, int *len)
   if(querylen>*len)
   {
     *len=querylen;
+    cd_free_disc_info(&disc);
     return NULL;
   }
 
@@ -466,7 +471,10 @@ int cddb_gen_unknown_entry(cddesc_t cd_desc,struct disc_data *data)
   cd_init_disc_info(&disc);
 
   if(cd_stat(cd_desc,&disc)<0)
+  {
+    cd_free_disc_info(&disc);
     return -1;
+  }
 
   if(data->data_artist!=NULL) free(data->data_artist);
   if(data->data_title!=NULL) free(data->data_title);
@@ -2443,7 +2451,7 @@ int cddb_http_query(const char *querystr,const struct cddb_host *host,const stru
     free(http_string);
     if(len!=0)
     {
-      /* Insuifficient space for http_string */
+      /* Insufficient space for http_string */
       http_string=(char *)malloc(len);
       if((sock=cddb_connect(host,proxy,hello,http_string,&len))==INVALID_CDSOCKET)
       {
