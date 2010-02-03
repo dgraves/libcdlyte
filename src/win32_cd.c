@@ -166,7 +166,7 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
 
   /* Read the number of tracks.  */
   msp.dwItem=MCI_STATUS_NUMBER_OF_TRACKS;
-  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM,(DWORD)(LPVOID)&msp)!=0)
+  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_WAIT,(DWORD)(LPVOID)&msp)!=0)
     return -1;
   disc->disc_first_track=1;
   disc->disc_total_tracks=msp.dwReturn;
@@ -179,7 +179,7 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
     /* Get offsets.  */
     msp.dwTrack=readtracks+1;
     msp.dwItem=MCI_STATUS_POSITION;
-    if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_TRACK,(DWORD)(LPVOID)&msp)!=0)
+    if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_WAIT|MCI_TRACK,(DWORD)(LPVOID)&msp)!=0)
       return -1;
 
     disc->disc_track[readtracks].track_pos.minutes=MCI_MSF_MINUTE(msp.dwReturn);
@@ -190,7 +190,7 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
     /* Get length.  */
     msp.dwTrack=readtracks+1;
     msp.dwItem=MCI_STATUS_LENGTH;
-    if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_TRACK,(DWORD)(LPVOID)&msp)!=0)
+    if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_WAIT|MCI_TRACK,(DWORD)(LPVOID)&msp)!=0)
       return -1;
 
     if(readtracks+1==disc->disc_total_tracks)
@@ -207,7 +207,7 @@ int cd_stat(cddesc_t cd_desc,struct disc_info *disc)
 
     msp.dwTrack=readtracks+1;
     msp.dwItem=MCI_CDA_STATUS_TYPE_TRACK;
-    if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_TRACK,(DWORD)(LPVOID)&msp)!=0)
+    if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_WAIT|MCI_TRACK,(DWORD)(LPVOID)&msp)!=0)
       return -1;
     disc->disc_track[readtracks].track_type=(msp.dwReturn==MCI_CDA_TRACK_AUDIO)?CDLYTE_TRACK_AUDIO:CDLYTE_TRACK_DATA;
   }
@@ -244,9 +244,16 @@ int cd_poll(cddesc_t cd_desc,struct disc_status *status)
 
   memset(&msp,0,sizeof(msp));
 
+  /* Make sure device is ready.  */
+  msp.dwItem=MCI_STATUS_READY;
+  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_WAIT,(DWORD)(LPVOID)&msp)!=0)
+    return -1;
+  if(!msp.dwReturn)
+    return -1;
+
   /* Check for media in drive.  */
   msp.dwItem=MCI_STATUS_MEDIA_PRESENT;
-  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM,(DWORD)(LPVOID)&msp)!=0)
+  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_WAIT,(DWORD)(LPVOID)&msp)!=0)
     return -1;
 
   if(!msp.dwReturn)
@@ -259,7 +266,7 @@ int cd_poll(cddesc_t cd_desc,struct disc_status *status)
 
   /* Get device state.  */
   msp.dwItem=MCI_STATUS_MODE;
-  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM,(DWORD)(LPVOID)&msp)!=0)
+  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_WAIT,(DWORD)(LPVOID)&msp)!=0)
     return -1;
   switch(msp.dwReturn)
   {
@@ -278,20 +285,20 @@ int cd_poll(cddesc_t cd_desc,struct disc_status *status)
 
   /* Get current position.  */
   msp.dwItem=MCI_STATUS_POSITION;
-  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM,(DWORD)(LPVOID)&msp)!=0)
+  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_WAIT,(DWORD)(LPVOID)&msp)!=0)
     return -1;
   position=MSF_TO_FRAMES(MCI_MSF_MINUTE(msp.dwReturn),MCI_MSF_SECOND(msp.dwReturn),MCI_MSF_FRAME(msp.dwReturn));
 
   /* Get current track.  */
   msp.dwItem=MCI_STATUS_CURRENT_TRACK;
-  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM,(DWORD)(LPVOID)&msp)!=0)
+  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_WAIT,(DWORD)(LPVOID)&msp)!=0)
     return -1;
   status->status_current_track=msp.dwReturn;
 
   /* Get offset for current track.  */
   msp.dwTrack=status->status_current_track;
   msp.dwItem=MCI_STATUS_POSITION;
-  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_TRACK,(DWORD)(LPVOID)&msp)!=0)
+  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_WAIT|MCI_TRACK,(DWORD)(LPVOID)&msp)!=0)
     return -1;
 
   /* Current disc and track times.  */
@@ -319,19 +326,19 @@ int cd_play_frames(int cd_desc,int startframe,int endframe)
 
   /* Calculate end position to fix broken leadout */
   msp.dwItem=MCI_STATUS_NUMBER_OF_TRACKS;
-  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM,(DWORD)(LPVOID)&msp)!=0)
+  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_WAIT,(DWORD)(LPVOID)&msp)!=0)
     return -1;
   tracks=msp.dwReturn;
 
   msp.dwTrack=tracks;
   msp.dwItem=MCI_STATUS_POSITION;
-  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_TRACK,(DWORD)(LPVOID)&msp)!=0)
+  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_WAIT|MCI_TRACK,(DWORD)(LPVOID)&msp)!=0)
     return -1;
   leadout=MSF_TO_FRAMES(MCI_MSF_MINUTE(msp.dwReturn),MCI_MSF_SECOND(msp.dwReturn),MCI_MSF_FRAME(msp.dwReturn));
 
   msp.dwTrack=tracks;
   msp.dwItem=MCI_STATUS_LENGTH;
-  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_TRACK,(DWORD)(LPVOID)&msp)!=0)
+  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_WAIT|MCI_TRACK,(DWORD)(LPVOID)&msp)!=0)
     return -1;
   leadout+=MSF_TO_FRAMES(MCI_MSF_MINUTE(msp.dwReturn),MCI_MSF_SECOND(msp.dwReturn),MCI_MSF_FRAME(msp.dwReturn))+1;
 
