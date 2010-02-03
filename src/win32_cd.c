@@ -444,6 +444,7 @@ int cd_close(int cd_desc)
  * Return the current volume level.
  * @param cd_desc the handle to the device to query.
  * @param vol a disc_volume structure to fill with current volume level.
+ *            The volume level is represented as a percentage (scale 0.0-1.0).
  * @return 0 on success, -1 on failure.
  */
 int cd_get_volume(cddesc_t cd_desc,struct disc_volume *vol)
@@ -458,7 +459,7 @@ int cd_get_volume(cddesc_t cd_desc,struct disc_volume *vol)
   {
     memset(&mxcd,0,sizeof(mxcd));
     mxcd.cbStruct=sizeof(mxcd);
-	mxcd.cChannels=(mxl.cChannels==1) ? 1 : 2;
+    mxcd.cChannels=(mxl.cChannels==1) ? 1 : 2;
     mxcd.cbDetails=mxcd.cChannels*sizeof(MIXERCONTROLDETAILS_UNSIGNED);
     mxcd.dwControlID=mxc.dwControlID;
     mxcd.paDetails=&volStruct;
@@ -467,7 +468,7 @@ int cd_get_volume(cddesc_t cd_desc,struct disc_volume *vol)
       vol->vol_back.left=vol->vol_front.left=((float)volStruct[0].dwValue)/((float)(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
       if(mxl.cChannels==1)
         vol->vol_back.right=vol->vol_front.right=vol->vol_back.left;
-	  else
+      else
         vol->vol_back.right=vol->vol_front.right=((float)volStruct[1].dwValue)/((float)(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
       return 0;
     }
@@ -480,6 +481,7 @@ int cd_get_volume(cddesc_t cd_desc,struct disc_volume *vol)
  * Set the volume level.
  * @param cd_desc the handle to the device to modify.
  * @param vol a disc_volume structure specifying the new volume level.
+ *            as a percentage (scale 0.0-1.0).
  * @return 0 on success, -1 on failure.
  */
 int cd_set_volume(cddesc_t cd_desc,const struct disc_volume *vol)
@@ -488,6 +490,9 @@ int cd_set_volume(cddesc_t cd_desc,const struct disc_volume *vol)
   MIXERCONTROLDETAILS_UNSIGNED volStruct[2];
 
   if(cdrom[cd_desc]==NULL)
+    return -1;
+
+  if(vol->vol_front.left>1.0f||vol->vol_front.left<0.0f||vol->vol_front.right>1.0f||vol->vol_front.right<0.0f||vol->vol_back.left>1.0f||vol->vol_back.left<0.0f||vol->vol_back.right>1.0f||vol->vol_back.right<0.0f)
     return -1;
 
   if(mixer!=NULL)
@@ -499,27 +504,27 @@ int cd_set_volume(cddesc_t cd_desc,const struct disc_volume *vol)
 
     memset(&mxcd,0,sizeof(mxcd));
     mxcd.cbStruct=sizeof(mxcd);
-	mxcd.hwndOwner = 0;
+    mxcd.hwndOwner = 0;
     mxcd.dwControlID=mxc.dwControlID;
     mxcd.paDetails=&volStruct;
 
-	if(mxl.cChannels==1)
-	{
+    if(mxl.cChannels==1)
+    {
       mxcd.cChannels=1;
       mxcd.cbDetails=sizeof(MIXERCONTROLDETAILS_UNSIGNED);
-	  
-	  /* When left/right have different values for a single channel, use the larger */
-	  volStruct[0].dwValue=(DWORD)((left>right?left:right)*(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
-	}
-	else
-	{
+
+      /* When left/right have different values for a single channel, use the larger */
+      volStruct[0].dwValue=(DWORD)((left>right?left:right)*(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
+    }
+    else
+    {
       mxcd.cChannels=2;
       mxcd.cbDetails=2*sizeof(MIXERCONTROLDETAILS_UNSIGNED);
       volStruct[0].dwValue=(DWORD)(left*(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
       volStruct[1].dwValue=(DWORD)(right*(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
-	}
+    }
 
-	result = mixerSetControlDetails((HMIXEROBJ)mixer,&mxcd,MIXER_SETCONTROLDETAILSF_VALUE);
+    result = mixerSetControlDetails((HMIXEROBJ)mixer,&mxcd,MIXER_SETCONTROLDETAILSF_VALUE);
     if(result==MMSYSERR_NOERROR)
       return 0;
   }
