@@ -465,11 +465,11 @@ int cd_get_volume(cddesc_t cd_desc,struct disc_volume *vol)
     mxcd.paDetails=&volStruct;
     if(mixerGetControlDetails((HMIXEROBJ)mixer,&mxcd,MIXER_GETCONTROLDETAILSF_VALUE)==MMSYSERR_NOERROR)
     {
-      vol->vol_back.left=vol->vol_front.left=((float)volStruct[0].dwValue)/((float)(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
+      vol->vol_back.left=vol->vol_front.left=((float)(volStruct[0].dwValue-mxc.Bounds.dwMinimum))/((float)(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
       if(mxl.cChannels==1)
         vol->vol_back.right=vol->vol_front.right=vol->vol_back.left;
       else
-        vol->vol_back.right=vol->vol_front.right=((float)volStruct[1].dwValue)/((float)(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
+        vol->vol_back.right=vol->vol_front.right=((float)(volStruct[1].dwValue-mxc.Bounds.dwMinimum))/((float)(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
       return 0;
     }
   }
@@ -514,17 +514,17 @@ int cd_set_volume(cddesc_t cd_desc,const struct disc_volume *vol)
       mxcd.cbDetails=sizeof(MIXERCONTROLDETAILS_UNSIGNED);
 
       /* When left/right have different values for a single channel, use the larger */
-      volStruct[0].dwValue=(DWORD)((left>right?left:right)*(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
+      volStruct[0].dwValue=mxc.Bounds.dwMinimum+((DWORD)((left>right?left:right)*(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum)));
     }
     else
     {
       mxcd.cChannels=2;
       mxcd.cbDetails=2*sizeof(MIXERCONTROLDETAILS_UNSIGNED);
-      volStruct[0].dwValue=(DWORD)(left*(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
-      volStruct[1].dwValue=(DWORD)(right*(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
+      volStruct[0].dwValue=mxc.Bounds.dwMinimum+((DWORD)(left*(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum)));
+      volStruct[1].dwValue=mxc.Bounds.dwMinimum+((DWORD)(right*(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum)));
     }
 
-    result = mixerSetControlDetails((HMIXEROBJ)mixer,&mxcd,MIXER_SETCONTROLDETAILSF_VALUE);
+    result=mixerSetControlDetails((HMIXEROBJ)mixer,&mxcd,MIXER_SETCONTROLDETAILSF_VALUE);
     if(result==MMSYSERR_NOERROR)
       return 0;
   }
