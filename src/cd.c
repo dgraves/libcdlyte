@@ -498,9 +498,9 @@ int cd_close(int cd_desc)
 }
 
 /* Convert volume level from a byte to a percentage.  */
-static float __internal_cd_get_volume_percentage(unsigned char level)
+static double __internal_cd_get_volume_percentage(unsigned char level)
 {
-  return (float)level/255.0f;
+  return (double)level/255.0;
 }
 
 /**
@@ -543,9 +543,9 @@ int cd_get_volume(cddesc_t cd_desc,struct disc_volume *vol)
 }
 
 /* Convert volume level from a percentage to a byte.  */
-static char __internal_cd_get_volume_val(float ratio)
+static char __internal_cd_get_volume_val(double ratio)
 {
-  return (char)(255.0f*ratio);
+  return (char)(255.0*ratio);
 }
 
 /**

@@ -465,11 +465,11 @@ int cd_get_volume(cddesc_t cd_desc,struct disc_volume *vol)
     mxcd.paDetails=&volStruct;
     if(mixerGetControlDetails((HMIXEROBJ)mixer,&mxcd,MIXER_GETCONTROLDETAILSF_VALUE)==MMSYSERR_NOERROR)
     {
-      vol->vol_back.left=vol->vol_front.left=((float)(volStruct[0].dwValue-mxc.Bounds.dwMinimum))/((float)(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
+      vol->vol_back.left=vol->vol_front.left=((double)(volStruct[0].dwValue-mxc.Bounds.dwMinimum))/((double)(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
       if(mxl.cChannels==1)
         vol->vol_back.right=vol->vol_front.right=vol->vol_back.left;
       else
-        vol->vol_back.right=vol->vol_front.right=((float)(volStruct[1].dwValue-mxc.Bounds.dwMinimum))/((float)(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
+        vol->vol_back.right=vol->vol_front.right=((double)(volStruct[1].dwValue-mxc.Bounds.dwMinimum))/((double)(mxc.Bounds.dwMaximum-mxc.Bounds.dwMinimum));
       return 0;
     }
   }
@@ -499,8 +499,8 @@ int cd_set_volume(cddesc_t cd_desc,const struct disc_volume *vol)
   {
     long result;
     /* The windows mixer does not support front and back.  Use the larger of the two.  */
-    float left=(vol->vol_back.left>vol->vol_front.left)?vol->vol_back.left:vol->vol_front.left;
-    float right=(vol->vol_back.right>vol->vol_front.right)?vol->vol_back.right:vol->vol_front.right;
+    double left=(vol->vol_back.left>vol->vol_front.left)?vol->vol_back.left:vol->vol_front.left;
+    double right=(vol->vol_back.right>vol->vol_front.right)?vol->vol_back.right:vol->vol_front.right;
 
     memset(&mxcd,0,sizeof(mxcd));
     mxcd.cbStruct=sizeof(mxcd);
