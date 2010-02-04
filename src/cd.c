@@ -573,12 +573,12 @@ int cd_set_volume(cddesc_t cd_desc,const struct disc_volume *vol)
   cdvol_data.CDVOLCTRL_FRONT_RIGHT_SELECT=CDLYTE_MAX_VOLUME;
   cdvol_data.CDVOLCTRL_BACK_LEFT_SELECT=CDLYTE_MAX_VOLUME;
   cdvol_data.CDVOLCTRL_BACK_RIGHT_SELECT=CDLYTE_MAX_VOLUME;
-#else
+#endif
+
   cdvol.CDVOLCTRL_FRONT_LEFT=__internal_cd_get_volume_val(vol->vol_front.left);
   cdvol.CDVOLCTRL_FRONT_RIGHT=__internal_cd_get_volume_val(vol->vol_front.right);
   cdvol.CDVOLCTRL_BACK_LEFT=__internal_cd_get_volume_val(vol->vol_back.left);
   cdvol.CDVOLCTRL_BACK_RIGHT=__internal_cd_get_volume_val(vol->vol_back.right);
-#endif
 
   if(ioctl(cd_desc,CDLYTE_SET_VOLUME,&cdvol)<0)
     return -1;
