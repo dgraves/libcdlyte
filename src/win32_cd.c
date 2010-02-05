@@ -244,13 +244,6 @@ int cd_poll(cddesc_t cd_desc,struct disc_status *status)
 
   memset(&msp,0,sizeof(msp));
 
-  /* Make sure device is ready.  */
-  msp.dwItem=MCI_STATUS_READY;
-  if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_WAIT,(DWORD)(LPVOID)&msp)!=0)
-    return -1;
-  if(!msp.dwReturn)
-    return -1;
-
   /* Check for media in drive.  */
   msp.dwItem=MCI_STATUS_MEDIA_PRESENT;
   if(mciSendCommand(cdrom[cd_desc]->cdrom_id,MCI_STATUS,MCI_STATUS_ITEM|MCI_WAIT,(DWORD)(LPVOID)&msp)!=0)
