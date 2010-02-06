@@ -2,7 +2,7 @@
 This is part of the audio CD player library
 Copyright (C)1998-99 Tony Arcieri <bascule@inferno.tusculum.edu>
 Parts Copyright (C)1999 Quinton Dolan <q@OntheNet.com.au>
-Copyright (C)2001-04 Dustin Graves <dgraves@computer.org>
+Copyright (C)2001-10 Dustin Graves <dgraves@computer.org>
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Library General Public
@@ -670,8 +670,7 @@ void cd_lba_to_msf(struct disc_timeval *time,int lba)
  */
 void cd_init_disc_info(struct disc_info *disc)
 {
-  disc->disc_total_tracks=0;
-  disc->disc_track=NULL;
+  memset(disc,0,sizeof(struct disc_info));
 }
 
 /** Free resources allocated for disc_info structure by cd_stat.

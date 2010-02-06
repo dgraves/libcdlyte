@@ -1,6 +1,6 @@
 /*
 Windows CD-ROM interface for libcdlyte
-Copyright (C)2001,2004 Dustin Graves <dgraves@computer.org>
+Copyright (C)2001,2004,2010 Dustin Graves <dgraves@computer.org>
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Library General Public
@@ -270,7 +270,7 @@ int cd_poll(cddesc_t cd_desc,struct disc_status *status)
       status->status_mode=CDLYTE_PAUSED;
       break;
     case MCI_MODE_STOP:
-      status->status_mode=cdrom[cd_desc]->cdrom_paused?CDLYTE_PAUSED:CDLYTE_STOPPED;
+      status->status_mode=cdrom[cd_desc]->cdrom_paused?CDLYTE_PAUSED:CDLYTE_NOSTATUS;
       break;
     default:
       status->status_mode=CDLYTE_NOSTATUS;

@@ -1,7 +1,7 @@
 /*
 This is part of the audio CD player library
 Copyright (C)1998-99 Tony Arcieri <bascule@inferno.tusculum.edu>
-Copyright (C)2001-04 Dustin Graves <dgraves@computer.org>
+Copyright (C)2001-04,2010 Dustin Graves <dgraves@computer.org>
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Library General Public
@@ -226,12 +226,7 @@ char* cddb_strdup(const char* str)
  */
 void cddb_init_disc_data(struct disc_data *data)
 {
-  data->data_artist=NULL;
-  data->data_title=NULL;
-  data->data_genre=NULL;
-  data->data_total_tracks=0;
-  data->data_track=NULL;
-  data->data_extended=NULL;
+  memset(data,0,sizeof(struct disc_data));
 }
 
 /** Free resources allocated for disc_data structure.
@@ -285,6 +280,7 @@ void cddb_free_disc_data(struct disc_data *data)
  */
 void cddb_init_cddb_query(struct cddb_query *query)
 {
+  query->query_match=0;
   query->query_matches=0;
   query->query_list=NULL;
 }
@@ -315,7 +311,8 @@ void cddb_free_cddb_query(struct cddb_query *query)
  */
 void cddb_init_cddb_host(struct cddb_host *host)
 {
-  host->host_server.server_name=NULL;
+  cddb_init_cddb_server(&host->host_server);
+  host->host_protocol=0;
   host->host_addressing=NULL;
   host->host_latitude=NULL;
   host->host_longitude=NULL;
@@ -363,10 +360,10 @@ void cddb_free_cddb_host(struct cddb_host *host)
  */
 void cddb_init_cddb_hello(struct cddb_hello *hello)
 {
-   hello->hello_user=NULL;
-   hello->hello_hostname=NULL;
-   hello->hello_program=NULL;
-   hello->hello_version=NULL;
+  hello->hello_user=NULL;
+  hello->hello_hostname=NULL;
+  hello->hello_program=NULL;
+  hello->hello_version=NULL;
 }
 
 /** Free resources allocated for cddb_hello structure.
@@ -405,6 +402,7 @@ void cddb_free_cddb_hello(struct cddb_hello *hello)
 void cddb_init_cddb_server(struct cddb_server *server)
 {
   server->server_name=NULL;
+  server->server_port=0;
 }
 
 /** Free resources allocated for cddb_server.

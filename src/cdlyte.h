@@ -1,7 +1,7 @@
 /*
 This is part of the audio CD player library
 Copyright (C)1998-99 Tony Arcieri
-Copyright (C)2001-04 Dustin Graves <dgraves@computer.org>
+Copyright (C)2001-04,2010 Dustin Graves <dgraves@computer.org>
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Library General Public
@@ -27,13 +27,11 @@ extern "C" {
 #endif
 
 /* Used with disc_info */
-#define CDLYTE_PLAYING			0
-#define CDLYTE_PAUSED			1
-#define CDLYTE_STOPPED			2
+#define CDLYTE_INVALID			0
+#define CDLYTE_PLAYING			1
+#define CDLYTE_PAUSED			2
 #define CDLYTE_COMPLETED		3
 #define CDLYTE_NOSTATUS			4
-#define CDLYTE_INVALID			5
-#define CDLYTE_ERROR			6
 
 #define CDLYTE_TRACK_AUDIO 		0
 #define CDLYTE_TRACK_DATA 		1
