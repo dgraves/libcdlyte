@@ -80,37 +80,41 @@ cddesc_t cd_init_device(char *device_name)
     return INVALID_CDDESC;
   }
 
-  if((mixer==NULL)&&(mixerOpen(&mixer,0,0,0,0)==MMSYSERR_NOERROR))
+  // All CD devices will share the same mixer
+  if(mixer==NULL)
   {
-    memset(&mxl,0,sizeof(mxl));
-    mxl.cbStruct=sizeof(mxl);
-    mxl.dwComponentType = MIXERLINE_COMPONENTTYPE_SRC_COMPACTDISC;
-    if(mixerGetLineInfo((HMIXEROBJ)mixer,&mxl,MIXER_GETLINEINFOF_COMPONENTTYPE)==MMSYSERR_NOERROR)
+    if(mixerOpen(&mixer,0,0,0,0)==MMSYSERR_NOERROR)
     {
-      memset(&mxc,0,sizeof(mxc));
-      mxc.cbStruct = sizeof(mxc);
+      memset(&mxl,0,sizeof(mxl));
+      mxl.cbStruct=sizeof(mxl);
+      mxl.dwComponentType = MIXERLINE_COMPONENTTYPE_SRC_COMPACTDISC;
+      if(mixerGetLineInfo((HMIXEROBJ)mixer,&mxl,MIXER_GETLINEINFOF_COMPONENTTYPE)==MMSYSERR_NOERROR)
+      {
+        memset(&mxc,0,sizeof(mxc));
+        mxc.cbStruct = sizeof(mxc);
 
-      memset(&mxlc,0,sizeof(mxlc));
-      mxlc.cbStruct=sizeof(mxlc);
-      mxlc.dwLineID=mxl.dwLineID;
-      mxlc.dwControlType=MIXERCONTROL_CONTROLTYPE_VOLUME;
-      mxlc.cControls=1;
-      mxlc.cbmxctrl=sizeof(mxc);
-      mxlc.pamxctrl=&mxc;
-      if(mixerGetLineControls((HMIXEROBJ)mixer,&mxlc,MIXER_GETLINECONTROLSF_ONEBYTYPE)!=MMSYSERR_NOERROR)
+        memset(&mxlc,0,sizeof(mxlc));
+        mxlc.cbStruct=sizeof(mxlc);
+        mxlc.dwLineID=mxl.dwLineID;
+        mxlc.dwControlType=MIXERCONTROL_CONTROLTYPE_VOLUME;
+        mxlc.cControls=1;
+        mxlc.cbmxctrl=sizeof(mxc);
+        mxlc.pamxctrl=&mxc;
+        if(mixerGetLineControls((HMIXEROBJ)mixer,&mxlc,MIXER_GETLINECONTROLSF_ONEBYTYPE)!=MMSYSERR_NOERROR)
+        {
+          mixerClose(mixer);
+          mixer=NULL;
+        }
+      }
+      else
       {
         mixerClose(mixer);
         mixer=NULL;
       }
     }
     else
-    {
-      mixerClose(mixer);
       mixer=NULL;
-    }
   }
-  else
-    mixer=NULL;
 
   if(mixer)
     mixref++;

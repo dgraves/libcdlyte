@@ -492,7 +492,7 @@ int cd_close(int cd_desc)
 
   return 0;
 #else
-  errno=ENOTTY;
+  errno=ENOSYS;
   return -1;
 #endif
 }
@@ -537,7 +537,7 @@ int cd_get_volume(cddesc_t cd_desc,struct disc_volume *vol)
 
   return 0;
 #else
-  errno = ENOTTY;
+  errno=ENOSYS;
   return -1;
 #endif
 }
@@ -585,7 +585,7 @@ int cd_set_volume(cddesc_t cd_desc,const struct disc_volume *vol)
 
   return 0;
 #else
-  errno = ENOTTY;
+  errno=ENOSYS;
   return -1;
 #endif
 }
