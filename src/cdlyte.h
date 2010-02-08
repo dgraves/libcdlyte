@@ -235,28 +235,11 @@ struct disc_data
    int                data_revision; 		/* CDDB revision (incremented with each submit) */
    char              *data_artist;		/* Album artist */
    char              *data_title;		/* Disc title */
-   char               data_year[5];             /* Year of publicarion */
+   char               data_year[5];             /* Year of publication */
    char              *data_genre;		/* Disc genre */
    int                data_total_tracks;
    struct track_data *data_track;	        /* Track names */
    char              *data_extended;	        /* Extended information */
-};
-
-/** Summary of a single disc in the changer */
-struct disc_summary
-{
-   int                 disc_present;		/* Is disc present? */
-   struct disc_timeval disc_length;		/* Length of disc */
-   int                 disc_total_tracks;	/* Total tracks */
-   unsigned long       disc_id;			/* CDDB ID */
-   char               *disc_info;		/* Artist name / Disc name */
-};
-
-/** Disc changer structure */
-struct disc_changer
-{
-   int                  changer_slots;
-   struct disc_summary *changer_disc;
 };
 
 
@@ -469,13 +452,6 @@ int cddb_read_data(cddesc_t cd_desc,const struct cddb_host *host,const struct cd
 
 /* Do full sites read.  */
 int cddb_read_sites(const struct cddb_host *host,const struct cddb_server *proxy,const struct cddb_hello *hello,struct cddb_serverlist *list);
-
-
-/* CD Changer function declarations */
-
-int cd_changer_select_disc(int cd_desc,int disc);
-int cd_changer_slots(int cd_desc);
-int cd_changer_stat(const char *path,int cd_desc,struct disc_changer *changer);
 
 #ifdef __cplusplus
 }

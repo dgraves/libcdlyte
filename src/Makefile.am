@@ -11,7 +11,6 @@ libcdlyte_la_SOURCES = \
 	irix_cd.c      \
 	win32_cd.c     \
 	cddb.c         \
-	changer.c      \
         extra_objs.c
 
 libcdlyte_la_LDFLAGS = \
