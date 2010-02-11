@@ -1236,7 +1236,7 @@ static int cddb_proc_read_string(char *line,struct disc_data *data)
         data->data_title=strdup(buffer);
       else
       {
-        data->data_title=(char *)realloc(data->data_title,strlen(buffer));
+        data->data_title=(char *)realloc(data->data_title,strlen(data->data_title)+strlen(buffer)+1);
         strcat(data->data_title, buffer);
       }
     }
@@ -1270,7 +1270,7 @@ static int cddb_proc_read_string(char *line,struct disc_data *data)
         data->data_track[index].track_title=strdup(buffer);
       else
       {
-        data->data_track[index].track_title=(char *)realloc(data->data_track[index].track_title,strlen(buffer));
+        data->data_track[index].track_title=(char *)realloc(data->data_track[index].track_title,strlen(data->data_track[index].track_title)+strlen(buffer)+1);
         strcat(data->data_track[index].track_title, buffer);
       }
     }
@@ -1281,7 +1281,7 @@ static int cddb_proc_read_string(char *line,struct disc_data *data)
         data->data_extended=strdup(buffer);
       else
       {
-        data->data_extended=(char *)realloc(data->data_extended,strlen(buffer));
+        data->data_extended=(char *)realloc(data->data_extended,strlen(data->data_extended)+strlen(buffer)+1);
         strcat(data->data_extended, buffer);
       }
     }
@@ -1305,7 +1305,7 @@ static int cddb_proc_read_string(char *line,struct disc_data *data)
         data->data_track[index].track_extended=strdup(buffer);
       else
       {
-        data->data_track[index].track_extended=(char *)realloc(data->data_track[index].track_extended,strlen(buffer));
+        data->data_track[index].track_extended=(char *)realloc(data->data_track[index].track_extended,strlen(data->data_track[index].track_extended)+strlen(buffer)+1);
         strcat(data->data_track[index].track_extended, buffer);
       }
     }
