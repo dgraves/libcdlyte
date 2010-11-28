@@ -1,3 +1,11 @@
+Changes in 1.0.0
+* Windows support
+* Basic rewrite of the CDDB code, adding full support for data submission through both SMTP and HTTP
+* Changes to internal memory management (no more fixed size arrays for CD info; may address this bug)
+* Removed CDindex support and CD changer support
+* General bug fixes, code reorganization, and simplification
+* Addition of test applications to exercise the CD player and CDDB capability (including SMTP and HTTP emulators for testing CDDB submission support)
+
 Changes in 0.99.4
 * cddb_mc_* class of functions finished.
 

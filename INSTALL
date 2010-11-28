@@ -1,15 +1,15 @@
-Installation Instructions for libcdaudio
+Installation Instructions for libcdlyte
 ----------------------------------------
 
- If you received libcdaudio as part of a package with something else, 
+ If you received libcdlyte as part of a package with something else, 
  then you should go to the top level source directory and read the instructions
- from there.  The instructions in this file are for building libcdaudio as an
+ from there.  The instructions in this file are for building libcdlyte as an
  independant package.
 
 Platforms
 ---------
 
- libcdaudio will compile under the following platforms.  Listed underneath
+ libcdlyte will compile under the following platforms.  Listed underneath
  them are any functions that will not work on that platform.
 
  Linux 1.2
@@ -59,16 +59,16 @@ Step 1.
   everything correctly.
 
 Step 2.
-  Run 'make'.  This will build libcdaudio.  If all works correctly both the
+  Run 'make'.  This will build libcdlyte.  If all works correctly both the
   shared and static libraries will be created, and should be located under
   source/.libs
 
 Step 3.
-  Run 'make install'.  This will install libcdaudio under /usr/local/lib.
+  Run 'make install'.  This will install libcdlyte under /usr/local/lib.
   If /usr/local/lib is not present in your ld.so.conf (usually located under
   /etc/ld.so.conf), you will need to add it.  If you are unable to add it or
   are on a system which does not use ld.so.conf, you will need to add 
-  /usr/local/lib to the LD_LIBRARY_PATH when you wish to run libcdaudio
+  /usr/local/lib to the LD_LIBRARY_PATH when you wish to run libcdlyte
   programs.
 
 Step 4.

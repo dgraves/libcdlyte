@@ -1,0 +1,7 @@
+Known Bugs
+-------------------
+Windows will continue to report that the CD is in the
+drive and playing if the CD is ejected while playing.
+On-line information seems to indicatet this may be a
+driver bug.  So far, a workaround to this problem has
+not been found.  

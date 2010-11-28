@@ -1,3 +1,12 @@
+Sat, 27 Nov 2010 19:48:07 -0400 Dustin Graves <dgraves@computer.org>
+	* Windows support
+	* Basic rewrite of the CDDB code, adding full support for data submission through both SMTP and HTTP
+	* Changes to internal memory management (no more fixed size arrays for CD info; may address this bug)
+	* Removed CDindex support and CD changer support
+	* General bug fixes, code reorganization, and simplification
+	* Addition of test applications to exercise the CD player and CDDB capability (including SMTP and HTTP emulators for testing CDDB submission support)
+
+
 Sat,  1 Jan 2000 10:34:43 -0700  Tony Arcieri  <bascule@inferno.tusculum.edu>
 
 	* Solaris fixes.
