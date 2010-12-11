@@ -1,11 +1,23 @@
 General Information
 -------------------
- libcdlyte is a library designed to provide functions to control
- operation of a CD-ROM when playing audio CDs.  It also contains
- functions for CDDB lookup.
+ libcdlyte is a portable C library designed to provide functions to control
+ operation of a CD-ROM when playing audio CDs.  It also provides functions
+ for retrieving CD information from CDDB compatible services.
 
- It is a fork of version 0.99.4 of the libcdaudio library by Tony
- Arcieri.  What follows is the content of the original libcdaudio
+ It is a fork of version 0.99.4 of the libcdaudio library by Tony Arcieri,
+ and was developed for use with the fxcd portable CD player application.
+ Modifications include:
+ * Support for Microsoft Windows
+ * Rewrite of CDDB code with full SMTP and HTTP submission capability
+ * New memory management model (no more fixed size arrays for CD info)
+ * Addition of test programs to exercise the CD and CDDB capability (including
+   SMTP and HTTP emulators for testing CDDB submission capability)
+ 
+ libcdlyte should continue to work with all operating systems supported by 
+ libcdaudio, with the addition of support for Microsoft Windows.  It continues 
+ to be licensed with the GNU LGPL v2 license.
+ 
+ What follows is the content of the original libcdaudio
  README file (with the libcdaudio name replaced with libcdlyte):
 
 Installation
