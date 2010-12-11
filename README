@@ -2,7 +2,11 @@ General Information
 -------------------
  libcdlyte is a library designed to provide functions to control
  operation of a CD-ROM when playing audio CDs.  It also contains
- functions for CDDB and CD Index lookup.
+ functions for CDDB lookup.
+
+ It is a fork of version 0.99.4 of the libcdaudio library by Tony
+ Arcieri.  What follows is the content of the original libcdaudio
+ README file (with the libcdaudio name replaced with libcdlyte):
 
 Installation
 ------------
